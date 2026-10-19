@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MineTokenCraft</title>
+  <link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="/dashboard.css">
+  <script type="importmap">{ "imports": { "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }</script>
+</head>
+<body>
+  <div id="toolbar">
+    <label class="switch"><input id="simple-toggle" type="checkbox"><span class="switch__track"></span>Mode simple</label>
+    <button id="sound-toggle" type="button">Son</button>
+    <button id="notify-toggle" type="button">Notifs Mac</button>
+    <button id="stats-toggle" type="button">Journée</button>
+    <button id="settings-toggle" type="button">Réglages</button>
+  </div>
+  <div id="toasts"></div>
+  <div id="history" hidden></div>
+  <div id="stats" hidden></div>
+  <div id="settings" hidden></div>
+  <main id="app">
+    <section id="stage">
+      <div id="sky"></div>
+      <canvas id="world"></canvas>
+      <div id="veil"></div>
+      <div id="flash"></div>
+      <div id="labels"></div>
+      <div id="bossbars"></div>
+      <div id="tooltip" class="mc-tooltip" hidden></div>
+      <div id="chat"></div>
+      <p id="empty" class="banner" hidden>Tout le monde dort.</p>
+      <p id="offline" class="banner banner--alert" hidden>Serveur injoignable, nouvelle tentative…</p>
+    </section>
+    <aside id="panel"></aside>
+  </main>
+  <main id="dashboard"></main>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

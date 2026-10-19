@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!-- Bloc d'herbe Minecraft en perspective. -->
+  <polygon points="16,3 29,9.5 16,16 3,9.5" fill="#7fb23a"/>
+  <polygon points="16,5 20,7 16,9 12,7" fill="#8fc447"/>
+  <polygon points="22,9 25,10.5 22,12 19,10.5" fill="#6c9c30"/>
+  <polygon points="9,9 12,10.5 9,12 6,10.5" fill="#8fc447"/>
+  <polygon points="3,9.5 16,16 16,29 3,22.5" fill="#8b5e3c"/>
+  <polygon points="3,9.5 16,16 16,19.5 3,13" fill="#5d8d2a"/>
+  <polygon points="16,16 29,9.5 29,22.5 16,29" fill="#6e4a2f"/>
+  <polygon points="16,16 29,9.5 29,13 16,19.5" fill="#4c7522"/>
+  <rect x="6" y="17" width="2" height="2" fill="#6e4a2f"/>
+  <rect x="10" y="22" width="2" height="2" fill="#6e4a2f"/>
+  <rect x="21" y="19" width="2" height="2" fill="#5a3b24"/>
+  <rect x="25" y="16" width="2" height="2" fill="#5a3b24"/>
+  <polygon points="16,3 29,9.5 29,22.5 16,29 3,22.5 3,9.5" fill="none" stroke="#2b1d10" stroke-width="0.8"/>
+</svg>

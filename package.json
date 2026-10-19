@@ -1,0 +1,48 @@
+{
+  "name": "minetokencraft",
+  "version": "1.0.0",
+  "description": "Watch all your Claude Code sessions live in a 3D Minecraft village: who is working, who is waiting for you, quotas, context and cost.",
+  "type": "module",
+  "bin": {
+    "minetokencraft": "bin/minetokencraft.mjs"
+  },
+  "scripts": {
+    "start": "node bin/minetokencraft.mjs serve",
+    "open": "node bin/minetokencraft.mjs",
+    "demo": "node bin/minetokencraft.mjs demo",
+    "assets": "node scripts/fetch-assets.mjs",
+    "autostart": "node scripts/autostart.mjs on",
+    "autostart:off": "node scripts/autostart.mjs off",
+    "autostart:status": "node scripts/autostart.mjs status",
+    "check": "node scripts/check.mjs"
+  },
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "anthropic",
+    "minecraft",
+    "dashboard",
+    "three.js",
+    "monitoring",
+    "ai-agents"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KillianHzr/minetokencraft.git"
+  },
+  "homepage": "https://github.com/KillianHzr/minetokencraft#readme",
+  "bugs": {
+    "url": "https://github.com/KillianHzr/minetokencraft/issues"
+  }
+}

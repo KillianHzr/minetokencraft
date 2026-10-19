@@ -1,0 +1,1406 @@
+@font-face {
+  font-family: 'Minecraft';
+  src: url('/assets/fonts/Minecraft.otf') format('opentype');
+}
+
+:root {
+  /* États : bleu / jaune / orange plutôt que vert / rouge, lisibles en daltonisme. */
+  --waiting: #ff8a1f;
+  --working: #ffd23f;
+  --done: #4da6ff;
+  --sleeping: #9a9a9a;
+  /* Niveaux de remplissage, mêmes teintes que la status line. */
+  --level-low: #00afff;
+  --level-mid: #ffd700;
+  --level-high: #ff5f00;
+  /* Couleurs des comptes, dans leur ordre d'apparition. */
+  --account-0: #005faf;
+  --account-1: #ffaf00;
+  --account-2: #7b3fb5;
+  --account-3: #1f8a70;
+  --sky-top: #78a7ff;
+  --sky-bottom: #c6dcff;
+  --panel-bg: #1b1820;
+  --panel-card: rgba(255, 255, 255, 0.06);
+  --text: #ffffff;
+  --muted: #a8a8a8;
+  --shadow: 2px 2px 0 rgba(0, 0, 0, 0.55);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* L'attribut hidden doit gagner sur les display posés par les classes. */
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--panel-bg);
+  color: var(--text);
+  font-family: 'Minecraft', ui-monospace, monospace;
+}
+
+#app {
+  display: flex;
+  height: 100vh;
+}
+
+#stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  background: linear-gradient(var(--sky-top), var(--sky-bottom));
+}
+
+#world {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* --- étiquettes de la carte : peu de texte, pour laisser voir les personnages ------------------------------- */
+
+.tag,
+.nametag,
+.wing-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  text-shadow: var(--shadow);
+  will-change: transform;
+}
+
+/* Villageois du joueur survolé dans le panneau. */
+.tag {
+  padding: 2px 5px 3px;
+  font-size: 11px;
+  line-height: 1.25;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.tag--waiting { --status: var(--waiting); }
+.tag--working { --status: var(--working); }
+.tag--done { --status: var(--done); }
+
+.status-icon {
+  color: var(--status);
+}
+
+/* Nametag au-dessus d'un joueur, comme dans le jeu : une ligne, fond noir translucide. */
+.nametag {
+  padding: 1px 5px 2px;
+  font-size: 11px;
+  line-height: 1.25;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.nametag--waiting { --status: var(--waiting); }
+.nametag--working { --status: var(--working); }
+.nametag--done { --status: var(--done); }
+.nametag--leaving { --status: var(--muted); opacity: 0.7; }
+.nametag--stuck { --status: #b0b0b0; }
+.nametag--hl { outline: 1px solid #fff; }
+
+/* Attente longue : le nametag passe à l'orange et pulse. */
+.nametag--urgent {
+  color: #000;
+  text-shadow: none;
+  background: var(--waiting);
+  animation: alert-glow 0.6s ease-in-out infinite;
+}
+
+.nametag--urgent .status-icon {
+  color: #000;
+}
+
+@keyframes alert-glow {
+  50% { box-shadow: 0 0 0 3px var(--waiting); }
+}
+
+/* Écriteau du compte, devant son aile. */
+.wing-tag {
+  padding: 2px 8px 3px;
+  font-size: 12px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  border-left: 4px solid var(--sign, #fff);
+}
+
+.wing-tag--slot-0 { --sign: var(--account-0); }
+.wing-tag--slot-1 { --sign: var(--account-1); }
+.wing-tag--slot-2 { --sign: var(--account-2); }
+.wing-tag--slot-3 { --sign: var(--account-3); }
+.wing-tag--nether { --sign: #ff5a26; color: #ffb35c; }
+.wing-tag--end { --sign: #c27bff; color: #e2c6ff; }
+
+/* --- barres de boss : les quotas de chaque compte, en haut de la scène ------------------------------------- */
+
+#bossbars {
+  position: absolute;
+  z-index: 3;
+  top: calc(var(--toolbar-height, 30px) + 18px);
+  left: 50%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 28px;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.bossbar {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+}
+
+.bossbar__title {
+  font-size: 12px;
+  text-shadow: var(--shadow);
+  white-space: nowrap;
+}
+
+.bossbar__title b {
+  font-weight: normal;
+}
+
+.bossbar__alert {
+  color: var(--level-high);
+}
+
+/* Les sprites du jeu (182 x 5 pixels), agrandis deux fois. */
+.bossbar__bar {
+  position: relative;
+  width: 364px;
+  height: 10px;
+  background: var(--bar) 0 0 / 100% 100%;
+  image-rendering: pixelated;
+}
+
+.bossbar__bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--fill) 0 0 / 364px 100%;
+  image-rendering: pixelated;
+}
+
+/* --- infobulle d'une pièce, façon infobulle d'objet Minecraft ---------------------------------------------- */
+
+.mc-tooltip {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  top: 0;
+  display: grid;
+  gap: 3px;
+  max-width: 340px;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: #fff;
+  text-shadow: var(--shadow);
+  background: rgba(16, 0, 16, 0.94);
+  border: 2px solid transparent;
+  border-image: linear-gradient(#5000ff, #28007f) 1;
+  box-shadow: 0 0 0 2px rgba(16, 0, 16, 0.94);
+  pointer-events: none;
+}
+
+.mc-tooltip__title {
+  font-size: 13px;
+}
+
+.mc-tooltip__muted {
+  color: #aaa;
+}
+
+.mc-tooltip__status--waiting { color: var(--waiting); }
+.mc-tooltip__status--working { color: var(--working); }
+.mc-tooltip__status--done { color: var(--done); }
+.mc-tooltip__status--stuck { color: #b0b0b0; }
+
+.mc-tooltip__line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mc-tooltip__villagers {
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  color: #ccc;
+}
+
+.status-icon--waiting { --status: var(--waiting); }
+.status-icon--working { --status: var(--working); }
+.status-icon--done { --status: var(--done); }
+
+/* --- jauges -------------------------------------------------------------- */
+
+.level--low { --level: var(--level-low); }
+.level--mid { --level: var(--level-mid); }
+.level--high { --level: var(--level-high); }
+
+.ctx__bar {
+  display: inline-block;
+  width: 46px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.ctx__bar i {
+  display: block;
+  height: 100%;
+  background: var(--level, var(--muted));
+}
+
+.ctx {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--level);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0 4px;
+  font-size: 0.8em;
+  text-shadow: none;
+  vertical-align: 1px;
+}
+
+.badge--slot-0 { background: var(--account-0); color: #fff; }
+.badge--slot-1 { background: var(--account-1); color: #000; }
+.badge--slot-2 { background: var(--account-2); color: #fff; }
+.badge--slot-3 { background: var(--account-3); color: #fff; }
+
+/* --- scène : chat, boutons, bannières ------------------------------------- */
+
+#chat {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  max-width: min(560px, 60%);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  pointer-events: none;
+}
+
+.chat__line {
+  padding: 2px 6px;
+  /* Assez sombre pour rester lisible sur la neige. */
+  background: rgba(0, 0, 0, 0.62);
+  font-size: 12px;
+  text-shadow: var(--shadow);
+  transition: opacity 2s;
+}
+
+.chat__line b { font-weight: normal; color: #fff; }
+.chat__line--waiting { color: var(--waiting); }
+.chat__line--done { color: var(--done); }
+.chat__line--join,
+.chat__line--working { color: var(--working); }
+.chat__line--villager { color: #55ffff; }
+.chat__line--leave { color: var(--muted); }
+.chat__line--theme-nether { color: #ff7a3a; }
+.chat__line--theme-end { color: #c27bff; }
+.chat__line--old { opacity: 0.55; }
+
+#toolbar {
+  position: fixed;
+  z-index: 10;
+  top: 10px;
+  left: 10px;
+  right: 400px;
+  flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#toolbar button,
+#toolbar .switch {
+  padding: 4px 9px;
+  font: inherit;
+  font-size: 11px;
+  color: #fff;
+  text-shadow: var(--shadow);
+  background: #6f6f6f;
+  border: 2px solid #000;
+  box-shadow: inset 2px 2px 0 #a8a8a8, inset -2px -2px 0 #4a4a4a;
+  cursor: pointer;
+}
+
+#toolbar select {
+  padding: 3px 6px;
+  font: inherit;
+  font-size: 11px;
+  color: #fff;
+  background: #3a3a3a;
+  border: 2px solid #000;
+}
+
+.demo-tag {
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #000;
+  background: #ffd23f;
+  border: 2px solid #000;
+}
+
+#toolbar button:hover,
+#toolbar .switch:hover {
+  background: #7d86c4;
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch__track {
+  position: relative;
+  width: 26px;
+  height: 14px;
+  background: #3a3a3a;
+  border: 2px solid #000;
+}
+
+.switch__track::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  background: #d8d8d8;
+  transition: transform 0.15s;
+}
+
+.switch input:checked + .switch__track {
+  background: #4da6ff;
+}
+
+.switch input:checked + .switch__track::after {
+  transform: translateX(12px);
+}
+
+.switch input:focus-visible + .switch__track {
+  outline: 2px solid #fff;
+}
+
+.banner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  padding: 10px 16px;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.6);
+  text-shadow: var(--shadow);
+}
+
+.banner--alert {
+  top: 12px;
+  transform: translateX(-50%);
+  color: var(--waiting);
+}
+
+/* --- panneau ------------------------------------------------------------- */
+
+#panel {
+  width: 380px;
+  flex: none;
+  overflow: hidden;
+  padding: 12px 12px 8px;
+  background: var(--panel-bg);
+  border-left: 4px solid #000;
+  box-shadow: inset 3px 0 0 #3b3542;
+  text-shadow: var(--shadow);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.panel__head h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: normal;
+  color: #ffd23f;
+}
+
+.counts {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.count--waiting { color: var(--waiting); }
+.count--working { color: var(--working); }
+.count--done { color: var(--done); }
+.count--sleeping { color: var(--sleeping); }
+
+.usage {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 8px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.account {
+  display: grid;
+  gap: 3px;
+}
+
+.quota {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quota__label {
+  width: 24px;
+  color: var(--muted);
+}
+
+.quota__text {
+  color: var(--muted);
+}
+
+.quota__text b {
+  font-weight: normal;
+  color: var(--level, #fff);
+}
+
+.icons {
+  display: flex;
+  gap: 1px;
+}
+
+.icon {
+  position: relative;
+  width: 14px;
+  height: 14px;
+}
+
+.icon img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.all-clear {
+  margin: 4px 0 8px;
+  color: var(--done);
+}
+
+.group h2 {
+  margin: 10px 0 5px;
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--status);
+}
+
+.group h2 span {
+  color: var(--muted);
+}
+
+.group--waiting { --status: var(--waiting); }
+.group--working { --status: var(--working); }
+.group--done { --status: var(--done); }
+.group--sleeping { --status: var(--sleeping); }
+
+.card {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 5px;
+  padding: 6px 7px;
+  background: var(--panel-card);
+  border-left: 4px solid var(--status);
+}
+
+.card--waiting {
+  background: rgba(255, 138, 31, 0.14);
+}
+
+.card:hover,
+.sleeper:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.face {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  image-rendering: pixelated;
+  box-shadow: 0 0 0 1px #000;
+}
+
+.face--small {
+  width: 14px;
+  height: 14px;
+}
+
+.card__body {
+  min-width: 0;
+  flex: 1;
+}
+
+.card__title {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card__status {
+  color: var(--status);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card__meta {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.card__villagers {
+  margin: 3px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+}
+
+.villager {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.villager--working { --status: var(--working); }
+.villager--done { --status: var(--done); color: var(--muted); }
+
+.card__quote {
+  margin-top: 2px;
+  color: #d8d8d8;
+  font-size: 11px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sleepers {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+}
+
+.sleeper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 4px;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sleeper__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #cfcfcf;
+}
+
+.sleeper__meta {
+  margin-left: auto;
+  flex: none;
+}
+
+/* Paliers de compactage, du plus léger au plus serré, pour que tout tienne sans défiler. Chaque palier
+   masque aussi ce que masquent les précédents. */
+#panel:is([data-density='compact'], [data-density='tiny'], [data-density='micro'], [data-density='nano']) .card__quote,
+#panel:is([data-density='tiny'], [data-density='micro'], [data-density='nano']) .sleeper__meta,
+#panel:is([data-density='micro'], [data-density='nano']) :is(.sleeper__name, .card__villagers),
+#panel[data-density='nano'] :is(.card .tasks, .card__where) {
+  display: none;
+}
+
+/* Une seule ligne par carte : le projet et la branche s'abrègent, le contexte et le coût restent entiers. */
+#panel:is([data-density='micro'], [data-density='nano']) .card__meta {
+  display: flex;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+#panel:is([data-density='micro'], [data-density='nano']) .card__where {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#panel:is([data-density='micro'], [data-density='nano']) .card__gauges {
+  flex-shrink: 0;
+}
+
+#panel:is([data-density='tiny'], [data-density='micro'], [data-density='nano']) .card {
+  margin-bottom: 3px;
+  padding: 3px 6px;
+}
+
+#panel:is([data-density='tiny'], [data-density='micro'], [data-density='nano']) .group h2 {
+  margin: 6px 0 3px;
+}
+
+#panel[data-density='tiny'] .sleepers {
+  grid-template-columns: 1fr 1fr;
+}
+
+#panel:is([data-density='micro'], [data-density='nano']) .sleepers {
+  grid-template-columns: repeat(auto-fill, 22px);
+}
+
+#panel:is([data-density='micro'], [data-density='nano']) .sleeper {
+  padding: 2px;
+}
+
+/* --- avancement des tâches, contexte, coût ---------------------------------- */
+
+.tasks {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.tasks__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #e8e0c8;
+}
+
+/* Une case par tâche, comme les cases d'un inventaire : finie, en cours (qui clignote), à faire. */
+.pips {
+  display: inline-flex;
+  flex: none;
+  gap: 1px;
+  padding: 1px;
+  background: #1a1a1a;
+  box-shadow: 0 0 0 1px #000;
+}
+
+.pip {
+  width: 7px;
+  height: 7px;
+  background: #4a4a4a;
+}
+
+.pip--done { background: #55ff55; box-shadow: inset -1px -1px 0 #2a9a2a; }
+.pip--current { background: #ffd23f; animation: pip-blink 1s steps(2) infinite; }
+
+@keyframes pip-blink {
+  50% { background: #7a6420; }
+}
+
+/* Contexte en barre d'expérience Minecraft : segments, couleur du niveau (bleu, jaune, orange). */
+.xp {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--level, var(--muted));
+}
+
+.xp b {
+  font-weight: normal;
+}
+
+.xp__bar {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 6px;
+  background: #222;
+  box-shadow: 0 0 0 1px #000;
+}
+
+.xp__bar i {
+  display: block;
+  height: 100%;
+  background: var(--level, var(--muted));
+}
+
+.xp__bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 5px, rgba(0, 0, 0, 0.55) 5px 6px);
+}
+
+.emerald {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: #7dffa0;
+}
+
+.emerald img,
+.item-icon {
+  width: 13px;
+  height: 13px;
+  image-rendering: pixelated;
+}
+
+
+
+
+
+
+
+
+
+
+.card--urgent {
+  background: rgba(255, 90, 0, 0.28);
+  animation: alert-glow 0.5s ease-in-out infinite;
+}
+
+.card--stuck .card__status {
+  color: #c8c8c8;
+}
+
+.card {
+  position: relative;
+  cursor: pointer;
+}
+
+.sleeper {
+  cursor: pointer;
+}
+
+.card .tasks {
+  font-size: 11px;
+  margin: 1px 0;
+}
+
+.card__history {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 2px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.card__history:hover {
+  opacity: 1;
+}
+
+.card__history .item-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.quota__forecast {
+  margin: -1px 0 2px 30px;
+  font-size: 11px;
+  color: var(--level-high);
+}
+
+
+
+/* --- messages façon « Progrès réalisé » ------------------------------------- */
+
+#toasts {
+  position: fixed;
+  z-index: 30;
+  top: 52px;
+  right: 400px;
+  display: grid;
+  gap: 6px;
+  width: 300px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #212121;
+  border: 2px solid #000;
+  box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #111;
+  text-shadow: var(--shadow);
+  animation: toast-in 0.25s ease-out;
+  transition: transform 0.5s, opacity 0.5s;
+}
+
+.toast--out {
+  transform: translateX(30px);
+  opacity: 0;
+}
+
+@keyframes toast-in {
+  from { transform: translateX(40px); opacity: 0; }
+}
+
+.toast__icon {
+  width: 28px;
+  height: 28px;
+  flex: none;
+}
+
+.toast__title {
+  font-size: 12px;
+  color: #ffd23f;
+}
+
+.toast--warn .toast__title {
+  color: var(--waiting);
+}
+
+.toast__text {
+  font-size: 11px;
+  color: #eee;
+}
+
+/* --- historique d'une session ------------------------------------------------ */
+
+#history {
+  position: fixed;
+  z-index: 25;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.history__panel {
+  display: flex;
+  flex-direction: column;
+  width: min(640px, 90vw);
+  max-height: 80vh;
+  background: #c6c6c6;
+  color: #3f3f3f;
+  border: 3px solid #000;
+  box-shadow: inset 3px 3px 0 #fff, inset -3px -3px 0 #555;
+}
+
+.history__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 8px;
+}
+
+.history__head > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.history__title {
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history__sub {
+  font-size: 11px;
+  color: #555;
+}
+
+.history__head button {
+  padding: 5px 9px;
+  font: inherit;
+  font-size: 11px;
+  color: #fff;
+  text-shadow: var(--shadow);
+  background: #6f6f6f;
+  border: 2px solid #000;
+  box-shadow: inset 2px 2px 0 #a8a8a8, inset -2px -2px 0 #4a4a4a;
+  cursor: pointer;
+}
+
+.history__list {
+  margin: 0;
+  padding: 0 14px 14px;
+  overflow: auto;
+  list-style: none;
+}
+
+.history__item {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  margin-bottom: 3px;
+  background: #8b8b8b;
+  box-shadow: inset 2px 2px 0 #373737, inset -2px -2px 0 #fff;
+  color: #fff;
+  text-shadow: var(--shadow);
+}
+
+.history__icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.history__meta {
+  font-size: 10px;
+  color: #ffd23f;
+}
+
+.history__item--prompt .history__meta { color: #7cc4ff; }
+
+.history__text {
+  font-size: 12px;
+  word-break: break-word;
+}
+
+.history__empty {
+  padding: 0 14px 14px;
+}
+
+
+
+
+
+
+
+/* --- écran « Journée » --------------------------------------------------------- */
+
+#stats {
+  position: fixed;
+  z-index: 25;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.stats__panel {
+  width: min(880px, 94vw);
+  padding: 14px 16px 12px;
+  background: #c6c6c6;
+  color: #3f3f3f;
+  border: 3px solid #000;
+  box-shadow: inset 3px 3px 0 #fff, inset -3px -3px 0 #555;
+}
+
+.stats__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.stats__head h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: normal;
+}
+
+.stats__clock {
+  width: 24px;
+  height: 24px;
+}
+
+.stats__head button,
+.stats__tabs button {
+  padding: 4px 9px;
+  font: inherit;
+  font-size: 11px;
+  color: #fff;
+  text-shadow: var(--shadow);
+  background: #6f6f6f;
+  border: 2px solid #000;
+  box-shadow: inset 2px 2px 0 #a8a8a8, inset -2px -2px 0 #4a4a4a;
+  cursor: pointer;
+}
+
+.stats__tabs button.is-active {
+  background: #7d86c4;
+}
+
+.stats__accounts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.stats__account .badge {
+  margin-bottom: 5px;
+}
+
+/* Emplacements d'inventaire : un objet, un nombre en bas à droite, une légende dessous. */
+.slots {
+  display: flex;
+  gap: 6px;
+}
+
+.slot {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: 92px;
+  padding: 6px 4px 4px;
+  background: #8b8b8b;
+  box-shadow: inset 2px 2px 0 #373737, inset -2px -2px 0 #fff;
+}
+
+.slot__icon {
+  width: 32px;
+  height: 32px;
+}
+
+.slot__count {
+  margin-top: -6px;
+  color: #fff;
+  font-size: 14px;
+  text-shadow: var(--shadow);
+}
+
+.slot__label {
+  font-size: 10px;
+  color: #2a2a2a;
+}
+
+.stats__tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+/* Histogramme : une colonne de blocs par compte et par heure. */
+.chart {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 3px;
+  height: 200px;
+  padding: 6px 6px 18px;
+  background: #8b8b8b;
+  box-shadow: inset 2px 2px 0 #373737, inset -2px -2px 0 #fff;
+}
+
+.hour {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.hour__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 100%;
+}
+
+.bar {
+  flex: 1;
+  min-height: 0;
+  background: var(--block) 0 100% / 12px;
+  image-rendering: pixelated;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.hour--now .hour__bars {
+  outline: 2px solid #ffd23f;
+  outline-offset: 1px;
+}
+
+.hour--future {
+  opacity: 0.4;
+}
+
+.hour__label {
+  position: absolute;
+  bottom: -16px;
+  left: 0;
+  font-size: 10px;
+  color: #2a2a2a;
+}
+
+.stats__note,
+.stats__empty {
+  margin: 8px 0 0;
+  font-size: 10px;
+  color: #444;
+}
+
+/* --- ciel, voile de météo, éclairs ----------------------------------------------- */
+
+#sky,
+#veil,
+#flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+#sky {
+  overflow: hidden;
+  transition: background 2s;
+}
+
+.sky__stars {
+  position: absolute;
+  inset: 0;
+  background-size: 512px 256px;
+  image-rendering: pixelated;
+  opacity: 0;
+  transition: opacity 2s;
+}
+
+/* Soleil carré de Minecraft : son fond noir disparaît en mode « écran ». */
+.sky__sun {
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  transform: translate(-50%, -50%);
+  image-rendering: pixelated;
+  mix-blend-mode: screen;
+  transition: left 2s, top 2s, opacity 2s;
+}
+
+.sky__moon {
+  position: absolute;
+  mix-blend-mode: screen;
+  top: 9%;
+  right: 14%;
+  width: 56px;
+  height: 56px;
+  background-size: 400% 200%;
+  image-rendering: pixelated;
+  opacity: 0;
+  transition: opacity 2s;
+}
+
+#veil {
+  opacity: 0;
+  background: linear-gradient(rgba(200, 206, 216, 0.6), rgba(225, 228, 233, 0.9));
+  transition: opacity 3s;
+}
+
+#veil[data-condition='rain'],
+#veil[data-condition='storm'] {
+  background: linear-gradient(rgba(70, 80, 100, 0.7), rgba(110, 120, 140, 0.6));
+}
+
+#veil[data-condition='snow'] {
+  background: rgba(240, 244, 250, 0.8);
+}
+
+#flash {
+  background: #fff;
+  opacity: 0;
+}
+
+#world,
+#veil,
+#flash {
+  z-index: 1;
+}
+
+#labels,
+#chat {
+  z-index: 2;
+}
+
+.banner {
+  z-index: 3;
+}
+
+/* --- réglages ---------------------------------------------------------------------------------------------- */
+
+#settings {
+  position: fixed;
+  z-index: 25;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.settings__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(720px, 94vw);
+  max-height: 88vh;
+  padding: 14px 16px;
+  overflow: auto;
+  color: #3f3f3f;
+  background: #c6c6c6;
+  border: 3px solid #000;
+  box-shadow: inset 3px 3px 0 #fff, inset -3px -3px 0 #555;
+}
+
+.settings__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings__panel h2,
+.settings__panel h3 {
+  margin: 0;
+  font-weight: normal;
+}
+
+.settings__panel h3 {
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.settings__hint,
+.settings__meta {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: #555;
+}
+
+.settings__meta code {
+  font: inherit;
+  color: #333;
+}
+
+.settings__accounts {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.settings__account {
+  padding: 8px;
+  background: #8b8b8b;
+  box-shadow: inset 2px 2px 0 #373737, inset -2px -2px 0 #fff;
+  color: #fff;
+  text-shadow: var(--shadow);
+}
+
+.settings__account .settings__meta,
+.settings__account .settings__meta code {
+  color: #e6e6e6;
+}
+
+.settings__line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.settings__panel input:not([type='checkbox']) {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  font: inherit;
+  font-size: 12px;
+  color: #fff;
+  background: #000;
+  border: 2px solid #a0a0a0;
+}
+
+.settings__panel button {
+  padding: 3px 9px;
+  font: inherit;
+  font-size: 11px;
+  color: #fff;
+  text-shadow: var(--shadow);
+  background: #6f6f6f;
+  border: 2px solid #000;
+  box-shadow: inset 2px 2px 0 #a8a8a8, inset -2px -2px 0 #4a4a4a;
+  cursor: pointer;
+}
+
+.settings__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.settings__chip {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  background: var(--account-0);
+  border: 2px solid #000;
+}
+
+.settings__chip--slot-1 { background: var(--account-1); }
+.settings__chip--slot-2 { background: var(--account-2); }
+.settings__chip--slot-3 { background: var(--account-3); }
+.settings__chip--off { opacity: 0.3; }
+
+.settings__ok {
+  flex: 1;
+  font-size: 11px;
+}
+
+.settings__message {
+  margin: 0;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #fff;
+  background: #3a3a3a;
+}

@@ -1,0 +1,5 @@
+node_modules/
+# Les textures, la police et les skins sont téléchargés dans ~/.cache/minetokencraft/assets : jamais dans le dépôt.
+assets/
+*.log
+.DS_Store
