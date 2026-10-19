@@ -17,6 +17,7 @@ import { accountTheme, themeNotice } from './themes.js';
 import { DEMO_SCENARIOS, demoHistory, demoState } from './demo.js';
 import { biomeFor, hash, professionFor } from './identity.js';
 import { loadImage, TEXTURE_ROOT } from './textures.js';
+import { SITE } from './site.js';
 import {
   clockTime,
   escapeHtml,
@@ -78,7 +79,8 @@ const ZONE_PARTICLES = {
   nether: { type: 'ember', rate: 10, velocity: [0, 0.9, 0], spread: 0.3, life: 2.6, size: 0.12 },
   end: { type: 'portal', rate: 10, velocity: [0, 0.25, 0], spread: 0.8, life: 2.2, size: 0.14 },
 };
-const DEMO = window.location.pathname === '/demo';
+// Page de test : /demo sur le serveur local, ou la démo en ligne (aucun serveur derrière).
+const DEMO = window.location.pathname.endsWith('/demo') || SITE.standalone;
 const DEMO_TICK_MS = 4000;
 
 const stage = document.getElementById('stage');
@@ -127,6 +129,8 @@ document.getElementById('stats-toggle').addEventListener('click', () => statsOve
 const history = new HistoryDrawer(document.getElementById('history'), { onFocus: focusPlayer });
 const settingsDialog = new SettingsDialog(document.getElementById('settings'), { onChange: () => refreshState() });
 document.getElementById('settings-toggle').addEventListener('click', () => settingsDialog.open());
+// Démo en ligne : ni réglages ni notifications, il n'y a pas de serveur sur la machine du visiteur.
+if (SITE.standalone) for (const id of ['settings-toggle', 'notify-toggle']) document.getElementById(id).hidden = true;
 const dashboard = new Dashboard(document.getElementById('dashboard'), { onFocus: focusPlayer, onHistory: openHistory });
 let highlighted = null;
 const panel = new Panel(document.getElementById('panel'), {
@@ -187,7 +191,7 @@ function skinFor(playerId) {
     }
   }
   const skin = skins.find((candidate) => candidate.name === skinAssignments[playerId]);
-  return { ...skin, url: `/assets/skins/${skin.file}` };
+  return { ...skin, url: skin.url ?? `${SITE.skins}${skin.file}` };
 }
 
 function desiredStation(player) {
@@ -517,7 +521,7 @@ function relayout() {
   const target = frameTarget();
   if (!sameFraming(target, framing.target)) framing.previous = framing.target;
   framing.target = target;
-  if (world.build(layout, conditions.season, sceneryFor(framing.target, framing.previous)) && lastNight >= 0) world.setNight(lastNight);
+  if (world.build(layout, conditions.season, sceneryFor(framing.target, framing.previous)) && lastGloom >= 0) world.setGloom(lastGloom);
   syncEntities();
   refreshLabels();
   empty.hidden = state.players.some((player) => player.status !== 'sleeping');
@@ -549,7 +553,7 @@ function applyState(next) {
   const waiting = state.players.filter((player) => player.status === 'waiting').length;
   const title = DEMO ? 'MineTokenCraft · test' : 'MineTokenCraft';
   document.title = waiting ? `(${waiting}) ! ${title}` : title;
-  document.getElementById('favicon').href = waiting ? '/favicon-alert.svg' : '/favicon.svg';
+  document.getElementById('favicon').href = waiting ? 'favicon-alert.svg' : 'favicon.svg';
 }
 
 function emitAmbient(record, dt) {
@@ -625,17 +629,17 @@ const herd = new Herd(scene, particles);
 // Heure, météo et saison forcées par la page de test ; vides en temps normal.
 let envOverride = {};
 let conditions = conditionsFor(Date.now(), null);
-let lastNight = -1;
+let lastGloom = -1;
 
 function updateEnvironment(dt) {
   const now = Date.now();
   conditions = conditionsFor(now, state?.weather, envOverride);
   if (layout && world.season !== conditions.season) relayout();
   aimSun(environment.update(dt, conditions, layout, particles, now));
-  const night = Math.round((1 - conditions.day) * 50) / 50;
-  if (night !== lastNight) {
-    lastNight = night;
-    world.setNight(night);
+  const gloom = Math.round(conditions.gloom * 50) / 50;
+  if (gloom !== lastGloom) {
+    lastGloom = gloom;
+    world.setGloom(gloom);
   }
   herd.update(dt, conditions, layout);
 }
@@ -734,16 +738,16 @@ async function start() {
   }
   setSimple(simple);
   simpleToggle.addEventListener('change', () => setSimple(simpleToggle.checked));
-  skins = await (await fetch('/assets/skins/index.json')).json();
+  skins = await (await fetch(SITE.skinsIndex)).json();
   new ResizeObserver(resize).observe(stage);
   resize();
   if (DEMO) {
     startDemo();
   } else {
     // Premier affichage sans attendre le flux direct, qui peut mettre un moment à livrer son premier message.
-    const initial = await (await fetch('/api/state')).json().catch(() => null);
+    const initial = await (await fetch('api/state')).json().catch(() => null);
     if (initial?.players && !state) applyState(initial);
-    const source = new EventSource('/events');
+    const source = new EventSource('events');
     source.onmessage = (event) => paused || applyState(JSON.parse(event.data));
     source.onopen = () => (offline.hidden = true);
     source.onerror = () => (offline.hidden = false);
@@ -766,7 +770,7 @@ async function start() {
 function refreshState() {
   if (DEMO) return;
   setTimeout(async () => {
-    const next = await (await fetch('/api/state')).json().catch(() => null);
+    const next = await (await fetch('api/state')).json().catch(() => null);
     if (next?.players) applyState(next);
   }, STATE_REFRESH_DELAY_MS);
 }
@@ -782,7 +786,7 @@ async function focusPlayer(id) {
     return;
   }
   try {
-    const response = await fetch(`/api/focus/${encodeURIComponent(id)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const response = await fetch(`api/focus/${encodeURIComponent(id)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     const result = await response.json();
     toasts.show(player.name, result.message, { ok: result.ok });
   } catch {
@@ -794,7 +798,7 @@ function openHistory(id) {
   const player = state?.players.find((candidate) => candidate.id === id);
   if (!player) return;
   history.open(player, async (playerId) => (DEMO ? demoHistory(player)
-    : (await (await fetch(`/api/history/${encodeURIComponent(playerId)}`)).json()).events));
+    : (await (await fetch(`api/history/${encodeURIComponent(playerId)}`)).json()).events));
 }
 
 /**

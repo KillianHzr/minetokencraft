@@ -18,9 +18,9 @@ const GOLDEN_SKY = ['#f19a68', '#ffd6a0'];
 // Voile sur la scène : brume, pluie fine ou flocons.
 const VEILS = { clear: 0, cloudy: 0.04, rain: 0.12, storm: 0.2, snow: 0.14, fog: 0.38 };
 // Lumière : moins forte par temps couvert ; la nuit, la lune éclaire en bleu.
-const OVERCAST = { clear: 1, cloudy: 0.75, rain: 0.55, storm: 0.4, snow: 0.7, fog: 0.6 };
+const OVERCAST = { clear: 1, cloudy: 0.8, rain: 0.65, storm: 0.5, snow: 0.75, fog: 0.7 };
 // La nuit reste lisible : la lune éclaire assez pour distinguer les pièces et les créatures.
-const SUN = { dayIntensity: 0.9, moonIntensity: 0.38, sky: 0.5, nightSky: 0.26 };
+const SUN = { dayIntensity: 0.9, moonIntensity: 0.38, sky: 0.58, nightSky: 0.28 };
 const RAIN_DROPS = 1600;
 const SNOW_FLAKES = 1100;
 const RAIN_SPEED = 16;

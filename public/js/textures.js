@@ -1,6 +1,7 @@
 import * as THREE from 'three';
+import { SITE } from './site.js';
 
-export const TEXTURE_ROOT = '/assets/textures/';
+export const TEXTURE_ROOT = SITE.textures;
 
 const imageCache = new Map();
 const textureCache = new Map();
@@ -17,6 +18,8 @@ export function loadImage(url) {
   if (!imageCache.has(url)) {
     imageCache.set(url, new Promise((resolve, reject) => {
       const image = new Image();
+      // Démo en ligne : les images viennent d'un autre site, qui l'autorise ; sans ça, WebGL les refuserait.
+      image.crossOrigin = 'anonymous';
       image.onload = () => resolve(image);
       image.onerror = () => reject(new Error(`image introuvable : ${url}`));
       image.src = url;

@@ -26,6 +26,8 @@ function atHour(now, hour) {
 }
 
 const clamp = (value) => Math.min(1, Math.max(0, value));
+// Part de lumière que chaque temps enlève, pour la pénombre qui allume les lampes.
+const WEATHER_GLOOM = { clear: 0, cloudy: 0.25, rain: 0.45, storm: 0.6, snow: 0.3, fog: 0.4 };
 
 /**
  * Lumière du jour de 0 (nuit) à 1 (plein jour), part de lumière rasante (aube, crépuscule), et course du soleil.
@@ -51,5 +53,9 @@ export function conditionsFor(now, weather, override = {}) {
   // L'hiver, la pluie tombe en neige.
   if (season === 'winter' && (condition === 'rain' || condition === 'storm')) condition = 'snow';
   const wind = override.condition ? (condition === 'storm' ? 1 : condition === 'clear' ? 0.25 : 0.5) : clamp((weather?.wind ?? 10) / WIND_MAX_KMH);
-  return { season, condition, wind, ...light };
+  // Pénombre de 0 (plein soleil) à 1 (nuit noire) : la nuit, mais aussi un soleil bas en fin de journée ou un ciel
+  // couvert. C'est elle qui allume les lampes, bien avant la nuit.
+  const sunHeight = Math.sin(Math.PI * light.course);
+  const gloom = clamp(1 - light.day * (1 - (WEATHER_GLOOM[condition] ?? 0)) * (0.45 + 0.55 * sunHeight));
+  return { season, condition, wind, gloom, ...light };
 }

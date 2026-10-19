@@ -29,4 +29,8 @@ assert.equal(accountIdFor('/srv/Claude Config'), 'claude-config');
 const { noise } = await import(path.join(root, 'public/js/noise.js'));
 assert.equal(noise(3, 4, 5), noise(3, 4, 5));
 assert.ok(noise(3, 4, 5) >= 0 && noise(3, 4, 5) < 1);
+// Une valeur de carte d'imports doit être une URL ou commencer par ./ ou / : sinon le navigateur la refuse.
+const html = fs.readFileSync(path.join(root, 'public/index.html'), 'utf8');
+const importMap = JSON.parse(html.match(/<script type="importmap">([\s\S]*?)<\/script>/)[1]);
+for (const target of Object.values(importMap.imports)) assert.match(target, /^(\.\/|\/|https:)/, `carte d'imports : ${target}`);
 console.log('règles : ok');

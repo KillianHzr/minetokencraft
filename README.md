@@ -15,6 +15,8 @@ Who is working, who is waiting for you, who is done, how full each context is, w
 [![three.js](https://img.shields.io/badge/three.js-r186-111?logo=three.js&logoColor=white)](https://threejs.org)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-0a66c2.svg)](#contributing)
 
+**[▶ Try the live demo](https://killianhzr.github.io/minetokencraft/)**, with fake sessions, right in your browser.
+
 <img src="docs/screenshots/village.jpg" alt="The village: one wing per Claude account, one room per session, the landscape around" width="100%">
 
 </div>
@@ -98,7 +100,7 @@ minetokencraft
 
 </details>
 
-Want to see it before running any session? `minetokencraft demo` opens a test page with fake sessions in every state, and lets you switch the time, weather, season and quota scenario.
+Want to see it first? The [live demo](https://killianhzr.github.io/minetokencraft/) runs in your browser with fake sessions in every state, and lets you switch the time, weather, season and quota scenario. `minetokencraft demo` opens the same page locally.
 
 ## Commands
 

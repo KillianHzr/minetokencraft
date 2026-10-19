@@ -101,7 +101,7 @@ function connectionLine(account) {
 }
 
 async function postSettings(patch) {
-  const response = await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+  const response = await fetch('api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
   const body = await response.json();
   if (!response.ok) throw new Error(body.message ?? 'Réglage refusé.');
   return body;
@@ -141,8 +141,8 @@ export class SettingsDialog {
 
   async refresh(message = '') {
     const [accounts, settings] = await Promise.all([
-      fetch('/api/accounts').then((response) => response.json()),
-      fetch('/api/settings').then((response) => response.json()),
+      fetch('api/accounts').then((response) => response.json()),
+      fetch('api/settings').then((response) => response.json()),
     ]);
     this.render(accounts, settings, message);
   }

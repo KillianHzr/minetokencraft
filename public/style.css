@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'Minecraft';
-  src: url('/assets/fonts/Minecraft.otf') format('opentype');
+  src: url('assets/fonts/Minecraft.otf') format('opentype');
 }
 
 :root {

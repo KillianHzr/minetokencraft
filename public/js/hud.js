@@ -257,7 +257,7 @@ export class Alerts {
     });
     notifyButton.addEventListener('click', () => this.setMacNotifications(!this.macNotifications));
     if (!demo) {
-      fetch('/api/settings').then((response) => response.json()).then(({ notifications }) => {
+      fetch('api/settings').then((response) => response.json()).then(({ notifications }) => {
         this.macNotifications = notifications;
         this.refreshButtons();
       }).catch(() => {});
@@ -267,7 +267,7 @@ export class Alerts {
 
   async setMacNotifications(enabled) {
     if (this.demo) return;
-    const response = await fetch('/api/settings', {
+    const response = await fetch('api/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ notifications: enabled }),

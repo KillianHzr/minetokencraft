@@ -8,8 +8,8 @@ import { ASSETS_DIR } from '../config.mjs';
 
 const assetsDir = ASSETS_DIR;
 
-const TEXTURES_BASE = 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21.1/assets/minecraft/textures/';
-const FONT_URL = 'https://raw.githubusercontent.com/IdreesInc/Minecraft-Font/main/Minecraft.otf';
+export const TEXTURES_BASE = 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21.1/assets/minecraft/textures/';
+export const FONT_URL = 'https://raw.githubusercontent.com/IdreesInc/Minecraft-Font/main/Minecraft.otf';
 
 const TEXTURES = [
   ...[
@@ -83,7 +83,7 @@ const TEXTURES = [
 
 // Skins par défaut : des créateurs Minecraft connus (francophones). Le skin est celui du compte Minecraft qui porte ce
 // pseudo. `--skins` en donne une autre liste.
-const DEFAULT_PLAYERS = [
+export const DEFAULT_PLAYERS = [
   'Siphano', 'Frigiel', 'aypierre', 'Fuze_III', 'Bob_Lennon', 'Zelvac', 'Skyyart', 'Squeezie', 'Inoxtag', 'Michou',
   'Gotaga', 'ZeratoR', 'Doigby', 'Locklear', 'Etoiles', 'Ponce', 'Kameto', 'Amixem', 'AntoineDaniel', 'Ninjaxx',
   'Zouloux', 'FuriousJumper', 'SuperFrog', 'Guep', 'MisterV', 'Cyprien', 'TiboInShape', 'Joyca', 'AmineMaTue',

@@ -119,7 +119,10 @@ const THEME_STYLES = {
   nether: { floor: 'blackstoneBricks', corridor: 'netherrack', wall: 'redNetherBricks', lowWall: 'netherBricks', pillar: 'blackstone', lamp: 'glowstone', rug: 'magma', chair: 'crimson_planks', light: '#ff5a26' },
   end: { floor: 'endStoneBricks', corridor: 'endStone', wall: 'purpur', lowWall: 'obsidian', pillar: 'purpurPillar', lamp: 'cryingObsidian', rug: 'purpleWool', chair: 'purpur_block', light: '#c27bff' },
 };
-const ROOM_LIGHT = { intensity: 2.2, distance: 9, decay: 1.4 };
+// Lampe de chaque pièce : assez forte pour que la pièce reste lisible au crépuscule, sous la pluie, la nuit.
+const ROOM_LIGHT = { intensity: 3, distance: 12, decay: 1.2, height: 2.6 };
+// Lueur d'un portail allumé : violette pour le Nether, bleu-vert pour l'End.
+const PORTAL_LIGHT = { nether: '#b45cff', end: '#4dffd2', intensity: 3.2, distance: 9, decay: 1.2 };
 // Lumière d'ambiance au-dessus d'une zone Nether ou End, pour la teinter tout entière.
 const ZONE_LIGHT = { height: 8, intensity: 2.4, decay: 0.7, reach: 1.3 };
 
@@ -146,8 +149,9 @@ const PLANTS = {
 const WIND_SETTINGS = { plant: { sway: 0.22, anchor: 0 }, leaves: { sway: 0.05, anchor: -0.5 } };
 const WINDY_PLANTS = new Set(['grass', 'grassAutumn', 'poppy', 'dandelion', 'cornflower', 'daisy', 'allium', 'azureBluet', 'blueOrchid', 'pinkTulip', 'crimsonRoots', 'netherSprouts', 'fern', 'berryBush']);
 // Les lampes des pièces éclairent davantage la nuit.
-const NIGHT_LIGHT_BOOST = 1.8;
-const LIGHTS_ON_AT_NIGHT = 0.25;
+// Les lampes s'allument dès que la pénombre dépasse ce seuil, et éclairent de plus en plus fort jusqu'à la nuit.
+const LIGHTS_ON_GLOOM = 0.12;
+const LIGHT_GAIN = { base: 0.6, gloom: 1.7 };
 // Coût affiché en blocs d'émeraude, sur une échelle logarithmique : 1 $, 3 $, 7 $, 15 $… jusqu'à 8 blocs.
 const EMERALD_LEVELS = 8;
 // Toiles d'araignée selon le remplissage du contexte.
@@ -179,7 +183,7 @@ function material(texture, { cutout = false, glow = false, wind = null, haze = f
     const options = cutout ? { alphaTest: 0.5, side: THREE.DoubleSide } : {};
     if (haze) options.color = HAZE;
     // Les blocs lumineux (lanternes, fourneau allumé) brillent même à l'ombre.
-    if (glow) Object.assign(options, { emissive: 0xffffff, emissiveIntensity: 0.85 });
+    if (glow) Object.assign(options, { emissive: 0xffffff, emissiveIntensity: 1 });
     const mat = new THREE.MeshLambertMaterial(options);
     if (wind) addWind(mat, WIND_SETTINGS[wind]);
     const loading = Array.isArray(texture) ? tintedTexture(...texture)
@@ -479,7 +483,7 @@ function furnishRoom(blocks, group, room, style, roomObjects) {
     if (villager.block) blocks.set(villager.block, x0 + villager.slot.block[0], 0, z0 + villager.slot.block[1]);
   }
   const light = new THREE.PointLight(style.light, ROOM_LIGHT.intensity, ROOM_LIGHT.distance, ROOM_LIGHT.decay);
-  light.position.set(x0 + width / 2, 2.2, z0 + 1.5);
+  light.position.set(x0 + width / 2, ROOM_LIGHT.height, z0 + ROOM_DEPTH / 2);
   group.add(light);
   light.userData.baseIntensity = ROOM_LIGHT.intensity;
   const frame = statusFrame(room);
@@ -646,7 +650,18 @@ function buildPortals(blocks, group, wing) {
     netherPortal,
     eyes,
     endPortal,
+    netherLight: portalLight(group, 'nether', x0 + 3, 2.5, netherZ + 1.2),
+    endLight: portalLight(group, 'end', x0 + 3.5, 2.4, endZ + 2.5),
   };
+}
+
+function portalLight(group, kind, x, y, z) {
+  const light = new THREE.PointLight(PORTAL_LIGHT[kind], PORTAL_LIGHT.intensity, PORTAL_LIGHT.distance, PORTAL_LIGHT.decay);
+  light.position.set(x, y, z);
+  light.userData.baseIntensity = PORTAL_LIGHT.intensity;
+  light.userData.active = false;
+  group.add(light);
+  return light;
 }
 
 /**
@@ -738,9 +753,11 @@ export class World {
       const fiveHour = account.usage?.fiveHour?.usedPct ?? 0;
       portal.nether.set(Math.min(NETHER_FRAME.length, Math.floor(fiveHour / 10)));
       portal.netherPortal.visible = fiveHour >= 100;
+      this.lightPortal(portal.netherLight, fiveHour >= 100);
       const sevenDay = account.usage?.sevenDay?.usedPct ?? 0;
       portal.eyes.set(Math.min(END_FRAME.length, Math.floor((sevenDay / 100) * END_FRAME.length)));
       portal.endPortal.visible = sevenDay >= 100;
+      this.lightPortal(portal.endLight, sevenDay >= 100);
       const netherMap = portal.netherPortal.material.map;
       if (netherMap?.userData.frames) netherMap.offset.y = Math.floor(time / 50) % netherMap.userData.frames / netherMap.userData.frames;
       const endMap = portal.endPortal.material.map;
@@ -751,15 +768,27 @@ export class World {
   /**
    * Nuit : les lampes des pièces (et l'ambiance des zones Nether ou End) éclairent plus fort.
    */
-  setNight(nightFactor) {
+  setGloom(gloom) {
+    this.gloom = gloom;
     this.group.traverse((object) => {
-      if (object.isPointLight && object.userData.baseIntensity) {
-        object.intensity = object.userData.baseIntensity * (1 + (NIGHT_LIGHT_BOOST - 1) * nightFactor);
-        // En plein jour, les lampes ne changent presque rien à l'image, mais chaque lumière coûte sur chaque pixel
-        // de l'écran : on ne les allume qu'à partir du crépuscule.
-        object.visible = nightFactor >= LIGHTS_ON_AT_NIGHT;
-      }
+      if (object.isPointLight && object.userData.baseIntensity) this.applyLight(object);
     });
+  }
+
+  /**
+   * En plein soleil, les lampes ne changent presque rien à l'image, mais chaque lumière coûte sur chaque pixel de
+   * l'écran : elles ne s'allument qu'avec la pénombre. Un portail n'éclaire que s'il est ouvert.
+   */
+  lightPortal(light, open) {
+    if (light.userData.active === open) return;
+    light.userData.active = open;
+    this.applyLight(light);
+  }
+
+  applyLight(light) {
+    const gloom = this.gloom ?? 0;
+    light.intensity = light.userData.baseIntensity * (LIGHT_GAIN.base + LIGHT_GAIN.gloom * gloom);
+    light.visible = gloom >= LIGHTS_ON_GLOOM && light.userData.active !== false;
   }
 
   setFurnace(playerId, lit) {
