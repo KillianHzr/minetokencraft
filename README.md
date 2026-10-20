@@ -8,6 +8,7 @@
 Who is working, who is waiting for you, who is done, how full each context is, what it costs, and how much quota is left on each of your accounts. At a glance, on one screen.
 
 [![check](https://github.com/KillianHzr/minetokencraft/actions/workflows/check.yml/badge.svg)](https://github.com/KillianHzr/minetokencraft/actions/workflows/check.yml)
+[![npm](https://img.shields.io/npm/v/minetokencraft?color=0a66c2&logo=npm)](https://www.npmjs.com/package/minetokencraft)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0a66c2.svg)](LICENSE)
 [![Node.js 20+](https://img.shields.io/badge/node-%3E%3D20-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-555)](#requirements)
@@ -107,7 +108,7 @@ Every change is tested on the three systems.
 ## Quick start
 
 ```sh
-npm install -g github:KillianHzr/minetokencraft
+npm install -g minetokencraft
 minetokencraft
 ```
 

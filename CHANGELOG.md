@@ -4,6 +4,12 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-21
+
+### Changed
+
+- Published on npm: `npm install -g minetokencraft`.
+
 ### Removed
 
 - The menu bar app for macOS: too much for what it brought. `minetokencraft menubar off` from 1.2.0 removes an installed one.
@@ -73,7 +79,8 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 - `minetokencraft` command: open, demo, stop, serve, autostart, assets, statusline.
 - A live demo on GitHub Pages.
 
-[Unreleased]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/KillianHzr/minetokencraft/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/KillianHzr/minetokencraft/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/KillianHzr/minetokencraft/releases/tag/v1.0.0
