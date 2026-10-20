@@ -1018,7 +1018,7 @@ body {
 
 
 
-/* --- "Today" screen ----------------------------------------------------------- */
+/* --- Usage screen ------------------------------------------------------------- */
 
 #stats {
   position: fixed;
@@ -1027,159 +1027,296 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.55);
 }
 
+/* Colors as variables: simple mode swaps them for its light ones. */
 .stats__panel {
-  width: min(880px, 94vw);
-  padding: 14px 16px 12px;
-  background: #c6c6c6;
-  color: #3f3f3f;
-  border: 3px solid #000;
-  box-shadow: inset 3px 3px 0 #fff, inset -3px -3px 0 #555;
+  --st-bg: #1b1820;
+  --st-card: rgba(255, 255, 255, 0.05);
+  --st-text: #ffffff;
+  --st-muted: #a8a8a8;
+  --st-line: rgba(255, 255, 255, 0.12);
+  --st-track: rgba(255, 255, 255, 0.08);
+  --st-accent: var(--working);
+  --st-slot-0: var(--account-0);
+  --st-slot-1: var(--account-1);
+  --st-slot-2: var(--account-2);
+  --st-slot-3: var(--account-3);
+  width: min(940px, 94vw);
+  max-height: 94vh;
+  overflow: auto;
+  padding: 18px 22px 14px;
+  color: var(--st-text);
+  background: var(--st-bg);
+  border: 2px solid #2a0a5e;
+  outline: 2px solid #000;
 }
 
 .stats__head {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
 .stats__head h2 {
   flex: 1;
   margin: 0;
-  font-size: 16px;
+  font-size: 20px;
   font-weight: normal;
-}
-
-.stats__clock {
-  width: 24px;
-  height: 24px;
-}
-
-.stats__head button,
-.stats__tabs button {
-  padding: 4px 9px;
-  font: inherit;
-  font-size: 11px;
-  color: #fff;
   text-shadow: var(--shadow);
-  background: #6f6f6f;
-  border: 2px solid #000;
-  box-shadow: inset 2px 2px 0 #a8a8a8, inset -2px -2px 0 #4a4a4a;
+}
+
+.stats__toggle {
+  display: inline-flex;
+  padding: 2px;
+  background: var(--st-card);
+  border: 1px solid var(--st-line);
+}
+
+.stats__toggle button,
+.stats__close {
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--st-muted);
+  background: none;
+  border: 0;
   cursor: pointer;
 }
 
-.stats__tabs button.is-active {
-  background: #7d86c4;
+.stats__toggle button.is-active {
+  color: #000;
+  background: var(--st-accent);
 }
 
-.stats__accounts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 10px;
+.stats__close {
+  color: var(--st-text);
 }
 
-.stats__account .badge {
-  margin-bottom: 5px;
-}
-
-/* Inventory slots: an item, a number at the bottom right, a caption below. */
-.slots {
+.stats__summary {
   display: flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 28px;
+  margin-bottom: 14px;
 }
 
-.slot {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  width: 92px;
-  padding: 6px 4px 4px;
-  background: #8b8b8b;
-  box-shadow: inset 2px 2px 0 #373737, inset -2px -2px 0 #fff;
-}
-
-.slot__icon {
-  width: 32px;
-  height: 32px;
-}
-
-.slot__count {
-  margin-top: -6px;
-  color: #fff;
-  font-size: 14px;
+.stats__headline b {
+  display: block;
+  font-size: 36px;
+  line-height: 1;
+  font-weight: normal;
   text-shadow: var(--shadow);
 }
 
-.slot__label {
-  font-size: 10px;
-  color: #2a2a2a;
+.stats__headline span {
+  margin-right: 10px;
+  color: var(--st-muted);
 }
 
-.stats__tabs {
+.stats__headline em {
+  font-style: normal;
+  color: var(--st-accent);
+}
+
+.stats__figures {
   display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 26px;
+  margin: 0;
 }
 
-/* Histogram: a column of blocks per account and per hour. */
-.chart {
+.stats__figures dt {
+  font-size: 11px;
+  color: var(--st-muted);
+}
+
+.stats__figures dd {
+  margin: 2px 0 0;
+  font-size: 18px;
+}
+
+.stats__shares {
   display: grid;
-  grid-template-columns: repeat(24, 1fr);
-  gap: 3px;
-  height: 200px;
-  padding: 6px 6px 18px;
-  background: #8b8b8b;
-  box-shadow: inset 2px 2px 0 #373737, inset -2px -2px 0 #fff;
+  gap: 6px;
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  list-style: none;
+  background: var(--st-card);
 }
 
-.hour {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+.stats__share {
+  display: grid;
+  grid-template-columns: minmax(90px, 140px) 1fr 80px minmax(130px, 180px);
+  align-items: center;
+  gap: 12px;
 }
 
-.hour__bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 1px;
+.stats__share .badge {
+  justify-self: start;
+}
+
+.stats__share b {
+  justify-self: end;
+  font-weight: normal;
+}
+
+.stats__track {
+  height: 10px;
+  background: var(--st-track);
+}
+
+.stats__track .stats__fill {
+  display: block;
   height: 100%;
 }
 
-.bar {
-  flex: 1;
-  min-height: 0;
-  background: var(--block) 0 100% / 12px;
-  image-rendering: pixelated;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+.stats__muted {
+  font-size: 11px;
+  color: var(--st-muted);
 }
 
-.hour--now .hour__bars {
-  outline: 2px solid #ffd23f;
-  outline-offset: 1px;
+.stats__fill--slot-0 { background: var(--st-slot-0); }
+.stats__fill--slot-1 { background: var(--st-slot-1); }
+.stats__fill--slot-2 { background: var(--st-slot-2); }
+.stats__fill--slot-3 { background: var(--st-slot-3); }
+
+/* Stacked chart: gridlines with their value on the left, one column per hour or per day. */
+.stats__chart {
+  position: relative;
+  padding: 8px 0 26px 64px;
 }
 
-.hour--future {
-  opacity: 0.4;
+.stats__plot {
+  position: relative;
+  height: 230px;
+  border-bottom: 1px solid var(--st-muted);
 }
 
-.hour__label {
+.stats__gridline {
   position: absolute;
-  bottom: -16px;
   left: 0;
-  font-size: 10px;
-  color: #2a2a2a;
+  right: 0;
+  border-top: 1px dashed var(--st-line);
+}
+
+.stats__gridline span {
+  position: absolute;
+  right: calc(100% + 8px);
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: var(--st-muted);
+  white-space: nowrap;
+}
+
+.stats__columns {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+}
+
+.stats__chart--week .stats__columns {
+  gap: 18px;
+  padding: 0 10px;
+}
+
+.stats__column {
+  position: relative;
+  height: 100%;
+  cursor: default;
+}
+
+.stats__stack {
+  display: flex;
+  flex-direction: column-reverse;
+  height: 100%;
+}
+
+.stats__segment {
+  flex: none;
+  width: 100%;
+}
+
+.stats__column:hover .stats__stack {
+  filter: brightness(1.3);
+  background: var(--st-track);
+}
+
+.stats__column--future {
+  opacity: 0.35;
+}
+
+.stats__label {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--st-muted);
+  white-space: nowrap;
+}
+
+.stats__column--now .stats__label {
+  color: var(--st-accent);
+}
+
+.stats__column--now::after {
+  content: '';
+  position: absolute;
+  top: calc(100% + 1px);
+  left: 50%;
+  width: 6px;
+  height: 3px;
+  transform: translateX(-50%);
+  background: var(--st-accent);
+}
+
+.stats__tip {
+  position: absolute;
+  top: 0;
+  left: 64px;
+  min-width: 170px;
+  pointer-events: none;
+}
+
+.stats__tip div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stats__tip b {
+  margin-left: auto;
+  font-weight: normal;
+}
+
+.stats__tip-total {
+  margin-top: 3px;
+  padding-top: 3px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stats__dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
 }
 
 .stats__note,
 .stats__empty {
-  margin: 8px 0 0;
-  font-size: 10px;
-  color: #444;
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: var(--st-muted);
+}
+
+.stats__empty {
+  padding: 30px 0;
+  text-align: center;
 }
 
 /* --- sky, weather veil, lightning ----------------------------------------------- */

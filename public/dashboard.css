@@ -812,9 +812,7 @@ body.simple .toast {
 }
 
 body.simple .toast__icon,
-body.simple .history__icon,
-body.simple .stats__clock,
-body.simple .slot__icon {
+body.simple .history__icon {
   display: none;
 }
 
@@ -833,8 +831,7 @@ body.simple #stats {
   background: rgb(0 0 0 / 0.7);
 }
 
-body.simple .history__panel,
-body.simple .stats__panel {
+body.simple .history__panel {
   color: var(--ui-text);
   background: var(--ui-surface);
   border: 0;
@@ -846,12 +843,7 @@ body.simple .history__panel {
   padding: 8px 8px 16px;
 }
 
-body.simple .stats__panel {
-  padding: 24px 32px;
-}
-
-body.simple .history__title,
-body.simple .stats__head h2 {
+body.simple .history__title {
   font-size: 24px;
   line-height: 32px;
   font-weight: 800;
@@ -863,9 +855,7 @@ body.simple .history__sub {
   color: var(--ui-secondary);
 }
 
-body.simple .history__head button,
-body.simple .stats__head button,
-body.simple .stats__tabs button {
+body.simple .history__head button {
   padding: 6px 16px;
   font: 600 12px/16px var(--ui-font);
   color: var(--ui-text);
@@ -899,61 +889,119 @@ body.simple .history__meta {
   color: var(--ui-muted);
 }
 
-body.simple .stats__tabs {
-  display: inline-grid;
-  grid-auto-flow: column;
-  gap: 10px;
+body.simple .stats__panel {
+  --st-bg: var(--ui-surface);
+  --st-card: var(--ui-subtle);
+  --st-text: var(--ui-text);
+  --st-muted: var(--ui-muted);
+  --st-line: var(--ui-border-light);
+  --st-track: var(--ui-track);
+  --st-accent: var(--ui-primary);
+  --st-slot-0: var(--ui-account-0);
+  --st-slot-1: var(--ui-account-1);
+  --st-slot-2: var(--ui-account-2);
+  --st-slot-3: var(--ui-account-3);
+  padding: 24px 32px;
+  font-family: var(--ui-font);
+  border: 0;
+  outline: 0;
+  border-radius: 24px;
+  box-shadow: var(--ui-shadow-xl);
+}
+
+body.simple .stats__head h2 {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 800;
+  color: #171717;
+  text-shadow: none;
+}
+
+body.simple .stats__toggle {
   padding: 4px;
   background: var(--ui-border-light);
+  border: 0;
   border-radius: 12px;
 }
 
-body.simple .stats__tabs button {
-  border: 0;
+body.simple .stats__toggle button {
+  font: 500 12px/16px var(--ui-font);
   border-radius: 8px;
-  background: transparent;
-  color: var(--ui-muted);
-  font-weight: 400;
 }
 
-body.simple .stats__tabs button.is-active {
-  color: var(--ui-text);
+body.simple .stats__toggle button.is-active {
   font-weight: 600;
+  color: var(--ui-text);
   background: var(--ui-surface);
   box-shadow: var(--ui-shadow-md);
 }
 
-body.simple .slot,
-body.simple .chart {
-  background: var(--ui-surface);
-  border: 1px solid var(--ui-border);
-  border-radius: 12px;
-  box-shadow: none;
+body.simple .stats__headline b {
+  font-size: 40px;
+  font-weight: 800;
+  color: #171717;
+  text-shadow: none;
 }
 
-body.simple .slot__count {
-  font-size: 18px;
+body.simple .stats__headline em {
+  font-weight: 600;
+  color: var(--ui-yellow-text);
+}
+
+body.simple .stats__figures dd {
   font-weight: 700;
   color: var(--ui-title);
+}
+
+body.simple .stats__shares {
+  border-radius: 12px;
+}
+
+body.simple .stats__share b {
+  font-weight: 700;
+}
+
+/* Account badges in the light palette, like the cards of simple mode. */
+body.simple .stats__share .badge {
+  padding: 4px 6px;
+  font: 600 10px/12px var(--ui-font);
+  text-transform: uppercase;
+  color: #fff;
   text-shadow: none;
+  border-radius: 6px;
 }
 
-body.simple .slot__label,
-body.simple .hour__label,
-body.simple .stats__note {
-  color: var(--ui-muted);
+body.simple .stats__share .badge--slot-0 { background: var(--ui-account-0); }
+body.simple .stats__share .badge--slot-1 { background: var(--ui-account-1); }
+body.simple .stats__share .badge--slot-2 { background: var(--ui-account-2); }
+body.simple .stats__share .badge--slot-3 { background: var(--ui-account-3); }
+
+body.simple .stats__track,
+body.simple .stats__track .stats__fill {
+  border-radius: 9999px;
+}
+
+body.simple .stats__segment {
+  border-radius: 2px 2px 0 0;
+}
+
+body.simple .stats__tip {
+  color: var(--ui-text);
   text-shadow: none;
+  background: var(--ui-surface);
+  border: 0;
+  border-radius: 12px;
+  box-shadow: var(--ui-shadow-xl), inset 0 0 0 1px var(--ui-border);
 }
 
-body.simple .bar {
-  background: var(--ui-account-0);
-  border-radius: 2px;
-  box-shadow: none;
+body.simple .stats__tip .mc-tooltip__title {
+  font-weight: 700;
+  color: var(--ui-title);
 }
 
-body.simple .bar--slot-1 { background: var(--ui-account-1); }
-body.simple .bar--slot-2 { background: var(--ui-account-2); }
-body.simple .bar--slot-3 { background: var(--ui-account-3); }
+body.simple .stats__tip-total {
+  border-top-color: var(--ui-border-light);
+}
 
 body.simple #settings {
   background: rgb(0 0 0 / 0.7);

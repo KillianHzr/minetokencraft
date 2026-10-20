@@ -133,20 +133,31 @@ const SLEEPERS = [
   ['claude', { en: 'Menu bar app', fr: 'Appli de barre de menus' }, 'menubar-app'],
 ];
 
-// Test day: a busy morning at work, an evening on the personal side.
+// Test week: busy mornings at work, evenings on the personal side, a quiet weekend.
 function demoStats(now) {
-  const currentHour = new Date(now).getHours();
-  const curve = (peak, height) => Array.from({ length: 24 }, (_, hour) => {
-    if (hour > currentHour) return { tokens: 0, cost: 0 };
+  const DAY = 24 * HOUR;
+  const days = Array.from({ length: 7 }, (_, index) => new Date(now - (6 - index) * DAY));
+  const curve = (date, peak, height, today) => Array.from({ length: 24 }, (_, hour) => {
+    if (today && hour > new Date(now).getHours()) return { tokens: 0, cost: 0 };
     const tokens = Math.max(0, Math.round(height * Math.exp(-((hour - peak) ** 2) / 8)));
     return { tokens, cost: tokens * 0.0000004 };
   });
   const day = (hours, sessions, agents) => ({
-    hours, sessions, agents,
+    hours, sessions, agents, unpriced: 0,
     tokens: hours.reduce((sum, hour) => sum + hour.tokens, 0),
     cost: hours.reduce((sum, hour) => sum + hour.cost, 0),
   });
-  return { day: 'demo', accounts: { 'claude-work': day(curve(10, 90e6), 3, 6), claude: day(curve(Math.min(currentHour, 15), 140e6), 4, 9) } };
+  const weekend = (date) => date.getDay() === 0 || date.getDay() === 6;
+  const series = (peak, height, sessions, agents, quietWeekend) => days.map((date, index) => {
+    const today = index === days.length - 1;
+    const scale = quietWeekend && weekend(date) ? 0.05 : 0.6 + ((index * 37) % 50) / 100;
+    return day(curve(date, today ? Math.min(new Date(now).getHours(), peak) : peak, height * scale, today), Math.round(sessions * scale), Math.round(agents * scale));
+  });
+  const localDay = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  return {
+    days: days.map(localDay),
+    accounts: { 'claude-work': series(10, 90e6, 4, 7, true), claude: series(20, 140e6, 3, 8, false) },
+  };
 }
 
 function usageFor(theme, now) {

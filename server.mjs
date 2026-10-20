@@ -163,14 +163,16 @@ setInterval(() => {
 
 startWeather();
 startLimits();
-await poll();
 // PID file: `minetokencraft stop` uses it to stop a server started in the background.
 const PID_FILE = path.join(CACHE_DIR, 'server.pid');
 
+// Listen first: the first pass reads whole transcripts, which takes a few seconds with big sessions. The page waits
+// for it on the live stream.
 server.listen(PORT, HOST, async () => {
   await fs.mkdir(CACHE_DIR, { recursive: true });
   await fs.writeFile(PID_FILE, String(process.pid));
   console.log(`MineTokenCraft: http://localhost:${PORT}`);
+  poll();
 });
 
 for (const signal of ['SIGINT', 'SIGTERM']) {

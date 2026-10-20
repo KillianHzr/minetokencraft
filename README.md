@@ -49,7 +49,8 @@ English · [Français](README.fr.md)
 - 🏠 **One wing per account, one room per session.** Every Claude Code session is a player with a real Minecraft skin; every sub-agent is a villager working at its job block in the same room.
 - 🚦 **Status you can read from across the room.** Waiting for you (orange, waving, with a `!` that grows the longer you wait), working (yellow, at the furniture of the tool in use), done (blue, sitting in the armchair), possibly stuck (black smoke).
 - 📊 **Quotas for every account.** 5-hour and weekly usage as Minecraft boss bars at the top of the screen, with a forecast of when the 5-hour quota runs out at this pace. An account that hits its 5-hour limit moves its whole wing to the **Nether**; its weekly limit, to the **End**.
-- 🧠 **Context, tasks and cost per session.** An XP bar for the context window, cobwebs creeping into the room as it fills up, redstone lamps lighting up as the task list advances, emerald blocks piling up with the cost.
+- 🧠 **Context, tasks and cost per session.** An XP bar for the context window, cobwebs creeping into the room as it fills up, redstone lamps lighting up as the task list advances, emerald blocks piling up with the cost. All read from the transcripts: no setup needed.
+- 📈 **Usage over the day and the week.** Cost or tokens hour by hour today, day by day over 7 days, per account, compared with a usual day.
 - 🌦️ **A living world.** Real time of day, real local weather (rain, storms, snow, fog), seasons (spring meadows, autumn leaves, winter snow), wind in the grass, animals by day, monsters at night: and you can fight them with a diamond sword.
 - 🏷️ **Out of the way.** Just a nametag over each player; hover a room for a Minecraft-style tooltip with the details.
 - 🖱️ **Click a room to jump to its terminal** (Terminal, iTerm, JetBrains IDEs on macOS), or open the session history.
@@ -139,12 +140,14 @@ Each one gets its own wing, color and style, in that order. In **Settings** you 
 
 1. **Your Claude Code login**, the same official numbers as `/usage`. The token is read from `<folder>/.credentials.json`, or on macOS from the Keychain, **only after you allow it** for that account in **Settings** (macOS then asks once: pick *Always Allow*). The token is never refreshed or stored by MineTokenCraft, so it never interferes with Claude Code's own login.
 2. **A claude.ai session key**, as a fallback: paste it in **Settings** for an account. It stays in a file only you can read and never goes back to the page.
-3. **The status line**, if you install it (below): it also gives each session's exact context usage.
+3. **The status line**, if you install it (below), as a last resort.
+
+Context and cost do not need any of this: they come from the transcripts. The context is the prompt of the last request over the model's window (200k, or 1M for `[1m]` models). The cost prices every request at Anthropic's list prices, cache writes included (the 1-hour cache Claude Code uses costs twice the input price), counts each request once even when it is copied into a resumed session, and includes sub-agents. It is what the same tokens would cost through the API: a subscription is billed differently.
 
 <details>
 <summary><a id="optional-status-line"></a>Optional: the status line</summary>
 
-Claude Code passes the session's context, cost and quotas to its status line command. MineTokenCraft can keep a copy of it. In `~/.claude/settings.json` (and in each other config folder):
+Claude Code passes the session's context, cost and quotas to its status line command. MineTokenCraft can keep a copy of it, useful for quotas when neither the login nor a session key is available. In `~/.claude/settings.json` (and in each other config folder):
 
 ```json
 {
