@@ -3,10 +3,10 @@ import * as THREE from 'three';
 const projected = new THREE.Vector3();
 const projectedRight = new THREE.Vector3();
 const GAP = 3;
-// Décalages essayés quand une étiquette en chevauche une autre, en fractions de sa largeur / hauteur.
+// Offsets tried when a label overlaps another, as fractions of its width / height.
 const SHIFTS_X = [0, -0.4, 0.4, -0.8, 0.8];
 const SHIFTS_Y = [0, -1, -2];
-// Monter coûte plus cher que glisser : une étiquette doit rester au-dessus de son personnage.
+// Going up costs more than sliding: a label must stay above its character.
 const VERTICAL_COST = 1.6;
 const WIDTH_TOLERANCE_PX = 2;
 
@@ -17,10 +17,10 @@ function overlap(a, b) {
 }
 
 /**
- * Étiquettes HTML accrochées à des points de la scène.
- * - fixes (cartouches des pièces, panneaux des toits) : posées sur leur ancre, sans bouger ;
- * - mobiles : parmi quelques positions proches de leur ancre, la plus proche qui ne chevauche rien.
- * `span` (ancres gauche et droite) borne la largeur d'une étiquette fixe à celle de ce qu'elle titre (une pièce).
+ * HTML labels attached to points in the scene.
+ * - fixed (room plaques, roof signs): placed on their anchor, without moving;
+ * - movable: among a few positions near their anchor, the closest one that overlaps nothing.
+ * `span` (left and right anchors) limits a fixed label's width to that of what it titles (a room).
  */
 export class Labels {
   constructor(container) {
@@ -63,7 +63,7 @@ export class Labels {
     for (const sx of SHIFTS_X) {
       for (const sy of SHIFTS_Y) {
         const left = Math.min(Math.max(x - w / 2 + sx * w, 2), width - w - 2);
-        // Une étiquette ne sort jamais par le haut de l'écran.
+        // A label never leaves through the top of the screen.
         const top = Math.max(bottom - h + sy * (h + GAP), 2);
         list.push({ x0: left, x1: left + w, y0: top, y1: top + h, cost: Math.abs(sx) + Math.abs(sy) * VERTICAL_COST });
       }
@@ -105,7 +105,7 @@ export class Labels {
         }, { option: options[0], covered: Infinity }).option;
       }
       placed.push(box);
-      // On n'écrit dans le DOM que si l'étiquette a bougé : sinon le navigateur recalcule les styles à chaque image.
+      // Only write to the DOM if the label moved: otherwise the browser recalculates styles on every frame.
       const transform = `translate(${Math.round(box.x0)}px, ${Math.round(box.y0)}px)`;
       if (item.transform !== transform) {
         item.transform = transform;

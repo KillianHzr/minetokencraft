@@ -4,52 +4,52 @@ import path from 'node:path';
 const home = os.homedir();
 
 export const PORT = Number(process.env.MINETOKENCRAFT_PORT || process.env.PORT) || 4747;
-// La page montre des extraits de conversation : le serveur n'écoute que la machine locale.
+// The page shows conversation excerpts: the server only listens on the local machine.
 export const HOST = '127.0.0.1';
 
-// Réglages (comptes, clés de session, notifications) et données de travail (historique des quotas).
+// Settings (accounts, session keys, notifications) and working data (quota history).
 export const CONFIG_DIR = path.join(process.env.XDG_CONFIG_HOME || path.join(home, '.config'), 'minetokencraft');
 export const CACHE_DIR = path.join(process.env.XDG_CACHE_HOME || path.join(home, '.cache'), 'minetokencraft');
-// Textures, police et skins téléchargés au premier lancement : chez l'utilisateur, le dossier d'installation pouvant
-// être en lecture seule.
+// Textures, font and skins downloaded on first launch: in the user's folder, since the install folder may be
+// read-only.
 export const ASSETS_DIR = path.join(CACHE_DIR, 'assets');
 
-// Copies du JSON que Claude Code passe à la status line (contexte, quotas), une par session, rangées par compte :
-// `<compte>/<session>.json`. Elles sont déposées par scripts/statusline.mjs.
+// Copies of the JSON that Claude Code passes to the status line (context, quotas), one per session, stored per account:
+// `<account>/<session>.json`. They are dropped by scripts/statusline.mjs.
 export const STATUSLINE_DIR = path.join(CACHE_DIR, 'statusline');
-// Copie d'une session fermée depuis une semaine : on la supprime.
+// Copy of a session closed for a week: we delete it.
 export const STATUSLINE_PRUNE_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const POLL_MS = 1000;
-// Une session qui a fini depuis plus longtemps que ça passe en inactive : plus de pièce, une ligne dans le panneau.
+// A session that finished longer ago than this becomes inactive: no more room, one line in the panel.
 export const DORMANT_AFTER_MS = 60 * 60 * 1000;
-// Un statut busy que rien n'a rafraîchi depuis ce délai est périmé.
+// A busy status that nothing has refreshed since this delay is stale.
 export const BUSY_STALE_MS = 30 * 60 * 1000;
-// Un villageois qui a fini reste ce temps-là auprès de son joueur avant de repartir.
+// A villager that has finished stays this long with its player before leaving.
 export const VILLAGER_LINGER_MS = 15 * 60 * 1000;
-// Un sous-agent qui n'a rien écrit depuis ce délai est considéré comme arrêté.
+// A sub-agent that has written nothing since this delay is considered stopped.
 export const VILLAGER_STALE_MS = 20 * 60 * 1000;
 
-// Octets lus à la fin d'un transcript : assez pour retrouver le titre, le dernier message et l'outil en cours.
+// Bytes read at the end of a transcript: enough to find the title, the last message and the current tool.
 export const SESSION_TAIL_BYTES = 768 * 1024;
 export const VILLAGER_TAIL_BYTES = 128 * 1024;
 
-// Un Claude qui t'attend depuis plus longtemps que ça passe en alerte renforcée.
+// A Claude that has been waiting for you longer than this goes to heightened alert.
 export const WAITING_URGENT_MS = 5 * 60 * 1000;
-// Une session au travail qui n'a rien écrit depuis ce délai est peut-être bloquée.
+// A working session that has written nothing since this delay may be stuck.
 export const STUCK_AFTER_MS = 8 * 60 * 1000;
-// Statut git d'un dossier : recalculé au plus toutes les 10 s (les gros dépôts sont lents).
+// Git status of a directory: recomputed at most every 10 s (big repos are slow).
 export const GIT_REFRESH_MS = 10 * 1000;
 
-// Prévision de quota : tendance calculée sur la dernière heure d'échantillons.
+// Quota forecast: trend computed over the last hour of samples.
 export const FORECAST_WINDOW_MS = 60 * 60 * 1000;
 export const USAGE_SAMPLE_MS = 60 * 1000;
 
-// Météo réelle (Open-Meteo, sans clé) : la ville réglée, sinon celle du fuseau horaire de la machine.
+// Real weather (Open-Meteo, no key): the configured city, otherwise the one of the machine's time zone.
 export const WEATHER_REFRESH_MS = 10 * 60 * 1000;
-// Comptes : les dossiers de config Claude Code sont recherchés à nouveau toutes les minutes.
+// Accounts: the Claude Code config folders are searched again every minute.
 export const ACCOUNTS_REFRESH_MS = 60 * 1000;
-// Quotas lus auprès d'Anthropic : toutes les 2 minutes ; après un refus pour excès de requêtes, on espace.
+// Quotas read from Anthropic: every 2 minutes; after a rate-limit refusal, we back off.
 export const LIMITS_REFRESH_MS = 2 * 60 * 1000;
 export const LIMITS_BACKOFF_MS = 5 * 60 * 1000;
 export const LIMITS_BACKOFF_MAX_MS = 60 * 60 * 1000;

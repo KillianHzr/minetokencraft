@@ -1,7 +1,7 @@
-// Démo en ligne (GitHub Pages) : la page seule, sans serveur, avec des sessions factices. Ses ressources viennent de
-// sources publiques qui autorisent leur chargement depuis un autre site : textures et police sur GitHub, skins via
-// minotar.net, three.js via jsDelivr. Aucun fichier de Mojang n'est copié ici.
-// Usage : node scripts/build-pages.mjs [dossier de sortie, _site par défaut]
+// Online demo (GitHub Pages): the page alone, without a server, with fake sessions. Its resources come from
+// public sources that allow loading from another site: textures and font on GitHub, skins via
+// minotar.net, three.js via jsDelivr. No Mojang file is copied here.
+// Usage: node scripts/build-pages.mjs [output folder, _site by default]
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,6 +30,6 @@ await fs.writeFile(styleFile, (await fs.readFile(styleFile, 'utf8')).replace("ur
 
 const skins = JSON.parse(await fs.readFile(path.join(root, 'scripts', 'demo-skins.json'), 'utf8'));
 await fs.writeFile(path.join(out, 'skins.json'), JSON.stringify(skins.map((skin) => ({ ...skin, url: SKIN_URL(skin.name) }))));
-// GitHub Pages ne doit pas passer la page dans Jekyll.
+// GitHub Pages must not run the page through Jekyll.
 await fs.writeFile(path.join(out, '.nojekyll'), '');
-console.log(`Démo en ligne prête dans ${path.relative(root, out)}/ (three.js ${three})`);
+console.log(`Online demo ready in ${path.relative(root, out)}/ (three.js ${three})`);

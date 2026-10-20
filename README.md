@@ -17,13 +17,15 @@ Who is working, who is waiting for you, who is done, how full each context is, w
 
 **[▶ Try the live demo](https://killianhzr.github.io/minetokencraft/)**, with fake sessions, right in your browser.
 
+English · [Français](README.fr.md)
+
 <img src="docs/screenshots/village.jpg" alt="The village: one wing per Claude account, one room per session, the landscape around" width="100%">
 
 </div>
 
 > [!NOTE]
 > Everything runs on your machine. The server only listens on `127.0.0.1`, and nothing about your sessions leaves it.
-> The interface is in French for now.
+> The interface speaks English and French: it follows your browser, and the toolbar switches it.
 
 ## Contents
 
@@ -123,14 +125,14 @@ An account is a Claude Code config folder. MineTokenCraft finds them without any
 - `~/.claude` (the default one) and `~/.config/claude`
 - every `~/.claude-*` and `~/.claude_*` folder, the usual way to run several accounts
 - the folders listed in `CLAUDE_CONFIG_DIR`
-- any folder you add in **Réglages** (settings)
+- any folder you add in **Settings**
 
-Each one gets its own wing, color and style, in that order. In **Réglages** you can rename an account, hide it, or add a folder.
+Each one gets its own wing, color and style, in that order. In **Settings** you can rename an account, hide it, or add a folder.
 
 ### Where quotas come from
 
-1. **Your Claude Code login**, the same official numbers as `/usage`. The token is read from `<folder>/.credentials.json`, or on macOS from the Keychain, **only after you allow it** for that account in **Réglages** (macOS then asks once: pick *Always Allow*). The token is never refreshed or stored by MineTokenCraft, so it never interferes with Claude Code's own login.
-2. **A claude.ai session key**, as a fallback: paste it in **Réglages** for an account. It stays in a file only you can read and never goes back to the page.
+1. **Your Claude Code login**, the same official numbers as `/usage`. The token is read from `<folder>/.credentials.json`, or on macOS from the Keychain, **only after you allow it** for that account in **Settings** (macOS then asks once: pick *Always Allow*). The token is never refreshed or stored by MineTokenCraft, so it never interferes with Claude Code's own login.
+2. **A claude.ai session key**, as a fallback: paste it in **Settings** for an account. It stays in a file only you can read and never goes back to the page.
 3. **The status line**, if you install it (below): it also gives each session's exact context usage.
 
 <details>
@@ -175,18 +177,19 @@ Click a room or a card to bring its terminal to the front. The book icon opens t
 
 ## Simple mode
 
-The **Mode simple** switch replaces the village with a light dashboard: quotas per account, then *À toi de jouer* (waiting for you), *En cours* (working), *Terminé* (done), and the idle sessions. It shrinks itself to fit the screen without scrolling. The choice is remembered.
+The **Simple mode** switch replaces the village with a light dashboard: quotas per account, then *Your turn*, *In progress*, *Done*, and the idle sessions. It shrinks itself to fit the screen without scrolling. The choice is remembered.
 
 ## Configuration
 
-Everything is set from the page (**Réglages**). Files and environment variables, for reference:
+Everything is set from the page (**Settings**). Files and environment variables, for reference:
 
 | | Default |
 | --- | --- |
-| Settings (accounts, session keys, city) | `~/.config/minetokencraft/settings.json` (`XDG_CONFIG_HOME`) |
+| Settings (accounts, session keys, city, language) | `~/.config/minetokencraft/settings.json` (`XDG_CONFIG_HOME`) |
 | Cache (status line copies, quota history, server log) | `~/.cache/minetokencraft/` (`XDG_CACHE_HOME`) |
 | Port | `4747` (`MINETOKENCRAFT_PORT`) |
-| Weather location | The city of your time zone, or the one set in **Réglages** |
+| Weather location | The city of your time zone, or the one set in **Settings** |
+| Language | Your browser's, or the one picked in the toolbar; notifications and the command line follow it |
 | Skins | A list of well-known Minecraft creators; `minetokencraft assets --skins name1,name2` for others |
 
 ## Privacy and security
@@ -217,14 +220,14 @@ The page is meant to stay open all day:
 <details>
 <summary><b>No quotas show up for an account</b></summary>
 
-Open **Réglages**. If the account's login is in the macOS Keychain, click **Autoriser la lecture** and choose *Always Allow* in the macOS dialog. Otherwise paste a claude.ai session key, or install the [status line](#optional-status-line).
+Open **Settings**. If the account's login is in the macOS Keychain, click **Allow access** and choose *Always Allow* in the macOS dialog. Otherwise paste a claude.ai session key, or install the [status line](#optional-status-line).
 
 </details>
 
 <details>
 <summary><b>macOS asks for my password or for Keychain access</b></summary>
 
-That is the Keychain prompt for reading Claude Code's login, which only happens after you allowed it in **Réglages**. Choose *Always Allow* so it does not come back. Click **Ne plus lire** to stop it.
+That is the Keychain prompt for reading Claude Code's login, which only happens after you allowed it in **Settings**. Choose *Always Allow* so it does not come back. Click **Stop reading** to stop it.
 
 </details>
 
@@ -255,11 +258,13 @@ Issues and pull requests are welcome.
 
 ```sh
 npm install
-npm run check   # syntax of every file, server modules, a few rules
+npm run check   # syntax of every file, server modules, translations, a few rules
 minetokencraft serve
 ```
 
 Then open <http://localhost:4747/demo> to see every state without real sessions. No build step: the page is plain ES modules and [three.js](https://threejs.org).
+
+The interface is translated in `public/js/locales` (page) and `lib/locales` (notifications, command line). English is the reference: a new string goes into every language, and `npm run check` fails when keys or placeholders differ.
 
 ## Disclaimer
 

@@ -1,13 +1,13 @@
 import { TEXTURE_ROOT } from './textures.js';
-import { escapeHtml, formatCost, formatTokens, levelClass, tasksText, truncate } from './format.js';
+import { escapeHtml, formatCost, formatPct, formatTokens, levelClass, tasksText, truncate } from './format.js';
 
-// Petits morceaux d'interface partagés par les panneaux des pièces, le panneau de droite et le mode simple.
+// Small pieces of interface shared by the room tooltip, the side panel and simple mode.
 
 const ITEMS = `${TEXTURE_ROOT}item/`;
 const MAX_PIPS = 12;
 
 /**
- * Avancement des tâches : une case par tâche (finie, en cours, à faire). Au-delà de 12 tâches, une case en vaut plusieurs.
+ * Task progress: one pip per task (done, current, to do). Past 12 tasks, one pip stands for several.
  */
 export function taskPips(tasks) {
   if (!tasks?.total) return '';
@@ -28,11 +28,11 @@ export function tasksLine(tasks, max = 60) {
 }
 
 /**
- * Contexte en barre d'expérience Minecraft : segmentée, de la couleur de son niveau (bleu, jaune, orange).
+ * Context as a Minecraft experience bar: segmented, in the color of its level (blue, yellow, orange).
  */
 export function xpBar(context) {
   if (context?.pct == null) return context?.tokens ? `<span class="xp xp--unknown">ctx ${formatTokens(context.tokens)}</span>` : '';
-  return `<span class="xp ${levelClass(context.pct)}"><span class="xp__bar"><i style="width:${Math.min(100, context.pct)}%"></i></span><b>${context.pct} %</b></span>`;
+  return `<span class="xp ${levelClass(context.pct)}"><span class="xp__bar"><i style="width:${Math.min(100, context.pct)}%"></i></span><b>${formatPct(context.pct)}</b></span>`;
 }
 
 export function emeraldCost(cost) {

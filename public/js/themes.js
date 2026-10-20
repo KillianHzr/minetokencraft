@@ -1,13 +1,14 @@
 import { clockTime } from './format.js';
+import { t } from './i18n.js';
 
-// Un compte à court de quota voit toute son aile changer de dimension : le Nether quand la fenêtre de 5 h
-// est épuisée, l'End quand c'est la semaine (plus grave, elle l'emporte).
+// An account out of quota sees its whole wing change dimension: the Nether when the 5-hour window is spent, the End
+// when the week is (worse, it wins).
 const LIMIT_PCT = 100;
 
 export const THEMES = {
   normal: { label: null },
-  nether: { label: 'Nether', reason: 'quota 5 h épuisé', quota: 'fiveHour', arrival: 'descend dans le Nether' },
-  end: { label: 'End', reason: 'quota de la semaine épuisé', quota: 'sevenDay', arrival: 'part dans l\'End' },
+  nether: { label: 'Nether', reason: 'theme.nether.reason', quota: 'fiveHour' },
+  end: { label: 'End', reason: 'theme.end.reason', quota: 'sevenDay' },
 };
 
 export function accountTheme(usage) {
@@ -17,11 +18,11 @@ export function accountTheme(usage) {
 }
 
 /**
- * Explication courte du thème d'une aile, avec l'heure à laquelle le quota revient.
+ * Short explanation of a wing's theme, with the time its quota comes back.
  */
 export function themeNotice(theme, usage) {
   const { reason, quota } = THEMES[theme];
   if (!reason) return null;
   const resetsAt = usage?.[quota]?.resetsAt;
-  return resetsAt ? `${reason} · retour ${clockTime(resetsAt)}` : reason;
+  return resetsAt ? t('theme.back', { reason: t(reason), time: clockTime(resetsAt) }) : t(reason);
 }

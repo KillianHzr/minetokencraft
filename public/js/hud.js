@@ -1,4 +1,5 @@
 import { skinFace, TEXTURE_ROOT } from './textures.js';
+import { t } from './i18n.js';
 import { accountTheme, THEMES } from './themes.js';
 import {
   ago,
@@ -7,11 +8,12 @@ import {
   forecastText,
   gitText,
   isUrgent,
+  formatPct,
   levelClass,
   playerActivity,
   slotClass,
   STATUS_ICONS,
-  STATUS_TITLES,
+  statusTitle,
   toolText,
   truncate,
 } from './format.js';
@@ -21,7 +23,7 @@ const HUD_SPRITES = `${TEXTURE_ROOT}gui/sprites/hud/`;
 const STATUS_ORDER = ['waiting', 'working', 'done', 'sleeping'];
 const CHAT_LINES = 7;
 const CHAT_FADE_MS = 45000;
-// Paliers de compactage du panneau quand tout ne tient pas en hauteur.
+// Panel compaction steps, used when everything does not fit in its height.
 const DENSITIES = ['', 'compact', 'tiny', 'micro', 'nano'];
 
 const faces = new Map();
@@ -42,7 +44,7 @@ function badge(player) {
 }
 
 /**
- * Jauge Minecraft : 10 icônes pour ce qui reste du quota (cœurs pour 5 h, cuisses pour 7 j).
+ * Minecraft gauge: 10 icons for what is left of the quota (hearts for 5 hours, drumsticks for 7 days).
  */
 function quotaIcons(remainingPct, kind) {
   const [full, half, empty] = kind === 'heart'
@@ -53,15 +55,15 @@ function quotaIcons(remainingPct, kind) {
     const layers = remainingPct >= (i + 1) * 10 ? full : remainingPct >= i * 10 + 5 ? half : empty;
     icons.push(`<span class="icon">${layers.split('|').map((file) => `<img src="${HUD_SPRITES}${file}" alt="">`).join('')}</span>`);
   }
-  // Minecraft remplit la barre de faim de droite à gauche.
+  // Minecraft fills the hunger bar from right to left.
   return `<span class="icons icons--${kind}">${(kind === 'heart' ? icons : icons.reverse()).join('')}</span>`;
 }
 
 export function quotaRow(label, quota, kind, forecast) {
-  if (!quota) return `<div class="quota quota--missing"><span class="quota__label">${label}</span><span class="quota__text muted">pas de quota sur ce compte</span></div>`;
+  if (!quota) return `<div class="quota quota--missing"><span class="quota__label">${label}</span><span class="quota__text muted">${t('quota.none')}</span></div>`;
   const remaining = Math.max(0, 100 - quota.usedPct);
   const reset = quota.resetsAt ? ` · ↻ ${clockTime(quota.resetsAt)}` : '';
-  const used = quota.usedPct >= 100 ? 'épuisé' : `${Math.round(quota.usedPct)} %`;
+  const used = quota.usedPct >= 100 ? t('quota.spent') : formatPct(quota.usedPct);
   const trend = forecastText(forecast);
   return `<div class="quota ${levelClass(quota.usedPct)}">
     <span class="quota__label">${label}</span>${quotaIcons(remaining, kind)}
@@ -70,9 +72,9 @@ export function quotaRow(label, quota, kind, forecast) {
 }
 
 export function accountQuotas(account) {
-  if (!account.usage) return '<span class="quota__text muted">pas encore de données</span>';
-  return quotaRow('5 h', account.usage.fiveHour, 'heart', account.forecast?.fiveHour)
-    + quotaRow('7 j', account.usage.sevenDay, 'food', account.forecast?.sevenDay);
+  if (!account.usage) return `<span class="quota__text muted">${t('quota.noData')}</span>`;
+  return quotaRow(t('quota.fiveHourShort'), account.usage.fiveHour, 'heart', account.forecast?.fiveHour)
+    + quotaRow(t('quota.sevenDayShort'), account.usage.sevenDay, 'food', account.forecast?.sevenDay);
 }
 
 function usageSection(accounts) {
@@ -93,32 +95,32 @@ function villagerList(player) {
     return `<li class="villager villager--${villager.status}"><span class="status-icon">${STATUS_ICONS[villager.status]}</span> ${escapeHtml(truncate(villager.description, 34))}${doing}</li>`;
   });
   const more = player.villagers.length - VILLAGERS_LISTED;
-  if (more > 0) rows.push(`<li class="muted">+ ${more} autre${more > 1 ? 's' : ''}</li>`);
+  if (more > 0) rows.push(`<li class="muted">${t('panel.more', { count: more })}</li>`);
   return `<ul class="card__villagers">${rows.join('')}</ul>`;
 }
 
 function playerCard(player, now) {
   const quote = player.status === 'working' ? player.lastPrompt : player.lastText || player.lastPrompt;
-  const where = [escapeHtml(player.project), escapeHtml(gitText(player.git)), player.kind === 'bg' ? 'tâche de fond' : '']
+  const where = [escapeHtml(player.project), escapeHtml(gitText(player.git)), player.kind === 'bg' ? t('session.background') : '']
     .filter(Boolean).join(' · ');
   const gauges = [xpBar(player.context), emeraldCost(player.costUSD)].filter(Boolean).join(' · ');
   const flags = [isUrgent(player, now) && 'card--urgent', player.stuck && 'card--stuck'].filter(Boolean).join(' ');
-  return `<article class="card card--${player.status} ${flags}" data-player="${escapeHtml(player.id)}" title="Aller au terminal">
+  return `<article class="card card--${player.status} ${flags}" data-player="${escapeHtml(player.id)}" title="${escapeHtml(t('session.goToTerminal'))}">
     ${faceImg(player.skinUrl)}
     <div class="card__body">
       <div class="card__title">${badge(player)} ${escapeHtml(truncate(player.name, 60))}</div>
       <div class="card__status"><span class="status-icon">${player.stuck ? '⚠' : STATUS_ICONS[player.status]}</span> ${escapeHtml(truncate(playerActivity(player, now), 70))}</div>
       ${tasksLine(player.tasks, 50)}
       <div class="card__meta"><span class="card__where">${where}</span>${where && gauges ? ' · ' : ''}<span class="card__gauges">${gauges}</span></div>
-      ${quote ? `<div class="card__quote">« ${escapeHtml(truncate(quote, 160))} »</div>` : ''}
+      ${quote ? `<div class="card__quote">${escapeHtml(t('quote', { text: truncate(quote, 160) }))}</div>` : ''}
       ${villagerList(player)}
     </div>
-    <button class="card__history" type="button" data-history="${escapeHtml(player.id)}" title="Historique">${itemIcon('writable_book')}</button>
+    <button class="card__history" type="button" data-history="${escapeHtml(player.id)}" title="${escapeHtml(t('session.history'))}">${itemIcon('writable_book')}</button>
   </article>`;
 }
 
 function sleeperRow(player, now) {
-  return `<li class="sleeper" data-player="${escapeHtml(player.id)}" title="${escapeHtml(`${player.name} · ${player.project} · clic pour aller au terminal`)}">${faceImg(player.skinUrl, 'face face--small')}
+  return `<li class="sleeper" data-player="${escapeHtml(player.id)}" title="${escapeHtml(`${player.name} · ${player.project} · ${t('session.clickToTerminal')}`)}">${faceImg(player.skinUrl, 'face face--small')}
     <span class="sleeper__name">${badge(player)} ${escapeHtml(truncate(player.name, 34))}</span>
     <span class="sleeper__meta">${escapeHtml(player.project)} · ${ago(player.lastActivityAt, now)}</span></li>`;
 }
@@ -128,7 +130,7 @@ export class Panel {
     this.element = element;
     element.addEventListener('mouseover', (event) => onHover(event.target.closest('[data-player]')?.dataset.player ?? null));
     element.addEventListener('mouseleave', () => onHover(null));
-    // Un clic sur une carte ramène son terminal ; le livre ouvre son historique.
+    // Clicking a card brings its terminal back; the book opens its history.
     element.addEventListener('click', (event) => {
       const history = event.target.closest('[data-history]');
       if (history) return onHistory(history.dataset.history);
@@ -141,14 +143,14 @@ export class Panel {
     const now = Date.now();
     const groups = Object.fromEntries(STATUS_ORDER.map((status) => [status, []]));
     for (const player of state.players) groups[player.status].push(player);
-    const counts = STATUS_ORDER.map((status) => `<span class="count count--${status}" title="${STATUS_TITLES[status]}">${STATUS_ICONS[status]} ${groups[status].length}</span>`).join('');
+    const counts = STATUS_ORDER.map((status) => `<span class="count count--${status}" title="${statusTitle(status)}">${STATUS_ICONS[status]} ${groups[status].length}</span>`).join('');
     const sections = STATUS_ORDER.filter((status) => groups[status].length).map((status) => {
       const list = status === 'sleeping'
         ? `<ul class="sleepers">${groups[status].map((player) => sleeperRow(player, now)).join('')}</ul>`
         : groups[status].map((player) => playerCard(player, now)).join('');
-      return `<section class="group group--${status}"><h2>${STATUS_ICONS[status]} ${STATUS_TITLES[status]} <span>${groups[status].length}</span></h2>${list}</section>`;
+      return `<section class="group group--${status}"><h2>${STATUS_ICONS[status]} ${statusTitle(status)} <span>${groups[status].length}</span></h2>${list}</section>`;
     }).join('');
-    const nobodyWaiting = groups.waiting.length ? '' : '<p class="all-clear">Personne ne t\'attend.</p>';
+    const nobodyWaiting = groups.waiting.length ? '' : `<p class="all-clear">${t('panel.allClear')}</p>`;
     this.element.innerHTML = `
       <header class="panel__head"><h1>MineTokenCraft</h1><div class="counts">${counts}</div></header>
       ${usageSection(state.accounts ?? [])}
@@ -166,7 +168,7 @@ export class Panel {
 }
 
 /**
- * Fil de discussion façon Minecraft, en bas à gauche de la scène.
+ * Minecraft-style chat, at the bottom left of the scene.
  */
 export class Chat {
   constructor(element) {
@@ -184,7 +186,7 @@ export class Chat {
 }
 
 /**
- * Événements à annoncer entre deux photographies du village.
+ * Events to announce between two snapshots of the village.
  */
 export function diffEvents(previous, next) {
   if (!previous) return [];
@@ -195,30 +197,30 @@ export function diffEvents(previous, next) {
   for (const player of next.players) {
     const old = before.get(player.id);
     if (!old) {
-      events.push({ kind: 'join', html: `${who(player)} a rejoint le village (${escapeHtml(player.project)})` });
+      events.push({ kind: 'join', html: t('chat.join', { who: who(player), project: escapeHtml(player.project) }) });
       continue;
     }
     if (player.status !== old.status) {
       if (player.status === 'waiting') {
-        events.push({ kind: 'waiting', html: `${who(player)} t'attend : ${escapeHtml(playerActivity(player))}`, player, alert: true });
+        events.push({ kind: 'waiting', html: t('chat.waiting', { who: who(player), what: escapeHtml(playerActivity(player)) }), player, alert: true });
       } else if (player.status === 'done' && old.status !== 'sleeping') {
-        events.push({ kind: 'done', html: `${who(player)} a fini`, player, chime: true });
+        events.push({ kind: 'done', html: t('chat.done', { who: who(player) }), player, chime: true });
       } else if (player.status === 'working' && old.status !== 'waiting') {
-        events.push({ kind: 'working', html: `${who(player)} se remet au travail` });
+        events.push({ kind: 'working', html: t('chat.working', { who: who(player) }) });
       }
     }
     const oldVillagers = new Map(old.villagers.map((villager) => [villager.id, villager]));
     for (const villager of player.villagers) {
       const was = oldVillagers.get(villager.id);
-      const what = `« ${escapeHtml(truncate(villager.description, 40))} »`;
-      if (!was) events.push({ kind: 'villager', html: `${who(player)} recrute un villageois : ${what}` });
+      const what = escapeHtml(t('quote', { text: truncate(villager.description, 40) }));
+      if (!was) events.push({ kind: 'villager', html: t('chat.villagerJoin', { who: who(player), what }) });
       else if (was.status === 'working' && villager.status === 'done') {
-        events.push({ kind: 'done', html: `Le villageois ${what} de ${who(player)} a fini` });
+        events.push({ kind: 'done', html: t('chat.villagerDone', { who: who(player), what }) });
       }
     }
   }
   for (const player of previous.players) {
-    if (!after.has(player.id)) events.push({ kind: 'leave', html: `${who(player)} a quitté le village` });
+    if (!after.has(player.id)) events.push({ kind: 'leave', html: t('chat.leave', { who: who(player) }) });
   }
   for (const account of next.accounts ?? []) {
     const old = previous.accounts?.find((candidate) => candidate.id === account.id);
@@ -226,8 +228,8 @@ export function diffEvents(previous, next) {
     if (before === now) continue;
     const label = `<b>${escapeHtml(account.label)}</b>`;
     events.push(now === 'normal'
-      ? { kind: 'done', html: `${label} revient dans l'Overworld : son quota est rechargé` }
-      : { kind: `theme-${now}`, html: `${label} ${THEMES[now].arrival} : ${THEMES[now].reason}` });
+      ? { kind: 'done', html: t('chat.overworld', { label }) }
+      : { kind: `theme-${now}`, html: t(`chat.${now}`, { label, reason: escapeHtml(t(THEMES[now].reason)) }) });
   }
   return events;
 }
@@ -235,8 +237,8 @@ export function diffEvents(previous, next) {
 const STORAGE_KEY = 'minetokencraft:alerts';
 
 /**
- * Son de la page (cloche quand on t'attend, petit ding quand un Claude finit) et notifications macOS,
- * envoyées par le serveur même page fermée.
+ * Page sound (a bell when a Claude waits for you, a small ding when one finishes) and macOS notifications, sent by
+ * the server even when the page is closed.
  */
 export class Alerts {
   constructor(soundButton, notifyButton, { demo = false } = {}) {
@@ -248,7 +250,7 @@ export class Alerts {
     try {
       this.settings.sound = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').sound === true;
     } catch {
-      // Stockage indisponible : réglages par défaut.
+      // Storage unavailable: default settings.
     }
     soundButton.addEventListener('click', () => {
       this.settings.sound = !this.settings.sound;
@@ -280,15 +282,15 @@ export class Alerts {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings));
     } catch {
-      // Tant pis, le réglage ne survivra pas au rechargement.
+      // Too bad, the setting will not survive a reload.
     }
     this.refreshButtons();
   }
 
   refreshButtons() {
-    this.soundButton.textContent = `Son : ${this.settings.sound ? 'oui' : 'non'}`;
-    const mac = this.macNotifications == null ? '…' : this.macNotifications ? 'oui' : 'non';
-    this.notifyButton.textContent = `Notifs Mac : ${this.demo ? 'non (test)' : mac}`;
+    this.soundButton.textContent = t('toolbar.sound', { state: t(this.settings.sound ? 'toolbar.on' : 'toolbar.off') });
+    const mac = this.macNotifications == null ? '…' : t(this.macNotifications ? 'toolbar.on' : 'toolbar.off');
+    this.notifyButton.textContent = t('toolbar.notifications', { state: this.demo ? t('toolbar.offDemo') : mac });
   }
 
   play(kind) {
@@ -316,7 +318,7 @@ export class Alerts {
   }
 
   /**
-   * Rappel pour un Claude qui t'attend depuis longtemps : la cloche sonne de nouveau.
+   * Reminder for a Claude that has been waiting for a long time: the bell rings again.
    */
   remind(players) {
     if (players.some((player) => isUrgent(player))) this.play('bell');

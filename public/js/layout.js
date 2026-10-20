@@ -1,38 +1,38 @@
 import { JOB_BLOCKS, professionFor } from './identity.js';
 import { accountTheme } from './themes.js';
 
-// Une grande maison sans toit, vue de trois quarts : une aile par compte, une pièce par session.
-// Chaque rangée de pièces a un mur du fond haut (au nord) et des murets bas côté caméra, puis une allée.
-// x vers la droite, z vers la caméra ; unité : le bloc. Le sol des pièces est en y = 0.
+// A big house without a roof, seen from three-quarters: one wing per account, one room per session.
+// Each row of rooms has a tall back wall (to the north) and low walls on the camera side, then an aisle.
+// x to the right, z toward the camera; unit: the block. The floor of the rooms is at y = 0.
 
 export const CAMERA_YAW = 0.5;
 export const CAMERA_PITCH = 0.62;
 export const ROOM_DEPTH = 5;
-// Deux blocs : assez pour l'intérieur, et l'allée suffit à ce que le mur de la rangée suivante ne cache rien.
+// Two blocks: enough for the interior, and the aisle is wide enough that the next row's wall hides nothing.
 export const BACK_WALL = 2;
 export const MAX_VILLAGERS_SHOWN = 6;
-// Mur du fond, pièce, muret avant, allée : l'allée est assez large pour que le mur du fond de la rangée
-// suivante ne cache pas l'intérieur de celle-ci, et que le panneau posé sur ce mur ne morde pas dessus.
+// Back wall, room, front low wall, aisle: the aisle is wide enough that the back wall of the next row
+// does not hide the interior of this one, and that the sign on this wall does not bite into it.
 const CORRIDOR = 4;
 export const ROW_PITCH = 1 + ROOM_DEPTH + 1 + CORRIDOR;
-// Partie du joueur, puis un bloc de métier tous les deux blocs pour ses villageois.
+// The player's part, then one block of trade every two blocks for its villagers.
 const PLAYER_AREA = 8;
 const VILLAGER_SPACING = 2;
 const HALL = 3;
-// Jardin autour de la maison : derrière pour les arbres, sur les côtés pour les portails des quotas,
-// étroit devant, côté caméra, où il ne ferait que réduire la maison à l'écran.
+// Garden around the house: behind for the trees, on the sides for the quota portals,
+// narrow in front, on the camera side, where it would only shrink the house on screen.
 const MARGIN = { back: 4, left: 8, right: 8, front: 2 };
-// Coin des portails d'une aile, sur le côté de la maison : le portail du Nether (quota 5 h), puis devant lui
-// le cadre du portail de l'End (quota de la semaine).
+// Corner of a wing's portals, on the side of the house: the Nether portal (5 h quota), then in front of it
+// the End portal frame (weekly quota).
 const PORTAL_AREA = 6;
-// Hauteurs à garder dans le cadre : le sol, et têtes + panneaux au-dessus des murs du fond.
+// Heights to keep in frame: the ground, and heads + signs above the back walls.
 const VIEW_BOTTOM = -1;
 const VIEW_TOP = BACK_WALL + 3;
 
 const FACING_CAMERA = 0;
 
-// Postes du joueur, en décalage depuis le coin nord-ouest de l'intérieur de sa pièce. Les meubles forment
-// un comptoir : le joueur se tient derrière, face à la caméra. `block` : case du meuble ; `spot` : où il se tient.
+// Player stations, offset from the north-west corner of the inside of its room. The furniture forms
+// a counter: the player stands behind it, facing the camera. `block`: the furniture's cell; `spot`: where it stands.
 export const STATIONS = {
   library: { spot: [0.95, 1.0], yaw: 0.45 },
   carto: { block: [2, 2], spot: [2.5, 1.05], yaw: FACING_CAMERA },
@@ -42,7 +42,7 @@ export const STATIONS = {
   front: { spot: [3.5, ROOM_DEPTH - 0.55], yaw: 0.35 },
   supervise: { spot: [5.4, 3.4], yaw: 0.5 },
 };
-// Coin avant droit de la partie du joueur : le tas d'émeraudes (coût), puis les toiles d'araignée (contexte).
+// Front right corner of the player's part: the emerald pile (cost), then the cobwebs (context).
 export const EMERALD_SPOTS = [[6, 4], [7, 4], [6, 3], [7, 3]];
 export const COBWEB_SPOTS = [[-1, 0], [-2, 0], [0, 3], [5, 4]];
 export const BOOKSHELF_X = [0, 1];
@@ -54,7 +54,7 @@ export function villagerSlot(index) {
 }
 
 /**
- * Villageois affichés dans la pièce : ceux qui travaillent d'abord, dans la limite de la place.
+ * Villagers shown in the room: the working ones first, within the available space.
  */
 export function shownVillagers(player) {
   const ordered = [...player.villagers].sort((a, b) => (a.status === b.status ? 0 : a.status === 'working' ? -1 : 1));
@@ -64,7 +64,7 @@ export function shownVillagers(player) {
 const roomWidth = (player) => (player ? PLAYER_AREA + VILLAGER_SPACING * shownVillagers(player).length : PLAYER_AREA);
 
 /**
- * Répartit les pièces d'une aile sur `rowCount` rangées de longueurs voisines, dans l'ordre.
+ * Distributes the rooms of a wing over `rowCount` rows of similar lengths, in order.
  */
 function splitIntoRows(rooms, rowCount) {
   const total = rooms.reduce((sum, room) => sum + room.width + 1, 0);
@@ -83,7 +83,7 @@ function splitIntoRows(rooms, rowCount) {
 }
 
 /**
- * Taille à l'écran (en blocs) de la boîte englobante, vue par la caméra.
+ * On-screen size (in blocks) of the bounding box, as seen by the camera.
  */
 function screenSize(bounds) {
   const cy = Math.cos(CAMERA_YAW);
@@ -152,13 +152,13 @@ function place(groups, rowCount) {
     z0: -MARGIN.back,
     z1: depth - 1 + MARGIN.front,
   };
-  // Zone de chaque aile, jardin compris : le thème (Nether, End) la couvre jusqu'au milieu de l'allée voisine.
+  // Area of each wing, garden included: the theme (Nether, End) covers it up to the middle of the neighboring aisle.
   wings.forEach((wing, index) => {
     wing.zone = {
       x0: index === 0 ? bounds.x0 : wing.x0 - Math.ceil(HALL / 2),
       x1: index === wings.length - 1 ? bounds.x1 : wing.x1 + Math.floor(HALL / 2),
     };
-    // Portails de la première aile à gauche de la maison, ceux de la dernière à droite.
+    // Portals of the first wing to the left of the house, those of the last one to the right.
     if (index === 0) wing.portals = { x0: wing.x0 - 1 - PORTAL_AREA };
     else if (index === wings.length - 1) wing.portals = { x0: wing.x1 + 2 };
   });
@@ -166,7 +166,7 @@ function place(groups, rowCount) {
 }
 
 /**
- * Plan de la maison : parmi les nombres de rangées possibles, celui qui affiche les personnages le plus grand.
+ * Plan of the house: among the possible numbers of rows, the one that displays the characters biggest.
  */
 export function computeLayout(players, accounts, viewport) {
   const groups = accounts.map((account) => ({

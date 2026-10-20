@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { itemTexture } from './textures.js';
 
-// Objet tenu en main selon l'outil que Claude est en train d'utiliser.
+// Item held in hand depending on the tool Claude is currently using.
 const TOOL_ITEMS = {
   Bash: 'diamond_pickaxe',
   Edit: 'writable_book',
@@ -63,7 +63,7 @@ function itemSpriteMaterial(name) {
 const itemGeometry = new THREE.PlaneGeometry(1, 1);
 
 /**
- * Objet plat tenu en main, de `size` blocs de côté.
+ * Flat item held in hand, `size` blocks wide.
  */
 export function createItemMesh(size) {
   const mesh = new THREE.Mesh(itemGeometry, itemMaterial('stick'));
@@ -78,7 +78,7 @@ export function setItem(mesh, name) {
 }
 
 /**
- * Icône flottante toujours tournée vers la caméra (au-dessus des villageois).
+ * Floating icon that always faces the camera (above the villagers).
  */
 export function createItemSprite(size) {
   const sprite = new THREE.Sprite(itemSpriteMaterial(DONE_ITEM));

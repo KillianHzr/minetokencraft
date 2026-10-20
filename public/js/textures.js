@@ -18,7 +18,7 @@ export function loadImage(url) {
   if (!imageCache.has(url)) {
     imageCache.set(url, new Promise((resolve, reject) => {
       const image = new Image();
-      // Démo en ligne : les images viennent d'un autre site, qui l'autorise ; sans ça, WebGL les refuserait.
+      // Online demo: the images come from another site, which allows it; without this, WebGL would refuse them.
       image.crossOrigin = 'anonymous';
       image.onload = () => resolve(image);
       image.onerror = () => reject(new Error(`image introuvable : ${url}`));
@@ -33,7 +33,7 @@ export function loadTexture(url) {
     textureCache.set(url, loadImage(url).then((image) => {
       const texture = new THREE.Texture(image);
       texture.needsUpdate = true;
-      // Texture animée de Minecraft (images empilées en hauteur) : on n'affiche que la première.
+      // Animated Minecraft texture (frames stacked vertically): only the first one is shown.
       if (image.height > image.width && image.height % image.width === 0) {
         texture.repeat.set(1, image.width / image.height);
         texture.offset.set(0, 1 - image.width / image.height);
@@ -48,7 +48,7 @@ export const blockTexture = (name) => loadTexture(`${TEXTURE_ROOT}block/${name}.
 export const itemTexture = (name) => loadTexture(`${TEXTURE_ROOT}item/${name}.png`);
 
 /**
- * Texture en niveaux de gris teintée comme Minecraft teinte l'herbe et le feuillage selon le biome.
+ * Grayscale texture tinted the way Minecraft tints grass and foliage according to the biome.
  */
 export function tintedTexture(name, color) {
   const key = `tint:${name}:${color}`;
@@ -62,7 +62,7 @@ export function tintedTexture(name, color) {
       context.globalCompositeOperation = 'multiply';
       context.fillStyle = color;
       context.fillRect(0, 0, canvas.width, canvas.height);
-      // Le multiply remplit aussi les pixels transparents : on remet l'alpha d'origine.
+      // The multiply also fills transparent pixels: restore the original alpha.
       context.globalCompositeOperation = 'destination-in';
       context.drawImage(image, 0, 0);
       return pixelated(new THREE.CanvasTexture(canvas));
@@ -72,7 +72,7 @@ export function tintedTexture(name, color) {
 }
 
 /**
- * Superpose plusieurs calques de même taille (villageois : corps, biome, métier).
+ * Overlays several layers of the same size (villager: body, biome, profession).
  */
 export function layeredTexture(urls) {
   const key = `layers:${urls.join('|')}`;
@@ -90,7 +90,7 @@ export function layeredTexture(urls) {
 }
 
 /**
- * Tête du joueur (visage + calque du chapeau), en data URL pour le panneau.
+ * Player head (face + hat layer), as a data URL for the panel.
  */
 export async function skinFace(url) {
   const key = `face:${url}`;

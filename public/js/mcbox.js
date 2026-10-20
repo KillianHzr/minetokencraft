@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-// Évite que le filtrage au plus proche n'attrape le pixel voisin sur les bords d'une face.
+// Keeps nearest-neighbor filtering from grabbing the neighboring pixel on the edges of a face.
 const UV_INSET = 0.01;
 
 /**
- * Pavé texturé selon le patron des modèles Minecraft, en pixels de texture.
- * Le modèle regarde vers +z : son côté droit est en -x.
- * `from` est le coin minimal, `size` = [largeur x, hauteur y, profondeur z], `uv` le coin du patron dans la texture.
+ * Textured box following the Minecraft model layout, in texture pixels.
+ * The model faces +z: its right side is at -x.
+ * `from` is the minimal corner, `size` = [width x, height y, depth z], `uv` the corner of the layout in the texture.
  */
 export function mcBox({ from, size, uv, tex, inflate = 0, mirror = false }) {
   const [w, h, d] = size;
@@ -22,7 +22,7 @@ export function mcBox({ from, size, uv, tex, inflate = 0, mirror = false }) {
   const rightRect = [u, v + d, d, h];
   const leftRect = [u + d + w, v + d, d, h];
 
-  // Coins vus de l'extérieur : haut gauche, haut droite, bas droite, bas gauche.
+  // Corners seen from the outside: top left, top right, bottom right, bottom left.
   const faces = [
     { normal: [0, 0, 1], corners: [[x0, y1, z1], [x1, y1, z1], [x1, y0, z1], [x0, y0, z1]], rect: [u + d, v + d, w, h] },
     { normal: [0, 0, -1], corners: [[x1, y1, z0], [x0, y1, z0], [x0, y0, z0], [x1, y0, z0]], rect: [u + 2 * d + w, v + d, w, h] },
@@ -62,7 +62,7 @@ export function mcBox({ from, size, uv, tex, inflate = 0, mirror = false }) {
 }
 
 /**
- * Membre articulé : un groupe placé sur son pivot, qui porte ses pavés.
+ * Articulated limb: a group placed on its pivot, carrying its boxes.
  */
 export function limb(parent, pivot, boxes, tex, materials) {
   const group = new THREE.Group();
@@ -77,10 +77,10 @@ export function limb(parent, pivot, boxes, tex, materials) {
 }
 
 /**
- * Fusionne un modèle monté en groupes (un par articulation, avec ses pavés) en un seul maillage animé par os :
- * un appel de dessin par matériau au lieu d'un par pavé. Chaque groupe devient un os placé pareil, que le code
- * d'animation tourne comme avant. `keep` : objets à laisser tels quels (objet tenu en main), rattachés à leur os.
- * Renvoie l'os de chaque groupe.
+ * Merges a model built as groups (one per joint, with its boxes) into a single mesh animated by bones:
+ * one draw call per material instead of one per box. Each group becomes a bone placed the same way, which the
+ * animation code rotates as before. `keep`: objects to leave as they are (held item), attached to their bone.
+ * Returns the bone of each group.
  */
 export function skinModel(model, keep = []) {
   model.updateWorldMatrix(true, true);
@@ -124,7 +124,7 @@ export function skinModel(model, keep = []) {
   mesh.updateWorldMatrix(true, true);
   mesh.bind(new THREE.Skeleton(bones));
   for (const [object, bone] of kept) bone.add(object);
-  // Les membres bougent hors de la boîte calculée au repos : on ne laisse pas la caméra l'écarter à tort.
+  // Limbs move outside the box computed at rest: don't let the camera cull the mesh by mistake.
   mesh.frustumCulled = false;
   mesh.castShadow = true;
   mesh.receiveShadow = true;

@@ -1,11 +1,12 @@
-// Lance le serveur à l'ouverture de session macOS (agent launchd), ou retire ce lancement.
-// Usage : minetokencraft autostart on | off | status (ou node scripts/autostart.mjs …)
+// Starts the server at macOS login (launchd agent), or removes that start.
+// Usage: minetokencraft autostart on | off | status (or node scripts/autostart.mjs …)
 import { execFile } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { translator } from '../lib/i18n.mjs';
 
 const run = promisify(execFile);
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -13,13 +14,13 @@ const LABEL = 'local.minetokencraft';
 const plistFile = path.join(os.homedir(), 'Library', 'LaunchAgents', `${LABEL}.plist`);
 const logFile = path.join(os.homedir(), 'Library', 'Logs', 'minetokencraft.log');
 const domain = `gui/${process.getuid()}`;
-// Après un plantage, launchd attend ce délai avant de relancer : pas de boucle si le port est pris.
+// After a crash, launchd waits this long before starting again: no loop when the port is taken.
 const THROTTLE_S = 10;
 
 const escapeXml = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 function plist() {
-  // Chemin absolu du node qui lance ce script : launchd ne connaît ni nvm ni le PATH du terminal.
+  // Absolute path of the node running this script: launchd knows neither nvm nor the terminal PATH.
   const strings = (values) => values.map((value) => `<string>${escapeXml(value)}</string>`).join('');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -51,7 +52,7 @@ async function loaded() {
 async function off() {
   if (await loaded()) await run('launchctl', ['bootout', `${domain}/${LABEL}`]);
   await fs.rm(plistFile, { force: true });
-  console.log('Démarrage automatique retiré.');
+  console.log((await translator())('cli.autostartOff'));
 }
 
 async function on() {
@@ -59,25 +60,27 @@ async function on() {
   await fs.mkdir(path.dirname(plistFile), { recursive: true });
   await fs.writeFile(plistFile, plist());
   await run('launchctl', ['bootstrap', domain, plistFile]);
-  console.log(`Démarrage automatique installé : ${plistFile}\nJournal : ${logFile}`);
+  console.log((await translator())('cli.autostartOn', { plist: plistFile, log: logFile }));
 }
 
 async function status() {
-  console.log(await loaded() ? `Actif (${plistFile})` : 'Inactif');
+  const t = await translator();
+  console.log(await loaded() ? t('cli.autostartActive', { plist: plistFile }) : t('cli.autostartInactive'));
 }
 
 const ACTIONS = { on, off, status };
 
 /**
- * Démarrage automatique à l'ouverture de session : `on`, `off` ou `status`. macOS seulement (launchd).
+ * Start at login: `on`, `off` or `status`. macOS only (launchd).
  */
 export async function autostart(action) {
+  const t = await translator();
   if (process.platform !== 'darwin') {
-    console.log('Le démarrage automatique passe par launchd : il n\'existe que sur macOS.');
+    console.log(t('cli.autostartMacOnly'));
     return false;
   }
   if (!ACTIONS[action]) {
-    console.log('Usage : minetokencraft autostart on | off | status');
+    console.log(t('cli.autostartUsage'));
     return false;
   }
   await ACTIONS[action]();

@@ -6,12 +6,12 @@ export function hash(text) {
 
 const BIOMES = ['plains', 'desert', 'jungle', 'savanna', 'snow', 'swamp', 'taiga'];
 
-// Tous les villageois d'un même joueur partagent la tenue d'un biome.
+// All villagers of the same player share a biome outfit.
 export function biomeFor(playerId) {
   return BIOMES[hash(playerId) % BIOMES.length];
 }
 
-// Métier du villageois selon le type de sous-agent.
+// Villager profession by sub-agent type.
 const PROFESSIONS = {
   Explore: 'cartographer',
   Plan: 'librarian',
@@ -27,7 +27,7 @@ export function professionFor(agentType, villagerId) {
   return PROFESSIONS[agentType] ?? OTHER_PROFESSIONS[hash(villagerId) % OTHER_PROFESSIONS.length];
 }
 
-// Bloc de métier devant lequel travaille chaque villageois, comme dans Minecraft (types de blocs de world.js).
+// Job block each villager works in front of, as in Minecraft (block types from world.js).
 export const JOB_BLOCKS = {
   armorer: 'blastFurnace',
   butcher: 'smoker',

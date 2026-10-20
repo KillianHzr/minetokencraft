@@ -1,5 +1,5 @@
-// Vent dans l'herbe et les feuillages : un petit décalage des sommets, plus fort en haut qu'au pied,
-// qui varie d'une plante à l'autre selon sa position.
+// Wind in the grass and foliage: a small vertex offset, stronger at the top than at the base,
+// that varies from plant to plant depending on its position.
 
 export const windUniforms = {
   uTime: { value: 0 },
@@ -7,7 +7,7 @@ export const windUniforms = {
 };
 
 /**
- * Fait onduler un matériau. `sway` : amplitude en blocs par grand vent ; `anchor` : hauteur du pied (y local).
+ * Makes a material sway. `sway`: amplitude in blocks in strong wind; `anchor`: height of the base (local y).
  */
 export function addWind(material, { sway, anchor }) {
   material.onBeforeCompile = (shader) => {
@@ -27,7 +27,7 @@ export function addWind(material, { sway, anchor }) {
         transformed.x += windSway;
         transformed.z += windSway * 0.5;`);
   };
-  // Programme distinct des matériaux immobiles qui partagent les mêmes réglages.
+  // Separate program from the static materials that share the same settings.
   material.customProgramCacheKey = () => `wind:${sway}:${anchor}`;
   return material;
 }

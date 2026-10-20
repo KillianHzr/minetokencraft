@@ -1,6 +1,6 @@
-/* Mode simple : fond gris clair, cartes blanches très arrondies à ombre légère, Montserrat en petits corps, un seul
-   accent vert lime, badges rectangulaires en capitales. Les états restent en bleu / jaune / orange, lisibles en
-   daltonisme. */
+/* Simple mode: light gray background, very rounded white cards with a light shadow, Montserrat in small sizes, a single
+   lime green accent, rectangular uppercase badges. States stay blue / yellow / orange, readable with
+   color blindness. */
 
 :root {
   --ui-font: Montserrat, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -63,7 +63,7 @@ body.simple #dashboard {
   overflow: hidden;
 }
 
-/* --- en-tête : barre blanche, la barre d'outils posée à droite ------------------------------------------- */
+/* --- header: white bar, the toolbar placed on the right ------------------------------------------- */
 
 .ui-bar {
   display: flex;
@@ -152,7 +152,7 @@ body.simple .demo-tag {
   border-radius: 6px;
 }
 
-/* Interrupteur : piste grise, lime une fois activé, pastille blanche. */
+/* Switch: gray track, lime once on, white knob. */
 body.simple .switch__track {
   width: 32px;
   height: 16px;
@@ -222,7 +222,7 @@ body.simple .switch input:checked + .switch__track::after {
   color: var(--ui-title);
 }
 
-/* Pastille d'icône : fond teinté à 10 %, glyphe plein. */
+/* Icon badge: background tinted at 10%, solid glyph. */
 .ui-tile {
   display: inline-flex;
   flex: none;
@@ -267,7 +267,7 @@ body.simple .switch input:checked + .switch__track::after {
   color: var(--ui-muted);
 }
 
-/* --- badges : petits rectangles arrondis, capitales ------------------------------------------------------ */
+/* --- badges: small rounded rectangles, uppercase ------------------------------------------------------ */
 
 .ui-badge {
   display: inline-flex;
@@ -341,7 +341,7 @@ body.simple .switch input:checked + .switch__track::after {
 .ui-dot--slot-2 { background: var(--ui-account-2); }
 .ui-dot--slot-3 { background: var(--ui-account-3); }
 
-/* --- jauges : pilules sur fond gris ---------------------------------------------------------------------- */
+/* --- gauges: pills on a gray background ---------------------------------------------------------------------- */
 
 .ui-progress {
   display: block;
@@ -362,7 +362,7 @@ body.simple .switch input:checked + .switch__track::after {
 .ui-progress--mid i { background: var(--ui-yellow); }
 .ui-progress--high i { background: var(--ui-orange); }
 
-/* L'avancement des tâches n'est pas une alerte : il prend l'accent de la marque. */
+/* Task progress is not an alert: it takes the brand accent. */
 .ui-progress--tasks {
   width: 80px;
   height: 6px;
@@ -377,7 +377,7 @@ body.simple .switch input:checked + .switch__track::after {
   height: 6px;
 }
 
-/* --- rangée du haut : quotas par compte, compteurs --------------------------------------------------------- */
+/* --- top row: quotas per account, counters --------------------------------------------------------- */
 
 .ui-summary {
   display: grid;
@@ -438,7 +438,7 @@ body.simple .switch input:checked + .switch__track::after {
   color: var(--ui-orange);
 }
 
-/* --- colonnes de sessions -------------------------------------------------------------------------------- */
+/* --- session columns -------------------------------------------------------------------------------- */
 
 .ui-columns {
   display: grid;
@@ -461,7 +461,7 @@ body.simple .switch input:checked + .switch__track::after {
   overflow: hidden;
 }
 
-/* Une session : bloc gris arrondi, bande blanche pour le titre. */
+/* A session: rounded gray block, white band for the title. */
 .ui-item {
   position: relative;
   display: flex;
@@ -701,7 +701,7 @@ body.simple .switch input:checked + .switch__track::after {
   height: 28px;
 }
 
-/* --- sessions inactives ---------------------------------------------------------------------------------- */
+/* --- idle sessions ---------------------------------------------------------------------------------- */
 
 .ui-idle {
   gap: 10px;
@@ -762,7 +762,7 @@ body.simple .switch input:checked + .switch__track::after {
   cursor: default;
 }
 
-/* --- compactage quand une colonne déborde ------------------------------------------------------------------ */
+/* --- compaction when a column overflows ------------------------------------------------------------------ */
 
 #dashboard:is([data-density='compact'], [data-density='tiny'], [data-density='micro'], [data-density='nano']) .ui-item__quote,
 #dashboard:is([data-density='tiny'], [data-density='micro'], [data-density='nano']) .ui-item__agents,
@@ -794,7 +794,7 @@ body.simple .switch input:checked + .switch__track::after {
   scrollbar-width: thin;
 }
 
-/* --- messages, historique et journée, aux couleurs du mode simple ----------------------------------------------- */
+/* --- messages, history and day, in simple mode colors ----------------------------------------------- */
 
 body.simple #toasts {
   top: 72px;

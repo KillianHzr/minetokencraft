@@ -1,8 +1,8 @@
-// Status line pour Claude Code : garde une copie du JSON que Claude Code lui passe (contexte, coût et quotas de la
-// session), que MineTokenCraft lit, puis affiche une ligne courte. Avec --quiet, n'affiche rien : pour l'appeler depuis
-// une status line existante.
+// Status line for Claude Code: keeps a copy of the JSON that Claude Code passes it (context, cost and quotas of the
+// session), which MineTokenCraft reads, then prints a short line. With --quiet, prints nothing: to call it from
+// an existing status line.
 //
-// Dans ~/.claude/settings.json :  "statusLine": { "type": "command", "command": "minetokencraft statusline" }
+// In ~/.claude/settings.json:  "statusLine": { "type": "command", "command": "minetokencraft statusline" }
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -17,7 +17,7 @@ async function readStdin() {
 }
 
 /**
- * Copie le JSON de la session dans `<compte>/<session>.json` ; écrite d'un bloc pour ne jamais être lue à moitié.
+ * Copies the session JSON to `<account>/<session>.json`; written in one go so it is never read half-written.
  */
 export async function saveStatusline(input) {
   const data = JSON.parse(input);
@@ -45,7 +45,7 @@ export async function statusline(args = []) {
     const data = await saveStatusline(await readStdin());
     if (!args.includes('--quiet')) process.stdout.write(`${line(data)}\n`);
   } catch {
-    // Une status line ne doit jamais casser l'affichage de Claude Code.
+    // A status line must never break the display of Claude Code.
   }
 }
 

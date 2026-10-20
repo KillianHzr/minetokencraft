@@ -4,19 +4,19 @@ import { layeredTexture, loadTexture, pixelated, TEXTURE_ROOT } from './textures
 import { createItemMesh, createItemSprite, setItem, setSpriteItem } from './items.js';
 
 const PX = 1 / 16;
-// Échelle de rendu que Minecraft applique aux joueurs et aux villageois.
+// Render scale that Minecraft applies to players and villagers.
 const MODEL_SCALE = 0.9375;
-// Joueurs un peu agrandis (proportions intactes) pour rester lisibles vus du dessus ; les villageois gardent
-// leur taille, ce qui les distingue aussi de leur joueur.
+// Players slightly enlarged (proportions intact) to stay readable from above; villagers keep
+// their size, which also tells them apart from their player.
 const CHARACTER_SCALE = 1.2;
 const WALK_SPEED = 3.2;
 export { castShadows };
-// Assis sur le fauteuil : les hanches (à 12 pixels du sol) descendent jusqu'à l'assise, à un demi-bloc.
+// Sitting on the armchair: the hips (12 pixels above the floor) go down to the seat, half a block.
 const HIP_HEIGHT = 12 * PX * MODEL_SCALE;
 const SEAT_HEIGHT = 0.56;
 const SEATED_DROP = SEAT_HEIGHT / CHARACTER_SCALE - HIP_HEIGHT;
 
-// Bleu / jaune / orange plutôt que vert / rouge : lisible en daltonisme, comme la status line.
+// Blue / yellow / orange rather than green / red: readable with color blindness, like the status line.
 export const STATUS_COLORS = {
   waiting: '#ff8a1f',
   working: '#ffd23f',
@@ -39,7 +39,7 @@ function castShadows(model) {
 }
 
 let alertMaterial;
-// « ! » orange en pixel art au-dessus d'un joueur qui t'attend.
+// Orange pixel-art "!" above a player who is waiting for you.
 function alertSprite() {
   if (!alertMaterial) {
     const canvas = document.createElement('canvas');
@@ -69,7 +69,7 @@ export function modelMaterials(texture) {
 }
 
 /**
- * Base commune : déplacement à pied vers une cible, orientation au repos, ancre de l'étiquette.
+ * Common base: walking toward a target, idle orientation, nametag anchor.
  */
 export class Entity {
   constructor(height, scale = 1) {
@@ -95,7 +95,7 @@ export class Entity {
   }
 
   moveTo(x, y, z) {
-    // Changer d'étage ne se fait pas à pied : on réapparaît directement dans la nouvelle pièce.
+    // Changing floors isn't done on foot: it reappears directly in the new room.
     if (Math.abs(y - this.target.y) > 0.5) this.root.position.set(x, y, z);
     this.target.set(x, y, z);
   }
@@ -128,7 +128,7 @@ export class Entity {
 
 export class Player extends Entity {
   constructor(skin) {
-    // Le nametag flotte au-dessus du « ! » des joueurs qui t'attendent.
+    // The nametag floats above the "!" of players who are waiting for you.
     super(2.75, CHARACTER_SCALE);
     this.pose = 'idle';
     this.item = createItemMesh(10);
@@ -172,7 +172,7 @@ export class Player extends Entity {
         : { from: [-2, -12, -2], size: [4, 12, 4], uv: [16, 48] },
       !legacy && { from: [-2, -12, -2], size: [4, 12, 4], uv: [0, 48], inflate: 0.25, overlay: true },
     ], tex, materials);
-    // Objet tenu en main : manche dans la main, tête vers l'avant.
+    // Held item: handle in the hand, head pointing forward.
     this.item.position.set(1.5 - arm / 2 - 0.5, -9, 3.5);
     this.item.rotation.set(0, -Math.PI / 2, 0);
     this.rightArm.add(this.item);
@@ -183,7 +183,7 @@ export class Player extends Entity {
   }
 
   /**
-   * work : tape sur un meuble ; read : lit un livre ; sit : se repose dans le fauteuil ; wave : t'appelle.
+   * work: hits a piece of furniture; read: reads a book; sit: rests in the armchair; wave: calls you.
    */
   setPose(pose, itemName) {
     this.pose = pose;
@@ -195,7 +195,7 @@ export class Player extends Entity {
     this.clock += dt;
     this.updateMovement(dt);
     const t = this.clock;
-    // Plus il t'attend longtemps, plus le « ! » grossit et s'agite.
+    // The longer it waits for you, the bigger and more agitated the "!" gets.
     const pace = this.urgent ? 9 : 4;
     this.alert.position.y = 2.45 + Math.abs(Math.sin(t * pace)) * (this.urgent ? 0.3 : 0.15);
     this.alert.scale.setScalar(this.urgent ? 0.8 : 0.55);
@@ -208,7 +208,7 @@ export class Player extends Entity {
     for (const part of [this.head, this.rightArm, this.leftArm, this.rightLeg, this.leftLeg]) part.rotation.set(0, 0, 0);
     this.leftArm.rotation.z = 0.06;
     this.rightArm.rotation.z = -0.06;
-    // Jambes repliées vers l'avant quand il est assis.
+    // Legs folded forward when sitting.
     this.rightLeg.rotation.x = -Math.PI / 2 * this.seated;
     this.leftLeg.rotation.x = -Math.PI / 2 * this.seated;
 
@@ -218,7 +218,7 @@ export class Player extends Entity {
     }
     switch (this.pose) {
       case 'work': {
-        // Coup de pioche à la Minecraft : un arc rapide vers l'avant.
+        // Minecraft-style pickaxe swing: a quick arc forward.
         const phase = (t * 2.4) % 1;
         this.rightArm.rotation.x = -0.5 - 1.1 * Math.sin(phase * Math.PI);
         this.rightArm.rotation.y = -0.2;
@@ -320,7 +320,7 @@ export class Villager extends Entity {
     if (this.moving) {
       this.walkCycle([this.rightLeg, this.leftLeg], null, 1);
     } else if (this.status === 'working') {
-      // Le villageois s'affaire sur son bloc de métier : il hoche la tête et se tourne d'un côté puis de l'autre.
+      // The villager busies itself at its job-site block: it nods and turns from one side to the other.
       this.head.rotation.x = 0.35 + Math.sin(t * 5) * 0.15;
       this.model.rotation.y = Math.sin(t * 1.3) * 0.4;
     } else {
@@ -330,7 +330,7 @@ export class Villager extends Entity {
 }
 
 /**
- * Bord de chapeau des villageois (fermier, pêcheur…) : un plateau de 16 x 16 pixels.
+ * Villager hat brim (farmer, fisherman...): a 16 x 16 pixel plate.
  */
 function hatRim(texture) {
   const geometry = new THREE.PlaneGeometry(16, 16);

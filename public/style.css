@@ -4,16 +4,16 @@
 }
 
 :root {
-  /* États : bleu / jaune / orange plutôt que vert / rouge, lisibles en daltonisme. */
+  /* States: blue / yellow / orange rather than green / red, readable with color blindness. */
   --waiting: #ff8a1f;
   --working: #ffd23f;
   --done: #4da6ff;
   --sleeping: #9a9a9a;
-  /* Niveaux de remplissage, mêmes teintes que la status line. */
+  /* Fill levels, same hues as the status line. */
   --level-low: #00afff;
   --level-mid: #ffd700;
   --level-high: #ff5f00;
-  /* Couleurs des comptes, dans leur ordre d'apparition. */
+  /* Account colors, in order of appearance. */
   --account-0: #005faf;
   --account-1: #ffaf00;
   --account-2: #7b3fb5;
@@ -31,7 +31,7 @@
   box-sizing: border-box;
 }
 
-/* L'attribut hidden doit gagner sur les display posés par les classes. */
+/* The hidden attribute must win over the display values set by classes. */
 [hidden] {
   display: none !important;
 }
@@ -73,7 +73,7 @@ body {
   pointer-events: none;
 }
 
-/* --- étiquettes de la carte : peu de texte, pour laisser voir les personnages ------------------------------- */
+/* --- map labels: little text, to leave the characters visible ------------------------------- */
 
 .tag,
 .nametag,
@@ -86,7 +86,7 @@ body {
   will-change: transform;
 }
 
-/* Villageois du joueur survolé dans le panneau. */
+/* Villagers of the player hovered in the panel. */
 .tag {
   padding: 2px 5px 3px;
   font-size: 11px;
@@ -103,7 +103,7 @@ body {
   color: var(--status);
 }
 
-/* Nametag au-dessus d'un joueur, comme dans le jeu : une ligne, fond noir translucide. */
+/* Nametag above a player, as in the game: one line, translucent black background. */
 .nametag {
   padding: 1px 5px 2px;
   font-size: 11px;
@@ -118,7 +118,7 @@ body {
 .nametag--stuck { --status: #b0b0b0; }
 .nametag--hl { outline: 1px solid #fff; }
 
-/* Attente longue : le nametag passe à l'orange et pulse. */
+/* Long wait: the nametag turns orange and pulses. */
 .nametag--urgent {
   color: #000;
   text-shadow: none;
@@ -134,7 +134,7 @@ body {
   50% { box-shadow: 0 0 0 3px var(--waiting); }
 }
 
-/* Écriteau du compte, devant son aile. */
+/* Account sign, in front of its wing. */
 .wing-tag {
   padding: 2px 8px 3px;
   font-size: 12px;
@@ -150,7 +150,7 @@ body {
 .wing-tag--nether { --sign: #ff5a26; color: #ffb35c; }
 .wing-tag--end { --sign: #c27bff; color: #e2c6ff; }
 
-/* --- barres de boss : les quotas de chaque compte, en haut de la scène ------------------------------------- */
+/* --- boss bars: each account's quotas, at the top of the scene ------------------------------------- */
 
 #bossbars {
   position: absolute;
@@ -187,7 +187,7 @@ body {
   color: var(--level-high);
 }
 
-/* Les sprites du jeu (182 x 5 pixels), agrandis deux fois. */
+/* The game sprites (182 x 5 pixels), scaled up twice. */
 .bossbar__bar {
   position: relative;
   width: 364px;
@@ -203,7 +203,7 @@ body {
   image-rendering: pixelated;
 }
 
-/* --- infobulle d'une pièce, façon infobulle d'objet Minecraft ---------------------------------------------- */
+/* --- room tooltip, Minecraft item tooltip style ---------------------------------------------- */
 
 .mc-tooltip {
   position: absolute;
@@ -255,7 +255,7 @@ body {
 .status-icon--working { --status: var(--working); }
 .status-icon--done { --status: var(--done); }
 
-/* --- jauges -------------------------------------------------------------- */
+/* --- gauges -------------------------------------------------------------- */
 
 .level--low { --level: var(--level-low); }
 .level--mid { --level: var(--level-mid); }
@@ -295,7 +295,7 @@ body {
 .badge--slot-2 { background: var(--account-2); color: #fff; }
 .badge--slot-3 { background: var(--account-3); color: #fff; }
 
-/* --- scène : chat, boutons, bannières ------------------------------------- */
+/* --- scene: chat, buttons, banners ------------------------------------- */
 
 #chat {
   position: absolute;
@@ -310,7 +310,7 @@ body {
 
 .chat__line {
   padding: 2px 6px;
-  /* Assez sombre pour rester lisible sur la neige. */
+  /* Dark enough to stay readable on snow. */
   background: rgba(0, 0, 0, 0.62);
   font-size: 12px;
   text-shadow: var(--shadow);
@@ -436,7 +436,7 @@ body {
   color: var(--waiting);
 }
 
-/* --- panneau ------------------------------------------------------------- */
+/* --- panel ------------------------------------------------------------- */
 
 #panel {
   width: 380px;
@@ -663,8 +663,8 @@ body {
   flex: none;
 }
 
-/* Paliers de compactage, du plus léger au plus serré, pour que tout tienne sans défiler. Chaque palier
-   masque aussi ce que masquent les précédents. */
+/* Compaction steps, from lightest to tightest, so everything fits without scrolling. Each step
+   also hides what the previous ones hide. */
 #panel:is([data-density='compact'], [data-density='tiny'], [data-density='micro'], [data-density='nano']) .card__quote,
 #panel:is([data-density='tiny'], [data-density='micro'], [data-density='nano']) .sleeper__meta,
 #panel:is([data-density='micro'], [data-density='nano']) :is(.sleeper__name, .card__villagers),
@@ -672,7 +672,7 @@ body {
   display: none;
 }
 
-/* Une seule ligne par carte : le projet et la branche s'abrègent, le contexte et le coût restent entiers. */
+/* One line per card: the project and branch are abbreviated, the context and cost stay whole. */
 #panel:is([data-density='micro'], [data-density='nano']) .card__meta {
   display: flex;
   gap: 4px;
@@ -710,7 +710,7 @@ body {
   padding: 2px;
 }
 
-/* --- avancement des tâches, contexte, coût ---------------------------------- */
+/* --- task progress, context, cost ---------------------------------- */
 
 .tasks {
   display: flex;
@@ -726,7 +726,7 @@ body {
   color: #e8e0c8;
 }
 
-/* Une case par tâche, comme les cases d'un inventaire : finie, en cours (qui clignote), à faire. */
+/* One slot per task, like inventory slots: done, in progress (blinking), to do. */
 .pips {
   display: inline-flex;
   flex: none;
@@ -749,7 +749,7 @@ body {
   50% { background: #7a6420; }
 }
 
-/* Contexte en barre d'expérience Minecraft : segments, couleur du niveau (bleu, jaune, orange). */
+/* Context as a Minecraft experience bar: segments, level color (blue, yellow, orange). */
 .xp {
   display: inline-flex;
   align-items: center;
@@ -857,7 +857,7 @@ body {
 
 
 
-/* --- messages façon « Progrès réalisé » ------------------------------------- */
+/* --- messages in the "Advancement Made" style ------------------------------------- */
 
 #toasts {
   position: fixed;
@@ -912,7 +912,7 @@ body {
   color: #eee;
 }
 
-/* --- historique d'une session ------------------------------------------------ */
+/* --- session history ------------------------------------------------ */
 
 #history {
   position: fixed;
@@ -1018,7 +1018,7 @@ body {
 
 
 
-/* --- écran « Journée » --------------------------------------------------------- */
+/* --- "Today" screen ----------------------------------------------------------- */
 
 #stats {
   position: fixed;
@@ -1086,7 +1086,7 @@ body {
   margin-bottom: 5px;
 }
 
-/* Emplacements d'inventaire : un objet, un nombre en bas à droite, une légende dessous. */
+/* Inventory slots: an item, a number at the bottom right, a caption below. */
 .slots {
   display: flex;
   gap: 6px;
@@ -1125,7 +1125,7 @@ body {
   margin-bottom: 8px;
 }
 
-/* Histogramme : une colonne de blocs par compte et par heure. */
+/* Histogram: a column of blocks per account and per hour. */
 .chart {
   display: grid;
   grid-template-columns: repeat(24, 1fr);
@@ -1182,7 +1182,7 @@ body {
   color: #444;
 }
 
-/* --- ciel, voile de météo, éclairs ----------------------------------------------- */
+/* --- sky, weather veil, lightning ----------------------------------------------- */
 
 #sky,
 #veil,
@@ -1206,7 +1206,7 @@ body {
   transition: opacity 2s;
 }
 
-/* Soleil carré de Minecraft : son fond noir disparaît en mode « écran ». */
+/* Square Minecraft sun: its black background disappears in "screen" mode. */
 .sky__sun {
   position: absolute;
   width: 72px;
@@ -1265,7 +1265,7 @@ body {
   z-index: 3;
 }
 
-/* --- réglages ---------------------------------------------------------------------------------------------- */
+/* --- settings ---------------------------------------------------------------------------------------------- */
 
 #settings {
   position: fixed;

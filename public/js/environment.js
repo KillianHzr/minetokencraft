@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import { windUniforms } from './wind.js';
 import { TEXTURE_ROOT } from './textures.js';
 
-// Ciel, lumière, météo et saisons : tout ce qui change avec l'heure réelle et le temps qu'il fait dehors.
+// Sky, light, weather and seasons: everything that changes with the real time and the weather outside.
 
-// Haut et bas du dégradé du ciel selon le temps, en plein jour ; la nuit et l'aube s'y mélangent.
+// Top and bottom of the sky gradient by weather, in full daylight; night and dawn blend into it.
 const SKIES = {
   clear: ['#78a7ff', '#c6dcff'],
   cloudy: ['#8e9db4', '#c8d0dc'],
@@ -15,11 +15,11 @@ const SKIES = {
 };
 const NIGHT_SKY = ['#070b22', '#1a2550'];
 const GOLDEN_SKY = ['#f19a68', '#ffd6a0'];
-// Voile sur la scène : brume, pluie fine ou flocons.
+// Veil over the scene: fog, light rain or flakes.
 const VEILS = { clear: 0, cloudy: 0.04, rain: 0.12, storm: 0.2, snow: 0.14, fog: 0.38 };
-// Lumière : moins forte par temps couvert ; la nuit, la lune éclaire en bleu.
+// Light: weaker when overcast; at night, the moon lights in blue.
 const OVERCAST = { clear: 1, cloudy: 0.8, rain: 0.65, storm: 0.5, snow: 0.75, fog: 0.7 };
-// La nuit reste lisible : la lune éclaire assez pour distinguer les pièces et les créatures.
+// Night stays readable: the moon gives enough light to tell rooms and creatures apart.
 const SUN = { dayIntensity: 0.9, moonIntensity: 0.38, sky: 0.58, nightSky: 0.28 };
 const RAIN_DROPS = 1600;
 const SNOW_FLAKES = 1100;
@@ -28,7 +28,7 @@ const SNOW_SPEED = 1.3;
 const SKY_HEIGHT = 14;
 const LIGHTNING_MIN_S = 5;
 const LIGHTNING_MAX_S = 14;
-// Nouvelle lune de référence (6 janvier 2000, 18 h 14 UTC) et durée d'un cycle lunaire.
+// Reference new moon (January 6, 2000, 18:14 UTC) and length of a lunar cycle.
 const NEW_MOON = Date.UTC(2000, 0, 6, 18, 14);
 const LUNAR_CYCLE_MS = 29.530588 * 24 * 60 * 60 * 1000;
 const FALLING = { autumn: ['leafOrange', 'leafRed', 'leafYellow'], spring: ['petal'] };
@@ -115,7 +115,7 @@ export class Environment {
         positions[at + 1] -= RAIN_SPEED * dt;
         positions[at] += RAIN_SPEED * slant * dt;
       }
-      // Une goutte = un trait de 0,6 bloc, penché par le vent.
+      // A drop = a 0.6-block streak, slanted by the wind.
       positions[at + 3] = positions[at] - slant * 0.6;
       positions[at + 4] = positions[at + 1] + 0.6;
       positions[at + 5] = positions[at + 2];
@@ -135,7 +135,7 @@ export class Environment {
         positions[at + 2] = z;
       } else {
         positions[at + 1] -= SNOW_SPEED * dt;
-        // Les flocons tourbillonnent en descendant.
+        // Flakes swirl as they fall.
         positions[at] += (Math.sin(time / 900 + i) * 0.4 + wind * 0.6) * dt;
         positions[at + 2] += Math.cos(time / 1100 + i * 1.7) * 0.3 * dt;
       }
@@ -153,7 +153,7 @@ export class Environment {
     this.sky.style.background = `linear-gradient(${top}, ${bottom})`;
     const clearSky = condition === 'clear' || condition === 'cloudy';
     this.stars.style.opacity = clearSky ? (1 - day) * 0.9 : 0;
-    // Soleil et lune traversent le haut du ciel, de l'est (à droite) vers l'ouest (à gauche).
+    // Sun and moon cross the upper sky, from the east (right) to the west (left).
     this.sunDisc.style.opacity = clearSky ? day : day * 0.25;
     this.sunDisc.style.left = `${88 - course * 76}%`;
     this.sunDisc.style.top = `${18 - Math.sin(course * Math.PI) * 12}%`;
@@ -169,7 +169,7 @@ export class Environment {
     const overcast = OVERCAST[condition] ?? 1;
     this.hemisphere.intensity = (SUN.nightSky + (SUN.sky - SUN.nightSky) * day) * (0.85 + 0.15 * overcast);
     this.hemisphere.color.set(mix('#56669a', '#dcecff', day));
-    // Le jour, le soleil ; la nuit, la lune (même lumière, plus faible et bleue).
+    // The sun by day, the moon by night (same light, weaker and bluer).
     const sunColor = mix('#fff1d6', '#ffb070', golden * 0.8);
     this.sun.color.set(mix('#9fb4ff', sunColor, day));
     this.sun.intensity = (SUN.moonIntensity + (SUN.dayIntensity - SUN.moonIntensity) * day) * overcast;
@@ -189,7 +189,7 @@ export class Environment {
       this.flashLeft = 0.25;
     }
     this.flashLeft = Math.max(0, this.flashLeft - dt);
-    // Double éclair : deux pics rapprochés.
+    // Double flash: two close peaks.
     const strobe = this.flashLeft > 0.18 || (this.flashLeft > 0.04 && this.flashLeft < 0.1);
     this.flash.style.opacity = strobe ? 0.55 : 0;
     if (strobe) this.hemisphere.intensity += 1.2;
@@ -201,7 +201,7 @@ export class Environment {
     this.fallingTimer -= dt;
     if (this.fallingTimer > 0) return;
     this.fallingTimer = 1 / FALLING_RATE;
-    // Feuilles et pétales tombent des arbres, au fond du jardin, et dérivent avec le vent.
+    // Leaves and petals fall from the trees at the back of the garden and drift with the wind.
     const origin = {
       x: bounds.x0 + Math.random() * (bounds.x1 - bounds.x0),
       y: 4 + Math.random() * 2,
@@ -216,7 +216,7 @@ export class Environment {
   }
 
   /**
-   * Met tout à jour pour l'instant présent ; renvoie la direction du soleil (ou de la lune).
+   * Updates everything for the present moment; returns the direction of the sun (or the moon).
    */
   update(dt, conditions, layout, particles, now) {
     windUniforms.uTime.value += dt;

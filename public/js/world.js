@@ -12,12 +12,12 @@ const FOLIAGE_TINT = '#77ab2f';
 const SPRUCE_TINT = '#619961';
 const BIRCH_TINT = '#80a755';
 const WATER = { tint: '#3f76e4', opacity: 0.8, level: -0.125, frameMs: 110 };
-// Perspective atmosphérique : le paysage autour est un peu voilé de bleu, pour que la maison ressorte.
+// Atmospheric perspective: the landscape around is slightly veiled in blue, so the house stands out.
 const HAZE = '#d3dce8';
 const FRAME_WIDTH = 0.14;
 
-// Textures de chaque bloc. Une entrée [nom, teinte] désigne une texture grise teintée selon le biome.
-// `front` ne s'applique qu'à la face tournée vers la caméra (+z).
+// Textures of each block. An entry [name, tint] designates a gray texture tinted according to the biome.
+// `front` only applies to the face turned toward the camera (+z).
 const BLOCKS = {
   grass: { top: ['grass_block_top', GRASS_TINT], side: 'grass_block_side', bottom: 'dirt' },
   dirt: { all: 'dirt' },
@@ -33,7 +33,7 @@ const BLOCKS = {
   oakLog: { top: 'oak_log_top', side: 'oak_log' },
   glass: { all: 'glass', cutout: true },
   leaves: { all: ['oak_leaves', FOLIAGE_TINT], cutout: true, wind: 'leaves' },
-  // Saisons : feuillages d'automne, azalées en fleurs au printemps, neige l'hiver.
+  // Seasons: autumn foliage, flowering azaleas in spring, snow in winter.
   leavesOrange: { all: ['oak_leaves', '#d9761f'], cutout: true, wind: 'leaves' },
   leavesRed: { all: ['oak_leaves', '#b8361e'], cutout: true, wind: 'leaves' },
   leavesYellow: { all: ['oak_leaves', '#e0b02a'], cutout: true, wind: 'leaves' },
@@ -88,7 +88,7 @@ const BLOCKS = {
   redstoneLampOn: { all: 'redstone_lamp_on', glow: true },
   emeraldBlock: { all: 'emerald_block' },
   endPortalFrame: { top: 'end_portal_frame_top', side: 'end_portal_frame_side', bottom: 'end_stone' },
-  // Paysage autour de la maison.
+  // Landscape around the house.
   sand: { all: 'sand' },
   cobblestone: { all: 'cobblestone' },
   gravel: { all: 'gravel' },
@@ -106,24 +106,24 @@ const BLOCKS = {
   path: { top: 'dirt_path_top', side: 'dirt_path_side', bottom: 'dirt' },
 };
 
-// Une aile par compte, chacune bien distincte, dans l'ordre des comptes : bureau en béton et pierre éclairé froid,
-// maison en bois et rondins éclairée chaud, atelier de briques, pavillon de bouleau et d'ardoise.
+// One wing per account, each clearly distinct, in the order of the accounts: concrete and stone office with cold light,
+// wood and log house with warm light, brick workshop, birch and slate pavilion.
 const WING_STYLES = [
   { floor: 'andesite', corridor: 'smoothStone', wall: 'whiteConcrete', lowWall: 'stoneBricks', pillar: 'stoneBricks', lamp: 'seaLantern', rug: 'lightBlueWool', chair: 'birch_planks', light: '#d4ecff' },
   { floor: 'planks', corridor: 'spruce', wall: 'planks', lowWall: 'planks', pillar: 'oakLog', lamp: 'shroomlight', rug: 'orangeWool', chair: 'spruce_planks', light: '#ffb070' },
   { floor: 'darkOak', corridor: 'smoothStone', wall: 'bricks', lowWall: 'bricks', pillar: 'stoneBricks', lamp: 'glowstone', rug: 'redWool', chair: 'dark_oak_planks', light: '#ffd29a' },
   { floor: 'birch', corridor: 'andesite', wall: 'birch', lowWall: 'deepslateTiles', pillar: 'deepslateTiles', lamp: 'seaLantern', rug: 'blueWool', chair: 'birch_planks', light: '#e2f0ff' },
 ];
-// Aile d'un compte à court de quota : le Nether (5 h) ou l'End (semaine) remplace ses matériaux.
+// Wing of an account out of quota: the Nether (5 h) or the End (week) replaces its materials.
 const THEME_STYLES = {
   nether: { floor: 'blackstoneBricks', corridor: 'netherrack', wall: 'redNetherBricks', lowWall: 'netherBricks', pillar: 'blackstone', lamp: 'glowstone', rug: 'magma', chair: 'crimson_planks', light: '#ff5a26' },
   end: { floor: 'endStoneBricks', corridor: 'endStone', wall: 'purpur', lowWall: 'obsidian', pillar: 'purpurPillar', lamp: 'cryingObsidian', rug: 'purpleWool', chair: 'purpur_block', light: '#c27bff' },
 };
-// Lampe de chaque pièce : assez forte pour que la pièce reste lisible au crépuscule, sous la pluie, la nuit.
+// Lamp of each room: strong enough for the room to stay readable at dusk, in the rain, at night.
 const ROOM_LIGHT = { intensity: 3, distance: 12, decay: 1.2, height: 2.6 };
-// Lueur d'un portail allumé : violette pour le Nether, bleu-vert pour l'End.
+// Glow of a lit portal: purple for the Nether, teal for the End.
 const PORTAL_LIGHT = { nether: '#b45cff', end: '#4dffd2', intensity: 3.2, distance: 9, decay: 1.2 };
-// Lumière d'ambiance au-dessus d'une zone Nether ou End, pour la teinter tout entière.
+// Ambient light above a Nether or End zone, to tint all of it.
 const ZONE_LIGHT = { height: 8, intensity: 2.4, decay: 0.7, reach: 1.3 };
 
 const PLANTS = {
@@ -145,22 +145,22 @@ const PLANTS = {
   sugarCane: 'sugar_cane',
   berryBush: 'sweet_berry_bush_stage3',
 };
-// Ondulation au vent : l'herbe et les fleurs bougent franchement, les feuillages à peine.
+// Wind sway: grass and flowers move noticeably, foliage barely.
 const WIND_SETTINGS = { plant: { sway: 0.22, anchor: 0 }, leaves: { sway: 0.05, anchor: -0.5 } };
 const WINDY_PLANTS = new Set(['grass', 'grassAutumn', 'poppy', 'dandelion', 'cornflower', 'daisy', 'allium', 'azureBluet', 'blueOrchid', 'pinkTulip', 'crimsonRoots', 'netherSprouts', 'fern', 'berryBush']);
-// Les lampes des pièces éclairent davantage la nuit.
-// Les lampes s'allument dès que la pénombre dépasse ce seuil, et éclairent de plus en plus fort jusqu'à la nuit.
+// Room lamps light up more at night.
+// Lamps turn on as soon as the dimness passes this threshold, and shine brighter and brighter until night.
 const LIGHTS_ON_GLOOM = 0.12;
 const LIGHT_GAIN = { base: 0.6, gloom: 1.7 };
-// Coût affiché en blocs d'émeraude, sur une échelle logarithmique : 1 $, 3 $, 7 $, 15 $… jusqu'à 8 blocs.
+// Cost shown in emerald blocks, on a logarithmic scale: $1, $3, $7, $15... up to 8 blocks.
 const EMERALD_LEVELS = 8;
-// Toiles d'araignée selon le remplissage du contexte.
+// Cobwebs according to how full the context is.
 const COBWEB_THRESHOLDS = [60, 75, 85, 95];
-// Une lampe de redstone par case de tâche ; celle de la tâche en cours clignote.
+// One redstone lamp per task cell; the one for the current task blinks.
 const LAMP_BLINK_MS = 600;
 const FLOWERS = ['poppy', 'dandelion', 'cornflower', 'daisy'];
 
-// Jardin normal et paysage selon la saison : sol, densité et choix des fleurs (feuillages dans terrain.js).
+// Normal garden and landscape by season: ground, density and choice of flowers (foliage in terrain.js).
 const SEASON_GROUNDS = {
   spring: { top: 'grass', flowers: [...FLOWERS, 'allium', 'azureBluet', 'blueOrchid', 'pinkTulip'], flowerRate: 0.16, meadowRate: 0.6, grass: 'grass' },
   summer: { top: 'grass', flowers: FLOWERS, flowerRate: 0.06, grass: 'grass' },
@@ -168,7 +168,7 @@ const SEASON_GROUNDS = {
   winter: { top: 'snowyGrass', flowers: [], flowerRate: 0, grass: null },
 };
 
-// Sol, plantes et arbres du jardin de chaque thème (le thème normal suit la saison).
+// Ground, plants and trees of the garden for each theme (the normal theme follows the season).
 const GROUNDS = {
   normal: { top: 'grass', flowers: FLOWERS, grass: 'grass', tree: oakTree },
   nether: { top: 'netherrack', patch: 'crimsonNylium', flowers: ['crimsonFungus', 'crimsonRoots'], grass: 'netherSprouts', tree: fungusTree, pool: 'lava' },
@@ -182,7 +182,7 @@ function material(texture, { cutout = false, glow = false, wind = null, haze = f
   if (!materialCache.has(key)) {
     const options = cutout ? { alphaTest: 0.5, side: THREE.DoubleSide } : {};
     if (haze) options.color = HAZE;
-    // Les blocs lumineux (lanternes, fourneau allumé) brillent même à l'ombre.
+    // Glowing blocks (lanterns, lit furnace) shine even in shadow.
     if (glow) Object.assign(options, { emissive: 0xffffff, emissiveIntensity: 1 });
     const mat = new THREE.MeshLambertMaterial(options);
     if (wind) addWind(mat, WIND_SETTINGS[wind]);
@@ -198,7 +198,7 @@ function material(texture, { cutout = false, glow = false, wind = null, haze = f
   return materialCache.get(key);
 }
 
-// Ordre des faces d'un BoxGeometry : +x, -x, +y, -y, +z, -z.
+// Order of the faces of a BoxGeometry: +x, -x, +y, -y, +z, -z.
 function blockMaterials({ all, top = all, bottom, side = all, front = side, cutout = false, glow = false, wind = null }, haze = false) {
   return [side, side, top, bottom ?? top, front, side].map((texture) => material(texture, { cutout, glow, wind, haze }));
 }
@@ -216,15 +216,15 @@ function shadowed(object, cast = true) {
 const unitBox = new THREE.BoxGeometry(1, 1, 1);
 const carpetBox = new THREE.BoxGeometry(1, 1 / 16, 1);
 
-// Une géométrie de bloc par jeu de textures : les faces qui partagent une texture forment un seul groupe, donc un
-// seul appel de dessin (pierre : 1 au lieu de 6 ; herbe : 3).
+// One block geometry per texture set: faces sharing a texture form a single group, hence a
+// single draw call (stone: 1 instead of 6; grass: 3).
 const shapeCache = new Map();
 function blockShape(spec, haze = false, base = unitBox) {
   const faces = blockMaterials(spec, haze);
   const materials = [...new Set(faces)];
   const key = `${base.uuid}|${faces.map((face) => face.uuid).join()}`;
   if (!shapeCache.has(key)) {
-    // Faces d'un BoxGeometry : 6 indices chacune, dans l'ordre de blockMaterials.
+    // Faces of a BoxGeometry: 6 indices each, in the order of blockMaterials.
     const source = base.index.array;
     const index = [];
     const geometry = base.clone();
@@ -248,8 +248,8 @@ function blockMesh(spec) {
 }
 
 /**
- * Rangée d'objets identiques dont les N premiers sont dans un état (allumés, posés, visibles) et les suivants dans
- * l'autre, ou cachés si `off` est absent : deux maillages instanciés au lieu d'un maillage par objet.
+ * Row of identical objects whose first N are in one state (lit, placed, visible) and the rest in
+ * the other, or hidden if `off` is absent: two instanced meshes instead of one mesh per object.
  */
 class Prefix {
   constructor(group, geometry, positions, on, off = null, castShadow = false) {
@@ -260,7 +260,7 @@ class Prefix {
       const mesh = new THREE.InstancedMesh(geometry, mat, positions.length);
       positions.forEach((position, index) => mesh.setMatrixAt(index, new THREE.Matrix4().setPosition(position)));
       mesh.count = 0;
-      // Un état translucide (bloc fantôme du portail) ne projette pas d'ombre.
+      // A translucent state (ghost block of the portal) casts no shadow.
       mesh.castShadow = castShadow && ![mat].flat().some((each) => each.transparent);
       mesh.receiveShadow = true;
       group.add(mesh);
@@ -287,7 +287,7 @@ function crossGeometry() {
   const a = new THREE.PlaneGeometry(1, 1).rotateY(Math.PI / 4);
   const b = new THREE.PlaneGeometry(1, 1).rotateY(-Math.PI / 4);
   const positions = [...a.attributes.position.array, ...b.attributes.position.array];
-  // Normales vers le haut : les plantes sont éclairées comme le sol, sans face sombre.
+  // Normals pointing up: plants are lit like the ground, with no dark side.
   const normals = positions.map((_, i) => (i % 3 === 1 ? 1 : 0));
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -299,10 +299,10 @@ function crossGeometry() {
 const cross = crossGeometry();
 
 /**
- * Accumule les blocs par type puis les dessine en InstancedMesh (un appel de rendu par type).
+ * Accumulates blocks by type then draws them as InstancedMesh (one render call per type).
  */
 class Blocks {
-  // Le paysage autour de la maison ne projette pas d'ombre : sa caméra d'ombres ne couvre que la maison.
+  // The landscape around the house casts no shadow: its shadow camera only covers the house.
   constructor({ castShadow = true, frozen = false, haze = false } = {}) {
     this.castShadow = castShadow;
     this.frozen = frozen;
@@ -343,7 +343,7 @@ class Blocks {
       return groups;
     };
     return [
-      // Le sol (sous y = 0) ne projette d'ombre sur rien : il reste hors de la passe des ombres.
+      // The ground (below y = 0) casts a shadow on nothing: it stays out of the shadow pass.
       ...[...byKey([...this.cells.values()].map((cell) => ({ ...cell, key: `${cell.type}|${cell.y < 0}` })), 'key')].map(([, cells]) => {
         const { geometry, materials } = blockShape(BLOCKS[cells[0].type], this.haze);
         return instanced(geometry, materials, cells, ({ x, y, z }, m) => m.makeTranslation(x + 0.5, y + 0.5, z + 0.5), this.castShadow && cells[0].y >= 0);
@@ -360,11 +360,11 @@ class Blocks {
   }
 }
 
-// Texture de l'eau, dont World.animate fait défiler les images.
+// Water texture, whose frames World.animate scrolls through.
 let waterMap = null;
 
 /**
- * Eau de la rivière : texture animée de Minecraft, teintée en bleu, translucide ; gelée l'hiver.
+ * River water: animated Minecraft texture, tinted blue, translucent; frozen in winter.
  */
 function waterMaterial(frozen) {
   const mat = new THREE.MeshLambertMaterial({ color: frozen ? '#ffffff' : WATER.tint, transparent: true, opacity: frozen ? 0.92 : WATER.opacity, depthWrite: false });
@@ -377,7 +377,7 @@ function waterMaterial(frozen) {
 }
 
 function chair(x, z, texture) {
-  // Assise, et dossier au nord : on s'y assoit face à la caméra.
+  // Seat, and backrest to the north: one sits there facing the camera.
   const seat = new THREE.BoxGeometry(1, 0.5, 1).translate(0.5, 0.25, 0.5);
   const back = new THREE.BoxGeometry(1, 0.5, 0.5).translate(0.5, 0.75, 0.25);
   const mesh = new THREE.Mesh(mergeGeometries([seat, back]), material(texture));
@@ -393,7 +393,7 @@ function flowerPot(blocks, group, x, z, flower) {
 }
 
 /**
- * Liseré au sol sur le pourtour intérieur de la pièce, de la couleur de l'état de la session.
+ * Floor trim along the inner perimeter of the room, in the color of the session's state.
  */
 function statusFrame(room) {
   const mat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true });
@@ -410,7 +410,7 @@ function statusFrame(room) {
 }
 
 /**
- * Champignon carmin géant du Nether : tige, chapeau de verrues, champilampes dessous.
+ * Giant crimson fungus of the Nether: stem, wart cap, shroomlights underneath.
  */
 function fungusTree(blocks, x, z, trunk) {
   blocks.box('crimsonStem', x, x, 0, trunk - 1, z, z);
@@ -427,7 +427,7 @@ function fungusTree(blocks, x, z, trunk) {
 }
 
 /**
- * Plante de chorus de l'End : une tige qui se ramifie, une fleur au bout.
+ * End chorus plant: a stem that branches out, a flower at the tip.
  */
 function chorusTree(blocks, x, z, trunk) {
   blocks.box('chorusPlant', x, x, 0, trunk - 1, z, z);
@@ -442,7 +442,7 @@ function furnishRoom(blocks, group, room, style, roomObjects) {
   const { x0, z0, width } = room;
   const seed = hash(room.key);
   if (!room.player) {
-    // Aile sans session : un débarras éteint.
+    // Wing without a session: an unlit storeroom.
     blocks.box('barrel', x0, x0 + 1, 0, 0, z0, z0);
     blocks.set('barrel', x0, 1, z0);
     blocks.set('hay', x0 + width - 1, 0, z0 + ROOM_DEPTH - 1);
@@ -468,7 +468,7 @@ function furnishRoom(blocks, group, room, style, roomObjects) {
     new THREE.Vector3(x0 + dx + 0.5, level + 0.5, z0 + dz + 0.5)))), emerald.materials, null, true);
   const cobwebs = new Prefix(group, cross, COBWEB_SPOTS.map(([dx, dz]) => (
     new THREE.Vector3(x0 + (dx < 0 ? width + dx : dx) + 0.5, 0, z0 + dz + 0.5))), material(PLANTS.cobweb, { cutout: true }));
-  // Lampes de redstone dans le mur du fond, à la place de la fenêtre, quand la session suit une liste de tâches.
+  // Redstone lamps in the back wall, in place of the window, when the session follows a task list.
   let lamps = null;
   if (room.player.tasks?.total) {
     const spots = [];
@@ -505,8 +505,8 @@ function furnishRoom(blocks, group, room, style, roomObjects) {
 }
 
 /**
- * Une rangée de pièces : sol, mur du fond haut (fenêtres, lampes), mur ouest haut, et côté caméra
- * des murets d'un bloc pour qu'on voie dedans. Devant, une allée.
+ * A row of rooms: floor, tall back wall (windows, lamps), tall west wall, and on the camera side
+ * one-block low walls so one can see inside. In front, an aisle.
  */
 function buildRow(blocks, group, row, style, roomObjects) {
   const front = row.z0 + ROOM_DEPTH;
@@ -517,16 +517,16 @@ function buildRow(blocks, group, row, style, roomObjects) {
   }
   blocks.box(style.pillar, row.x0, row.x0, 0, BACK_WALL - 1, row.back, front);
   blocks.box(style.pillar, row.x0, row.x0, BACK_WALL, BACK_WALL, row.back, row.back);
-  // Fenêtres et lampes dans le mur du fond, au rang du haut quand il n'y en a que deux.
+  // Windows and lamps in the back wall, on the top row when there are only two.
   for (let z = row.back; z <= front; z++) blocks.set(style.pillar, row.x1, 0, z);
   for (const room of row.rooms) {
     const { x0, z0, width } = room;
     for (let x = x0; x < x0 + width; x++) for (let z = z0; z < front; z++) blocks.set(style.floor, x, -1, z);
-    // Poteau haut à chaque cloison du mur du fond, cloison basse jusqu'au muret avant.
+    // Tall post at each partition of the back wall, low partition down to the front low wall.
     blocks.box(style.pillar, x0 + width, x0 + width, 0, BACK_WALL, row.back, row.back);
     for (let z = z0; z <= front; z++) blocks.set(style.pillar, x0 + width, 0, z);
     for (const dx of DOOR_X) blocks.clear(x0 + dx, 0, front);
-    // Fenêtre derrière le comptoir (ou lampes de tâches, posées avec les meubles), lampes encastrées de part et d'autre.
+    // Window behind the counter (or task lamps, placed with the furniture), recessed lamps on either side.
     const top = BACK_WALL - 1;
     if (!room.player?.tasks?.total) for (let dx = 2; dx <= Math.min(5, width - 3); dx++) blocks.set('glass', x0 + dx, top, row.back);
     if (room.player) {
@@ -542,7 +542,7 @@ function buildGarden(blocks, group, layout, season) {
   const themeAt = (x) => layout.wings.find((wing) => x >= wing.zone.x0 && x <= wing.zone.x1)?.theme ?? 'normal';
   const seasonal = SEASON_GROUNDS[season];
   const groundAt = (x) => (themeAt(x) === 'normal' ? { ...GROUNDS.normal, ...seasonal } : GROUNDS[themeAt(x)]);
-  // Cases occupées par la maison ou par un coin de portails : pas de fleurs ni de foin dessus.
+  // Cells occupied by the house or by a portal corner: no flowers or hay on them.
   const inHouse = (x, z) => layout.wings.some((wing) => wing.rows.some((row) => x >= row.x0 && x <= row.x1
     && z >= row.back && z < row.back + ROW_PITCH)
     || (wing.portals && x >= wing.portals.x0 && x <= wing.portals.x0 + 6 && z >= 0 && z <= 9));
@@ -552,7 +552,7 @@ function buildGarden(blocks, group, layout, season) {
       blocks.set(ground.patch && noise(Math.floor(x / 3), Math.floor(z / 3), 11) < 0.35 ? ground.patch : ground.top, x, -1, z);
       if (inHouse(x, z)) continue;
       const roll = noise(x, z, 7);
-      // Au printemps, des prairies fleuries par plaques, bien visibles de loin.
+      // In spring, flowering meadows in patches, clearly visible from afar.
       const meadow = ground.meadowRate && noise(Math.floor(x / 4), Math.floor(z / 4), 13) < 0.3;
       const flowerRate = meadow ? ground.meadowRate : ground.flowerRate ?? 0.06;
       if (roll < flowerRate && ground.flowers.length) {
@@ -564,7 +564,7 @@ function buildGarden(blocks, group, layout, season) {
       }
     }
   }
-  // Allée entre les ailes, avec un tapis rouge.
+  // Aisle between the wings, with a red carpet.
   for (let i = 0; i < layout.wings.length - 1; i++) {
     const x0 = layout.wings[i].x1 + 1;
     for (let x = x0; x < x0 + layout.hall; x++) {
@@ -574,20 +574,20 @@ function buildGarden(blocks, group, layout, season) {
       }
     }
   }
-  // Arbres derrière la maison seulement : devant ou sur les côtés, ils cacheraient les pièces et les portails.
+  // Trees behind the house only: in front or on the sides, they would hide the rooms and the portals.
   for (let x = bounds.x0 + 1; x <= bounds.x1 - 1; x += 6) {
     const tx = x + Math.floor(noise(x, 3) * 2);
     groundAt(tx).tree(blocks, tx, bounds.z0 + 1, 4 + (x % 2), season);
   }
   for (const wing of layout.wings) {
     if (wing.theme === 'nether') {
-      // Mares de lave dans le jardin, devant et derrière la maison.
+      // Lava pools in the garden, in front of and behind the house.
       for (const [px, pz] of [[wing.zone.x0 + 2, bounds.z1 - 1], [wing.zone.x1 - 3, bounds.z0 + 3]]) {
         if (inHouse(px, pz) || inHouse(px + 1, pz)) continue;
         blocks.box('lava', px, px + 1, -1, -1, pz, pz);
       }
     } else if (wing.theme === 'end') {
-      // Piliers d'obsidienne, comme sur l'île de l'Ender Dragon.
+      // Obsidian pillars, like on the Ender Dragon's island.
       for (const px of [wing.zone.x0 + 2, wing.zone.x1 - 2]) blocks.box('obsidian', px, px, 0, 4, bounds.z0 + 3, bounds.z0 + 3);
     }
     if (wing.theme !== 'normal') {
@@ -607,7 +607,7 @@ const ghostMaterial = new THREE.MeshLambertMaterial({ color: '#2a1f3d', transpar
 function animatedPlane(width, height, textureName, opacity) {
   const mat = new THREE.MeshBasicMaterial({ transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false });
   loadTexture(`${TEXTURE_ROOT}${textureName}.png`).then((map) => {
-    // Texture d'animation (images empilées) : on la fait défiler nous-mêmes, image par image.
+    // Animation texture (stacked frames): we scroll it ourselves, frame by frame.
     const frames = map.image.height / map.image.width;
     map.repeat.set(1, 1 / Math.max(1, frames));
     map.wrapT = THREE.RepeatWrapping;
@@ -621,8 +621,8 @@ function animatedPlane(width, height, textureName, opacity) {
 }
 
 /**
- * Portails d'une aile : le cadre du Nether se construit avec le quota 5 h (un bloc par tranche de 10 %),
- * le cadre de l'End reçoit un œil par douzième du quota de la semaine. À 100 %, le portail s'allume.
+ * Portals of a wing: the Nether frame is built with the 5 h quota (one block per 10 % step),
+ * the End frame receives an eye per twelfth of the weekly quota. At 100 %, the portal lights up.
  */
 function buildPortals(blocks, group, wing) {
   const x0 = wing.portals.x0;
@@ -665,7 +665,7 @@ function portalLight(group, kind, x, y, z) {
 }
 
 /**
- * Le décor : île, jardin, maison à deux ailes et meubles, reconstruit seulement quand le plan change.
+ * The scenery: island, garden, two-wing house and furniture, rebuilt only when the plan changes.
  */
 export class World {
   constructor(scene) {
@@ -703,8 +703,8 @@ export class World {
   }
 
   /**
-   * Libère ce qui a été créé pour l'ancien plan (géométries et matériaux propres aux pièces, instances) ; ce qui est
-   * partagé par le cache reste. Sans ça, une page ouverte toute la journée accumule de la mémoire graphique.
+   * Frees what was created for the old plan (geometries and materials specific to rooms, instances); what is
+   * shared through the cache stays. Without this, a page left open all day accumulates graphics memory.
    */
   release() {
     const shared = new Set([unitBox, carpetBox, waterQuad, cross, ghostMaterial, ...shapeCache.values(), ...materialCache.values()]);
@@ -717,7 +717,7 @@ export class World {
   }
 
   /**
-   * Eau qui ondule : on fait défiler les images de sa texture animée.
+   * Rippling water: we scroll through the frames of its animated texture.
    */
   animate(time) {
     if (!waterMap) return;
@@ -726,7 +726,7 @@ export class World {
   }
 
   /**
-   * Objets d'une pièce qui suivent la session : lampes des tâches, toiles du contexte, émeraudes du coût.
+   * Objects of a room that follow the session: task lamps, context cobwebs, cost emeralds.
    */
   updateRoom(player, time) {
     const room = this.rooms.get(player.id);
@@ -744,7 +744,7 @@ export class World {
   }
 
   /**
-   * Portails des quotas de chaque compte, et défilement de leurs textures animées.
+   * Quota portals of each account, and scrolling of their animated textures.
    */
   updatePortals(accounts, time) {
     for (const account of accounts) {
@@ -766,7 +766,7 @@ export class World {
   }
 
   /**
-   * Nuit : les lampes des pièces (et l'ambiance des zones Nether ou End) éclairent plus fort.
+   * Night: room lamps (and the ambiance of Nether or End zones) shine brighter.
    */
   setGloom(gloom) {
     this.gloom = gloom;
@@ -776,8 +776,8 @@ export class World {
   }
 
   /**
-   * En plein soleil, les lampes ne changent presque rien à l'image, mais chaque lumière coûte sur chaque pixel de
-   * l'écran : elles ne s'allument qu'avec la pénombre. Un portail n'éclaire que s'il est ouvert.
+   * In full sun, lamps change almost nothing in the image, but every light costs on every pixel of
+   * the screen: they only turn on with dimness. A portal only lights up if it is open.
    */
   lightPortal(light, open) {
     if (light.userData.active === open) return;

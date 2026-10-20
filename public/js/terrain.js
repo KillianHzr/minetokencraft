@@ -1,46 +1,46 @@
 import { fbm, noise, smoothNoise, smoothstep } from './noise.js';
 
-// Le paysage autour de la maison, à la place d'une île qui flotte dans le vide : des montagnes rocheuses derrière, qui
-// montent au-delà du haut de l'écran ; des collines boisées à gauche ; une rivière qui passe devant ; une prairie basse
-// au-delà. Un chemin de terre fait le tour de la propriété. La zone plate du centre suit le plan de la maison, le
-// relief se cale autour, et le tout couvre tout ce que voit la caméra, coins compris : on ne voit jamais le vide.
+// The landscape around the house, instead of an island floating in the void: rocky mountains behind, rising
+// beyond the top of the screen; wooded hills on the left; a river running in front; a low meadow
+// beyond. A dirt path goes around the property. The flat area in the center follows the house plan, the
+// terrain is shaped around it, and the whole covers everything the camera sees, corners included: never any void.
 //
-// Côté caméra (devant, à droite), le terrain reste bas : il ne doit jamais cacher une pièce.
+// On the camera side (front, right), the terrain stays low: it must never hide a room.
 
-// Bande de terrain plat autour de la maison avant que le relief commence.
+// Strip of flat terrain around the house before the relief starts.
 const FLAT_MARGIN = 2;
-// Montée par bloc derrière la maison, et à gauche, puis bosses et pics par-dessus.
+// Rise per block behind the house, and to the left, then bumps and peaks on top.
 const MOUNTAIN_SLOPE = 1.6;
 const HILL_SLOPE = 0.6;
 const HILLS = 3;
 const PEAKS = 8;
 const CRAGS = 10;
-// Devant et à droite : au plus un bloc au-dessus du sol de la maison.
+// In front and to the right: at most one block above the house's floor.
 const LOW_CAP = 1;
 const ROCK_LINE = 8;
 const SNOW_LINE = 14;
 const RIVER = {
-  // Écart entre le devant de la maison et l'axe de la rivière.
+  // Distance between the front of the house and the river's axis.
   offset: 8,
   halfWidth: 2.3,
-  // Méandres : décalage aléatoire de l'axe, en blocs.
+  // Meanders: random offset of the axis, in blocks.
   meander: 2,
-  // Pente douce des berges vers l'eau.
+  // Gentle slope of the banks toward the water.
   valley: 5,
-  // Haut du lit : moins profond sur les bords.
+  // Top of the bed: shallower at the edges.
   deep: -2,
   shallow: -1,
 };
-// Le chemin qui fait le tour de la propriété, juste à l'extérieur du jardin.
+// The path going around the property, just outside the garden.
 const PATH_WIDTH = 1;
-// Arbres sur une grille de 5 blocs, un par case au plus, décalé au hasard dans sa case.
+// Trees on a 5-block grid, at most one per cell, randomly offset within its cell.
 const TREE_GRID = 5;
-// Devant et à droite, les arbres restent loin : plus près, ils mordraient sur la maison à l'écran.
+// In front and to the right, trees stay far away: closer, they would overlap the house on screen.
 const OPEN_GROUND = 14;
 
 const NONE = -32768;
 
-// Feuillages selon la saison ; l'hiver, une couche de neige sur le dessus des arbres.
+// Foliage by season; in winter, a layer of snow on top of the trees.
 const FOLIAGE = {
   spring: { oak: ['leaves', 'floweringAzalea'], birch: 'birchLeaves' },
   summer: { oak: ['leaves'], birch: 'birchLeaves' },
@@ -53,8 +53,8 @@ function snowCap(blocks, season, x, y, z) {
 }
 
 /**
- * Chêne : tronc, feuillage en deux étages ; au printemps des fleurs d'azalée s'y mêlent, à l'automne chaque arbre
- * a sa couleur.
+ * Oak: trunk, two-tier foliage; in spring azalea flowers mix in, in autumn each tree
+ * has its own color.
  */
 export function oakTree(blocks, x, z, trunk, season = 'summer', base = 0) {
   const leaves = FOLIAGE[season].oak;
@@ -75,7 +75,7 @@ export function oakTree(blocks, x, z, trunk, season = 'summer', base = 0) {
 }
 
 /**
- * Bouleau : tronc blanc plus haut, feuillage plus étroit, jaune à l'automne.
+ * Birch: taller white trunk, narrower foliage, yellow in autumn.
  */
 function birchTree(blocks, x, z, trunk, season, base) {
   const type = FOLIAGE[season].birch;
@@ -95,7 +95,7 @@ function birchTree(blocks, x, z, trunk, season, base) {
 }
 
 /**
- * Sapin : un cône d'étages alternés, larges puis étroits, jusqu'à une pointe ; toujours vert.
+ * Spruce: a cone of alternating tiers, wide then narrow, up to a tip; always green.
  */
 function spruceTree(blocks, x, z, trunk, season, base) {
   blocks.box('spruceLog', x, x, base, base + trunk - 1, z, z);
@@ -115,7 +115,7 @@ function spruceTree(blocks, x, z, trunk, season, base) {
 }
 
 /**
- * Roche d'un flanc de montagne : surtout de la pierre, avec des veines d'andésite, de pierre taillée et de gravier.
+ * Rock of a mountainside: mostly stone, with veins of andesite, stone bricks and gravel.
  */
 function rockAt(x, y, z) {
   const vein = smoothNoise(x + y * 3, z - y * 2, 4, 90);
@@ -132,10 +132,10 @@ function segmentDistance(px, pz, [ax, az], [bx, bz]) {
 }
 
 /**
- * Construit le paysage. `flat` : la zone plate de la maison (jardin compris), que le jardin remplit lui-même ;
- * `cover` : le rectangle de cases à couvrir pour remplir la vue ; `ceiling(x, z)` : hauteur au-delà de laquelle une
- * colonne sort par le haut de l'écran (inutile de la monter plus haut ; négative, la case est hors champ).
- * `flora` : fleurs et herbes de la saison.
+ * Builds the landscape. `flat`: the house's flat area (garden included), which the garden fills itself;
+ * `cover`: the rectangle of cells to cover to fill the view; `ceiling(x, z)`: height beyond which a
+ * column leaves through the top of the screen (no need to raise it higher; negative, the cell is out of view).
+ * `flora`: the season's flowers and grasses.
  */
 export function buildTerrain(blocks, { flat, cover, ceiling }, season, flora) {
   const width = cover.x1 - cover.x0 + 1;
@@ -146,7 +146,7 @@ export function buildTerrain(blocks, { flat, cover, ceiling }, season, flora) {
   const water = new Uint8Array(width * depth);
   const river = new Float32Array(width * depth);
 
-  // La rivière traverse tout le devant, d'un bord à l'autre de la vue.
+  // The river crosses the whole front, from one edge of the view to the other.
   const riverPath = [[cover.x1 + 10, flat.z1 + RIVER.offset], [cover.x0 - 10, flat.z1 + RIVER.offset]];
   const riverDistance = (x, z) => {
     const wx = x + (smoothNoise(x, z, 9, 40) - 0.5) * 2 * RIVER.meander;
@@ -174,14 +174,14 @@ export function buildTerrain(blocks, { flat, cover, ceiling }, season, flora) {
       const behind = flat.z0 - z;
       const left = flat.x0 - x;
       const away = awayFromFlat(x, z);
-      // Devant et à droite (côté caméra), le terrain s'aplatit.
+      // In front and to the right (camera side), the terrain flattens out.
       const low = Math.max(smoothstep(flat.z1 - 2, flat.z1 + 6, z), smoothstep(flat.x1 - 2, flat.x1 + 6, x) * smoothstep(flat.z0 - 6, flat.z0 + 2, z));
-      // Massifs : la pente monte derrière et à gauche, plus ou moins vite selon l'endroit (cols et sommets).
+      // Massifs: the slope rises behind and to the left, at varying speed depending on the place (cols and summits).
       const slope = Math.max(0, behind - FLAT_MARGIN) * MOUNTAIN_SLOPE + Math.max(0, left - FLAT_MARGIN) * HILL_SLOPE;
       const massif = slope * (0.6 + 0.8 * smoothNoise(x, z, 16, 5));
-      // Arêtes pointues par-dessus, là où le relief est déjà haut.
+      // Sharp ridges on top, where the relief is already high.
       const ridge = (1 - Math.abs(smoothNoise(x, z, 11, 6) * 2 - 1)) * PEAKS * smoothstep(3, 12, slope);
-      // Affleurements et ravines qui cassent la régularité des gradins.
+      // Outcrops and gullies that break up the regularity of the steps.
       const crags = (fbm(x, z, 5, 7, 2) - 0.5) * CRAGS * smoothstep(3, 10, slope);
       const shape = (value) => {
         let height = value * smoothstep(RIVER.halfWidth + 1, RIVER.halfWidth + RIVER.valley, distance);
@@ -232,7 +232,7 @@ export function buildTerrain(blocks, { flat, cover, ceiling }, season, flora) {
         surface = steep && top >= ROCK_LINE ? 'snow' : 'snowyGrass';
         if (top >= ROCK_LINE) filler = 'rock';
       } else if (steep || (top >= ROCK_LINE && smoothNoise(x, z, 5, 63) < 0.45)) {
-        // Flancs de pierre ; les corniches douces gardent leur herbe, comme dans le jeu.
+        // Stone flanks; the gentle ledges keep their grass, like in the game.
         surface = rockAt(x, top - 1, z);
         filler = 'rock';
       } else {
@@ -250,7 +250,7 @@ export function buildTerrain(blocks, { flat, cover, ceiling }, season, flora) {
         continue;
       }
       if (steep || surface === 'path') continue;
-      // Cannes à sucre au bord de l'eau.
+      // Sugar cane at the water's edge.
       if (bank && !frozen && nextToWater(x, z) && noise(x, z, 67) < 0.3) {
         const height = 1 + Math.floor(noise(x, z, 68) * 3);
         for (let k = 0; k < height; k++) blocks.plants.push({ type: 'sugarCane', x, y: top + k, z });
@@ -271,8 +271,8 @@ export function buildTerrain(blocks, { flat, cover, ceiling }, season, flora) {
     }
   }
 
-  // Arbres : forêt dense de chênes et de bouleaux à gauche, sapins au pied des montagnes, quelques arbres au loin
-  // dans la prairie.
+  // Trees: dense forest of oaks and birches on the left, spruces at the foot of the mountains, a few trees far away
+  // in the meadow.
   for (let gz = Math.floor(cover.z0 / TREE_GRID); gz <= Math.floor(cover.z1 / TREE_GRID); gz++) {
     for (let gx = Math.floor(cover.x0 / TREE_GRID); gx <= Math.floor(cover.x1 / TREE_GRID); gx++) {
       const x = gx * TREE_GRID + 1 + Math.floor(noise(gx, gz, 80) * (TREE_GRID - 2));

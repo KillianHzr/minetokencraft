@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,11 +14,12 @@
 </head>
 <body>
   <div id="toolbar">
-    <label class="switch"><input id="simple-toggle" type="checkbox"><span class="switch__track"></span>Mode simple</label>
-    <button id="sound-toggle" type="button">Son</button>
-    <button id="notify-toggle" type="button">Notifs Mac</button>
-    <button id="stats-toggle" type="button">Journée</button>
-    <button id="settings-toggle" type="button">Réglages</button>
+    <label class="switch"><input id="simple-toggle" type="checkbox"><span class="switch__track"></span><span data-i18n="toolbar.simple">Simple mode</span></label>
+    <button id="sound-toggle" type="button"></button>
+    <button id="notify-toggle" type="button"></button>
+    <button id="stats-toggle" type="button" data-i18n="toolbar.stats">Today</button>
+    <button id="settings-toggle" type="button" data-i18n="toolbar.settings">Settings</button>
+    <select id="language-select" data-i18n-title="toolbar.language" aria-label="Language"></select>
   </div>
   <div id="toasts"></div>
   <div id="history" hidden></div>
@@ -34,8 +35,8 @@
       <div id="bossbars"></div>
       <div id="tooltip" class="mc-tooltip" hidden></div>
       <div id="chat"></div>
-      <p id="empty" class="banner" hidden>Tout le monde dort.</p>
-      <p id="offline" class="banner banner--alert" hidden>Serveur injoignable, nouvelle tentative…</p>
+      <p id="empty" class="banner" data-i18n="banner.empty" hidden>Everyone is asleep.</p>
+      <p id="offline" class="banner banner--alert" data-i18n="banner.offline" hidden>Server unreachable, trying again…</p>
     </section>
     <aside id="panel"></aside>
   </main>

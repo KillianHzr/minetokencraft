@@ -1,8 +1,8 @@
-// Bruits déterministes pour le décor : une même case donne toujours le même tirage, d'un chargement à l'autre.
+// Deterministic noise for the scenery: the same cell always gives the same roll, from one load to the next.
 
 /**
- * Valeur entre 0 et 1 propre à une case et à un sel. Hachage entier avec le brassage final de MurmurHash3 :
- * deux sels voisins donnent des tirages indépendants (sans lui, le type de fleur suivait le tirage « fleur ou pas »).
+ * Value between 0 and 1 specific to a cell and a salt. Integer hash with the MurmurHash3 final mix:
+ * two nearby salts give independent rolls (without it, the flower type followed the "flower or not" roll).
  */
 export function noise(x, z, salt = 0) {
   let h = Math.imul(x, 0x27d4eb2d) ^ Math.imul(z, 0x165667b1) ^ Math.imul(salt + 0x5bd1e995, 0x9e3779b1);
@@ -14,7 +14,7 @@ export function noise(x, z, salt = 0) {
 const ease = (t) => t * t * (3 - 2 * t);
 
 /**
- * Bruit lissé : tirages aux nœuds d'une grille de pas `scale`, interpolés entre eux.
+ * Smooth noise: rolls at the nodes of a grid with step `scale`, interpolated between them.
  */
 export function smoothNoise(x, z, scale, salt = 0) {
   const gx = x / scale;
@@ -31,7 +31,7 @@ export function smoothNoise(x, z, scale, salt = 0) {
 }
 
 /**
- * Plusieurs couches de bruit lissé de plus en plus fines (reliefs, crêtes), entre 0 et 1.
+ * Several layers of smooth noise, increasingly fine (reliefs, ridges), between 0 and 1.
  */
 export function fbm(x, z, scale, salt = 0, octaves = 3) {
   let total = 0;

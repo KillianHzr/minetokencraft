@@ -18,9 +18,11 @@ import { DEMO_SCENARIOS, demoHistory, demoState } from './demo.js';
 import { biomeFor, hash, professionFor } from './identity.js';
 import { loadImage, TEXTURE_ROOT } from './textures.js';
 import { SITE } from './site.js';
+import { LANGUAGE, LANGUAGES, setLanguage, t, translatePage } from './i18n.js';
 import {
   clockTime,
   escapeHtml,
+  formatPct,
   gitText,
   isUrgent,
   playerActivity,
@@ -30,14 +32,14 @@ import {
   workingVillagers,
 } from './format.js';
 
-// Caméra orthographique fixe, de trois quarts (angles dans layout.js) : toute la maison tient dans l'écran.
+// Fixed orthographic three-quarter camera (angles in layout.js): the whole house fits on screen.
 const CAMERA_DISTANCE = 150;
-// Direction du soleil (ou de la lune) : elle suit l'heure, fournie par l'environnement à chaque image.
+// Direction of the sun (or moon): it follows the time of day, supplied by the environment on every frame.
 const SHADOW_MAP_SIZE = 2048;
-// Budget de rendu : une page de suivi n'a pas besoin de plus de 30 images par seconde, ni d'un canvas en pleine
-// résolution Retina (le pixel art n'y gagne rien) ; les ombres se recalculent dix fois par seconde.
+// Render budget: a monitoring page does not need more than 30 frames per second, nor a canvas at full Retina
+// resolution (pixel art gains nothing from it); shadows are recomputed ten times per second.
 const FRAME_MS = 1000 / 30;
-// Fenêtre sans le focus (la page reste ouverte sur un écran pendant qu'on travaille ailleurs) : 20 images par seconde.
+// Window without focus (the page stays open on a screen while you work elsewhere): 20 frames per second.
 const BACKGROUND_FRAME_MS = 1000 / 20;
 const MAX_PIXEL_RATIO = 1.25;
 const SHADOW_EVERY_MS = 100;
@@ -46,18 +48,18 @@ const FRAMING_EASE = 4;
 const SKINS_STORAGE_KEY = 'minetokencraft:skins';
 const SIMPLE_STORAGE_KEY = 'minetokencraft:simple';
 const REFRESH_TEXTS_MS = 30000;
-// Un joueur ne change de meuble qu'après ce délai, sinon il courrait de l'un à l'autre à chaque appel d'outil.
+// A player only switches furniture after this delay, otherwise it would run from one to the other on every tool call.
 const STATION_DWELL_MS = 1500;
 const LABEL_PRIORITY = { wing: 0, room: 1, villager: 2 };
-// Nametag : le nom de la session, raccourci ; l'infobulle donne le reste.
+// Nametag: the session name, shortened; the tooltip gives the rest.
 const NAMETAG_CHARS = 26;
 const TOOLTIP_VILLAGERS = 6;
 const TOOLTIP_OFFSET_PX = 16;
-// Couleurs des barres de boss du jeu, une par compte dans leur ordre.
+// Colors of the game's boss bars, one per account in order.
 const BOSS_BAR_COLORS = ['blue', 'yellow', 'purple', 'white'];
 
-// Meuble de la pièce selon l'outil : fourneau pour les commandes, bibliothèque pour lire et chercher,
-// table de cartographie pour le web, établi pour écrire et le reste.
+// Room furniture by tool: furnace for commands, bookshelf for reading and searching,
+// cartography table for the web, crafting table for writing and everything else.
 const TOOL_STATIONS = {
   Bash: 'furnace',
   BashOutput: 'furnace',
@@ -74,12 +76,12 @@ const TOOL_STATIONS = {
 const STATION_POSES = { carto: 'work', craft: 'work', furnace: 'work', library: 'read', chair: 'sit', front: 'wave', supervise: 'idle' };
 const TOOL_STATIONS_WITH_ITEM = new Set(['carto', 'craft', 'furnace']);
 const PARTICLE_TIMERS = { craft: 0.42, carto: 0.42, furnace: 0.3, library: 0.5, chair: 2 };
-// Ambiance d'une zone Nether (braises qui montent) ou End (particules de portail qui flottent), par seconde.
+// Ambiance of a Nether zone (rising embers) or End zone (floating portal particles), per second.
 const ZONE_PARTICLES = {
   nether: { type: 'ember', rate: 10, velocity: [0, 0.9, 0], spread: 0.3, life: 2.6, size: 0.12 },
   end: { type: 'portal', rate: 10, velocity: [0, 0.25, 0], spread: 0.8, life: 2.2, size: 0.14 },
 };
-// Page de test : /demo sur le serveur local, ou la démo en ligne (aucun serveur derrière).
+// Test page: /demo on the local server, or the online demo (no server behind it).
 const DEMO = window.location.pathname.endsWith('/demo') || SITE.standalone;
 const DEMO_TICK_MS = 4000;
 
@@ -90,6 +92,17 @@ const empty = document.getElementById('empty');
 const bossBars = document.getElementById('bossbars');
 const tooltip = document.getElementById('tooltip');
 const simpleToggle = document.getElementById('simple-toggle');
+const languageSelect = document.getElementById('language-select');
+
+translatePage();
+languageSelect.innerHTML = Object.entries(LANGUAGES).map(([code, { name }]) => `<option value="${code}"${code === LANGUAGE ? ' selected' : ''}>${name}</option>`).join('');
+languageSelect.addEventListener('change', async () => {
+  // The server follows the page language for macOS notifications and the command line.
+  if (!DEMO) {
+    await fetch('api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ language: languageSelect.value }) }).catch(() => {});
+  }
+  setLanguage(languageSelect.value);
+});
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
@@ -97,7 +110,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.shadowMap.autoUpdate = false;
 const scene = new THREE.Scene();
-// Lumière du ciel (bleutée d'en haut, terreuse d'en bas) et soleil chaud qui porte les ombres.
+// Sky light (bluish from above, earthy from below) and a warm sun that casts the shadows.
 const hemisphere = new THREE.HemisphereLight(0xdcecff, 0x8a7454, 0.5);
 scene.add(hemisphere);
 const sun = new THREE.DirectionalLight(0xfff1d6, 0.9);
@@ -129,7 +142,7 @@ document.getElementById('stats-toggle').addEventListener('click', () => statsOve
 const history = new HistoryDrawer(document.getElementById('history'), { onFocus: focusPlayer });
 const settingsDialog = new SettingsDialog(document.getElementById('settings'), { onChange: () => refreshState() });
 document.getElementById('settings-toggle').addEventListener('click', () => settingsDialog.open());
-// Démo en ligne : ni réglages ni notifications, il n'y a pas de serveur sur la machine du visiteur.
+// Online demo: no settings or notifications, there is no server on the visitor's machine.
 if (SITE.standalone) for (const id of ['settings-toggle', 'notify-toggle']) document.getElementById(id).hidden = true;
 const dashboard = new Dashboard(document.getElementById('dashboard'), { onFocus: focusPlayer, onHistory: openHistory });
 let highlighted = null;
@@ -141,17 +154,18 @@ const panel = new Panel(document.getElementById('panel'), {
   onFocus: focusPlayer,
   onHistory: openHistory,
 });
-// Un Claude qui t'attend depuis longtemps : la cloche resonne à intervalles réguliers.
+// A Claude that has been waiting for you for a long time: the bell rings at regular intervals.
 const REMIND_MS = 60 * 1000;
-// Le serveur relit les sessions toutes les secondes : un peu plus d'attente suffit pour voir un réglage appliqué.
+// The server rereads the sessions every second: waiting a little longer is enough to see a setting applied.
 const STATE_REFRESH_DELAY_MS = 1200;
-// Session qui se termine (ou s'endort) : le joueur sort par sa porte et quitte l'île, puis sa pièce part en fumée.
+// Session that ends (or falls asleep): the player leaves through its door and exits the house, then its room
+// goes up in smoke.
 const DEPARTURE_MS = 7000;
 const departing = new Map();
 const SOOT_EVERY_S = 0.25;
 
 /**
- * Joueurs qui ont une pièce : les sessions éveillées, plus celles qui sont en train de partir.
+ * Players that have a room: the awake sessions, plus those that are leaving.
  */
 function housedPlayers() {
   const active = state.players.filter((player) => player.status !== 'sleeping');
@@ -169,7 +183,7 @@ let paused = false;
 let simple = false;
 
 /**
- * Skin attribué à chaque joueur : stable pendant toute sa vie (et après rechargement), sans doublon si possible.
+ * Skin assigned to each player: stable for its whole life (and after a reload), without duplicates if possible.
  */
 function skinFor(playerId) {
   if (!skinAssignments[playerId] || !skins.some((skin) => skin.name === skinAssignments[playerId])) {
@@ -187,7 +201,7 @@ function skinFor(playerId) {
     try {
       localStorage.setItem(SKINS_STORAGE_KEY, JSON.stringify(skinAssignments));
     } catch {
-      // Sans stockage, les skins seront retirés au prochain chargement.
+      // Without storage, the skins will be drawn again on the next load.
     }
   }
   const skin = skins.find((candidate) => candidate.name === skinAssignments[playerId]);
@@ -212,7 +226,7 @@ function stationSpot(record) {
 }
 
 /**
- * Poste du joueur : on ne le change qu'une fois le nouvel outil installé, sauf pour t'appeler ou se reposer.
+ * Player's station: it only changes once the new tool is set up, except to call you or to rest.
  */
 function applyStation(record, now) {
   const player = record.data;
@@ -235,7 +249,7 @@ function applyStation(record, now) {
 }
 
 /**
- * Départ d'une session : jusqu'à la porte, puis tout droit hors de l'île.
+ * A session leaving: to the door, then straight out of the house.
  */
 function walkAway(record) {
   const { entity, room } = record;
@@ -250,7 +264,7 @@ function walkAway(record) {
 }
 
 /**
- * Nuage de fumée sur toute la surface d'une pièce qui disparaît.
+ * Smoke cloud over the whole surface of a room that disappears.
  */
 function roomPoof(room) {
   for (let dx = 0.5; dx < room.width; dx += 1.5) {
@@ -281,7 +295,7 @@ function syncVillagers(record, player, room) {
     let villager = record.villagers.get(placed.id);
     if (!villager) {
       villager = new Villager(biome, professionFor(data.type, data.id));
-      // Le villageois arrive depuis son joueur puis rejoint son bloc de métier.
+      // The villager arrives from its player, then walks to its job site block.
       villager.placeAt(record.entity.root.position.x, 0, record.entity.root.position.z);
       scene.add(villager.root);
       record.villagers.set(placed.id, villager);
@@ -320,7 +334,7 @@ function syncEntities() {
       scene.add(record.entity.root);
     }
     const isNew = !record.room;
-    // Changement de pièce (réorganisation) : il y réapparaît plutôt que de traverser les murs.
+    // Room change (reorganization): it reappears there rather than walking through walls.
     const moved = record.room && (record.room.x0 !== room.x0 || record.room.z0 !== room.z0);
     record.data = player;
     record.room = room;
@@ -338,8 +352,8 @@ function syncEntities() {
 }
 
 /**
- * Détails d'une session, dans l'infobulle qui suit la souris au-dessus de sa pièce : nom et projet, ce qu'il fait,
- * ses tâches, le contexte en barre d'expérience, le coût en émeraudes, la branche git et ses villageois.
+ * Details of a session, in the tooltip that follows the mouse over its room: name and project, what it is doing,
+ * its tasks, the context as an experience bar, the cost in emeralds, the git branch and its villagers.
  */
 function sessionTooltip(player) {
   const icon = player.stuck ? '⚠' : STATUS_ICONS[player.status];
@@ -361,9 +375,9 @@ function anchorAt(x, y, z) {
 }
 
 /**
- * Étiquettes de la carte, réduites au minimum pour laisser voir les personnages : un nametag au-dessus de chaque
- * joueur (comme dans le jeu), un petit écriteau devant chaque aile, et les villageois du joueur survolé dans le
- * panneau. Le reste est dans les barres de boss (quotas) et l'infobulle (détails d'une pièce).
+ * Map labels, kept to a minimum so the characters stay visible: a nametag above each player (as in the game),
+ * a small sign in front of each wing, and the hovered player's villagers in the panel. The rest is in the
+ * boss bars (quotas) and the tooltip (room details).
  */
 function refreshLabels() {
   const ids = new Set();
@@ -399,8 +413,8 @@ function refreshLabels() {
 }
 
 /**
- * Quotas de chaque compte en barres de boss, en haut de l'écran : la barre du haut pour les 5 heures, celle du
- * dessous pour la semaine. Elles se remplissent avec la consommation.
+ * Each account's quotas as boss bars at the top of the screen: the top bar for the 5 hours, the one below for
+ * the week. They fill up with consumption.
  */
 function renderBossBars() {
   const now = Date.now();
@@ -408,10 +422,10 @@ function renderBossBars() {
     const usage = account.usage;
     const notice = themeNotice(accountTheme(usage), usage);
     const color = BOSS_BAR_COLORS[(account.slot ?? 0) % BOSS_BAR_COLORS.length];
-    const value = (quota) => (quota ? (quota.usedPct >= 100 ? 'épuisé' : `${Math.round(quota.usedPct)} %`) : '?');
+    const value = (quota) => (quota ? (quota.usedPct >= 100 ? t('quota.spent') : formatPct(quota.usedPct)) : '?');
     const eta = account.forecast?.fiveHour?.eta;
     const detail = notice ? `<span class="bossbar__alert">${escapeHtml(notice)}</span>`
-      : `5 h ${value(usage?.fiveHour)}${eta ? ` <span class="bossbar__alert">→ ${clockTime(eta, now)}</span>` : ''} · semaine ${value(usage?.sevenDay)}`;
+      : `${t('bossbar.fiveHour', { value: value(usage?.fiveHour) })}${eta ? ` <span class="bossbar__alert">→ ${clockTime(eta, now)}</span>` : ''} · ${t('bossbar.week', { value: value(usage?.sevenDay) })}`;
     const bar = (quota) => `<div class="bossbar__bar" style="--bar:url('${TEXTURE_ROOT}gui/sprites/boss_bar/${color}_background.png');--fill:url('${TEXTURE_ROOT}gui/sprites/boss_bar/${color}_progress.png')">
         <i style="width:${Math.min(100, quota?.usedPct ?? 0)}%"></i></div>`;
     return `<div class="bossbar"><div class="bossbar__title"><b>${escapeHtml(account.label)}</b> · ${detail}</div>${bar(usage?.fiveHour)}${bar(usage?.sevenDay)}</div>`;
@@ -458,7 +472,7 @@ function updateCamera(dt) {
 }
 
 /**
- * Le soleil suit la maison : sa caméra d'ombres couvre juste l'île, pour des ombres nettes.
+ * The sun follows the house: its shadow camera covers just the house, for crisp shadows.
  */
 function aimSun(direction) {
   const { bounds } = layout;
@@ -470,17 +484,17 @@ function aimSun(direction) {
   sun.shadow.camera.updateProjectionMatrix();
 }
 
-// Paysage : il couvre tout ce que voit la caméra, coins compris, jusqu'au lit de la rivière ; les montagnes montent
-// au-delà du haut de l'écran, de quelques blocs seulement.
+// Landscape: it covers everything the camera sees, corners included, down to the riverbed; the mountains rise
+// past the top of the screen, by only a few blocks.
 const LOWEST_GROUND = -3;
 const COVER_MARGIN = 3;
 const CEILING_MARGIN = 3;
-// La pluie et la neige tombent aussi autour de la maison.
+// Rain and snow also fall around the house.
 const WEATHER_MARGIN = 14;
 
 /**
- * Cases à couvrir de paysage pour le cadrage visé (et le précédent, le temps que la caméra glisse de l'un à l'autre),
- * et hauteur à partir de laquelle une colonne sort par le haut de l'écran.
+ * Tiles to cover with landscape for the target framing (and the previous one, while the camera glides from one to
+ * the other), and the height from which a column leaves through the top of the screen.
  */
 function sceneryFor(target, previous) {
   const basis = new THREE.Matrix4().lookAt(cameraDirection, new THREE.Vector3(), new THREE.Vector3(0, 1, 0));
@@ -505,7 +519,7 @@ function sceneryFor(target, previous) {
   }
   const top = Math.max(...[target, previous].filter(Boolean).map((view) => view.center.clone().addScaledVector(up, view.top).sub(target.center).dot(up)));
   const point = new THREE.Vector3();
-  // Un bloc de plus en hauteur remonte le sommet de la colonne de up.y à l'écran.
+  // One more block of height raises the top of the column by up.y on screen.
   const ceiling = (x, z) => Math.floor((top - point.set(x + 0.5, 0, z + 0.5).sub(target.center).dot(up)) / up.y) + CEILING_MARGIN;
   return { cover, ceiling, skyKey: Math.round(top * 10) };
 }
@@ -551,7 +565,7 @@ function applyState(next) {
   for (const event of events) chat.say(event.html, event.kind);
   alerts.announce(events);
   const waiting = state.players.filter((player) => player.status === 'waiting').length;
-  const title = DEMO ? 'MineTokenCraft · test' : 'MineTokenCraft';
+  const title = DEMO ? `MineTokenCraft · ${t('demo.title')}` : 'MineTokenCraft';
   document.title = waiting ? `(${waiting}) ! ${title}` : title;
   document.getElementById('favicon').href = waiting ? 'favicon-alert.svg' : 'favicon.svg';
 }
@@ -597,7 +611,7 @@ function emitAmbient(record, dt) {
 }
 
 /**
- * Braises ou particules de portail au-dessus des zones dont le compte a épuisé un quota.
+ * Embers or portal particles above the zones whose account has used up a quota.
  */
 function emitZoneParticles(dt) {
   for (const wing of layout.wings) {
@@ -626,7 +640,7 @@ const environment = new Environment(scene, {
   sun,
 });
 const herd = new Herd(scene, particles);
-// Heure, météo et saison forcées par la page de test ; vides en temps normal.
+// Time, weather and season forced by the test page; empty in normal operation.
 let envOverride = {};
 let conditions = conditionsFor(Date.now(), null);
 let lastGloom = -1;
@@ -650,7 +664,7 @@ let lastShadowAt = -Infinity;
 
 function frame(time) {
   requestAnimationFrame(frame);
-  // Tolérance de 2 ms : sur un écran à 60 Hz, une image sur deux ; à 120 Hz, une sur quatre.
+  // 2 ms tolerance: on a 60 Hz screen, one frame out of two; at 120 Hz, one out of four.
   if (time - lastFrameAt < (document.hasFocus() ? FRAME_MS : BACKGROUND_FRAME_MS) - 2) return;
   lastFrameAt = time;
   if (time - lastShadowAt >= SHADOW_EVERY_MS) {
@@ -676,7 +690,7 @@ function frame(time) {
 function renderFrame(time) {
   timer.update(time);
   const dt = Math.min(timer.getDelta(), 0.1);
-  // En mode simple, la scène n'est pas affichée : on ne calcule rien.
+  // In simple mode the scene is not displayed: nothing is computed.
   if (simple || !layout) return;
   const now = performance.now();
   timed('entities', () => {
@@ -701,7 +715,7 @@ function renderFrame(time) {
   timed('labels', () => labels.update(camera, viewport.width, viewport.height));
 }
 
-// Temps passé par étape sur la seconde écoulée, pour minetokencraft.perf().
+// Time spent per step over the last second, for minetokencraft.perf().
 function timed(name, run) {
   const started = performance.now();
   run();
@@ -722,7 +736,7 @@ function setSimple(value) {
   try {
     localStorage.setItem(SIMPLE_STORAGE_KEY, value ? '1' : '0');
   } catch {
-    // Le choix ne survivra pas au rechargement.
+    // The choice will not survive a reload.
   }
   if (!state) return;
   if (!value) resize();
@@ -744,7 +758,7 @@ async function start() {
   if (DEMO) {
     startDemo();
   } else {
-    // Premier affichage sans attendre le flux direct, qui peut mettre un moment à livrer son premier message.
+    // First render without waiting for the live stream, which can take a while to deliver its first message.
     const initial = await (await fetch('api/state')).json().catch(() => null);
     if (initial?.players && !state) applyState(initial);
     const source = new EventSource('events');
@@ -762,10 +776,10 @@ async function start() {
 }
 
 /**
- * Page de test : sessions factices, un sélecteur de scénario (thèmes des ailes) et des outils qui tournent.
+ * Test page: fake sessions, a scenario selector (wing themes) and tools that cycle.
  */
 /**
- * Après un réglage (nom ou affichage d'un compte) : le serveur en tient compte au tour suivant, on va chercher l'état.
+ * After a setting change (an account's name or display): the server takes it into account on the next pass, so fetch the state.
  */
 function refreshState() {
   if (DEMO) return;
@@ -776,21 +790,21 @@ function refreshState() {
 }
 
 /**
- * Ramène le terminal d'une session (clic sur sa pièce ou sa carte) et dit ce qui a été fait.
+ * Brings a session's terminal to the front (click on its room or its card) and reports what was done.
  */
 async function focusPlayer(id) {
   const player = state?.players.find((candidate) => candidate.id === id);
   if (!player) return;
   if (DEMO) {
-    toasts.show(player.name, 'Page de test : pas de vrai terminal derrière cette session.', { ok: false });
+    toasts.show(player.name, t('focus.demo'), { ok: false });
     return;
   }
   try {
     const response = await fetch(`api/focus/${encodeURIComponent(id)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     const result = await response.json();
-    toasts.show(player.name, result.message, { ok: result.ok });
+    toasts.show(player.name, t(`focus.${result.code}`, result), { ok: result.ok });
   } catch {
-    toasts.show(player.name, 'Le serveur ne répond pas.', { ok: false });
+    toasts.show(player.name, t('focus.offline'), { ok: false });
   }
 }
 
@@ -802,7 +816,7 @@ function openHistory(id) {
 }
 
 /**
- * Ce qu'il y a sous le pointeur : une créature d'abord, sinon la pièce où le rayon de la caméra touche le sol.
+ * What is under the pointer: a creature first, otherwise the room where the camera ray hits the ground.
  */
 const raycaster = new THREE.Raycaster();
 const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -820,7 +834,7 @@ function aimAt(event) {
   return { room };
 }
 
-// Au-dessus d'une créature, le pointeur devient une épée en diamant.
+// Over a creature, the pointer becomes a diamond sword.
 let swordCursor = 'crosshair';
 loadImage(`${TEXTURE_ROOT}item/diamond_sword.png`).then((image) => {
   const size = 32;
@@ -845,7 +859,7 @@ canvas.addEventListener('mousemove', (event) => {
 canvas.addEventListener('mouseleave', () => showTooltip(null));
 
 /**
- * Infobulle de la pièce survolée, façon infobulle d'objet Minecraft, à côté du pointeur sans sortir de la scène.
+ * Tooltip of the hovered room, styled like a Minecraft item tooltip, next to the pointer without leaving the scene.
  */
 function showTooltip(player, event) {
   tooltip.hidden = !player;
@@ -860,23 +874,23 @@ function showTooltip(player, event) {
 function startDemo() {
   const select = document.createElement('select');
   select.id = 'demo-scenario';
-  select.innerHTML = DEMO_SCENARIOS.map((scenario) => `<option value="${scenario.id}">${escapeHtml(scenario.label)}</option>`).join('');
+  select.innerHTML = DEMO_SCENARIOS.map((scenario) => `<option value="${scenario.id}">${escapeHtml(t(`demo.scenario.${scenario.id}`))}</option>`).join('');
   const tag = document.createElement('span');
   tag.className = 'demo-tag';
-  tag.textContent = 'Page de test';
+  tag.textContent = t('demo.tag');
   document.getElementById('toolbar').append(tag, select);
   let tick = 0;
-  // « Faire partir » retire une session au travail le temps de voir le joueur quitter l'île et sa pièce disparaître.
+  // "Make leave" removes a working session long enough to see the player exit the house and its room disappear.
   const hidden = new Set();
-  // Heure, météo et saison forcées, pour voir chaque ambiance sans attendre qu'elle arrive.
+  // Forced time, weather and season, to see each ambiance without waiting for it to come.
   const environmentSelects = [
-    ['hour', [['', 'Heure réelle'], ['9', 'Matin'], ['13', 'Midi'], ['18.6', 'Coucher'], ['23', 'Nuit']]],
-    ['condition', [['', 'Météo réelle'], ['clear', 'Soleil'], ['cloudy', 'Nuageux'], ['rain', 'Pluie'], ['storm', 'Orage'], ['snow', 'Neige'], ['fog', 'Brouillard']]],
-    ['season', [['', 'Saison réelle'], ...SEASONS.map((season) => [season, { winter: 'Hiver', spring: 'Printemps', summer: 'Été', autumn: 'Automne' }[season]])]],
+    ['hour', [['', 'real'], ['9', 'morning'], ['13', 'noon'], ['18.6', 'sunset'], ['23', 'night']]],
+    ['condition', ['', 'clear', 'cloudy', 'rain', 'storm', 'snow', 'fog'].map((condition) => [condition, condition || 'real'])],
+    ['season', ['', ...SEASONS].map((season) => [season, season || 'real'])],
   ];
   for (const [key, options] of environmentSelects) {
     const control = document.createElement('select');
-    control.innerHTML = options.map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
+    control.innerHTML = options.map(([value, label]) => `<option value="${value}">${t(`demo.${key}.${label}`)}</option>`).join('');
     control.addEventListener('change', () => {
       envOverride = { ...envOverride, [key]: control.value === '' ? undefined : key === 'hour' ? Number(control.value) : control.value };
     });
@@ -884,7 +898,7 @@ function startDemo() {
   }
   const leave = document.createElement('button');
   leave.type = 'button';
-  leave.textContent = 'Faire partir une session';
+  leave.textContent = t('demo.leave');
   leave.addEventListener('click', () => {
     hidden.add('demo:4');
     show();
@@ -903,11 +917,11 @@ function startDemo() {
   show();
 }
 
-// Pour essayer les états depuis la console : minetokencraft.pause(), puis applyState() d'une copie modifiée de state().
+// To try states from the console: minetokencraft.pause(), then applyState() with a modified copy of state().
 window.minetokencraft = {
   scene,
   renderer,
-  // Coût du rendu : appels de dessin, triangles, lumières, et temps moyen passé par image sur les dernières images.
+  // Render cost: draw calls, triangles, lights, and the average time spent per frame over the last frames.
   perf: () => ({
     ...renderer.info.render,
     geometries: renderer.info.memory.geometries,
@@ -933,7 +947,7 @@ window.minetokencraft = {
   applyState,
   state: () => structuredClone(state),
   pause: (value = true) => (paused = value),
-  // Créatures par thème, avec leur position à l'écran (pour viser depuis la console) et leur vie.
+  // Creatures by theme, with their screen position (to aim from the console) and their health.
   mobs: () => [...herd.groups.values()].map((group) => ({
     theme: group.theme,
     cells: group.cells.size,

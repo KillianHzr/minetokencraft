@@ -1,20 +1,23 @@
+import { LOCALE, t } from './i18n.js';
+
 export const STATUS_ICONS = { waiting: '!', working: '⚒', done: '✔', sleeping: 'z', leaving: '→' };
-// Un Claude qui t'attend depuis plus longtemps que ça passe en alerte renforcée (même seuil que le serveur).
+// A Claude waiting for you longer than this gets the stronger alert (same threshold as the server).
 export const WAITING_URGENT_MS = 5 * 60 * 1000;
 
-export const STATUS_TITLES = {
-  waiting: "T'attendent",
-  working: 'Au travail',
-  done: 'Ont fini',
-  sleeping: 'Inactives',
+export function statusTitle(status) {
+  return t(`status.${status}`);
+}
+
+// What a waiting Claude expects from you, by the reason Claude Code gives.
+const WAITING_KEYS = {
+  'input needed': 'waiting.input',
+  'dialog open': 'waiting.dialog',
+  'sandbox request': 'waiting.sandbox',
+  'goal proposal': 'waiting.goal',
 };
 
-const WAITING_TEXTS = {
-  'input needed': 'attend ta réponse',
-  'dialog open': 'attend ton choix',
-  'sandbox request': 'demande un accès réseau',
-  'goal proposal': 'propose un objectif',
-};
+const oneDecimal = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const twoDecimals = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function escapeHtml(text) {
   return String(text ?? '').replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
@@ -27,34 +30,55 @@ export function truncate(text, max) {
 
 export function ago(timestamp, now = Date.now()) {
   const minutes = Math.floor((now - timestamp) / 60000);
-  if (minutes < 1) return "à l'instant";
-  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 1) return t('time.now');
+  if (minutes < 60) return t('time.minutes', { count: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} h`;
-  return `${Math.floor(hours / 24)} j`;
+  if (hours < 24) return t('time.hours', { count: hours });
+  return t('time.days', { count: Math.floor(hours / 24) });
 }
 
 export function clockTime(timestamp, now = Date.now()) {
   const date = new Date(timestamp);
-  const time = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const time = date.toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' });
   if (timestamp - now < 20 * 60 * 60 * 1000) return time;
-  return `${date.toLocaleDateString('fr-FR', { weekday: 'short' })} ${time}`;
+  return `${date.toLocaleDateString(LOCALE, { weekday: 'short' })} ${time}`;
 }
 
 export function formatTokens(tokens) {
   if (!tokens) return '0';
-  if (tokens >= 1e6) return `${(tokens / 1e6).toFixed(1).replace('.', ',')}M`;
+  if (tokens >= 1e6) return `${oneDecimal.format(tokens / 1e6)}M`;
   return `${Math.round(tokens / 1000)}k`;
 }
 
 export function formatCost(cost) {
-  return cost ? `${cost < 10 ? cost.toFixed(2).replace('.', ',') : Math.round(cost)} $` : '';
+  if (!cost) return '';
+  return t('cost', { amount: cost < 10 ? twoDecimals.format(cost) : Math.round(cost).toLocaleString(LOCALE) });
+}
+
+export function formatPct(pct) {
+  return t('percent', { value: Math.round(pct) });
+}
+
+const TASK_STATUSES = new Set(['pending', 'in_progress', 'completed', 'deleted']);
+
+/**
+ * What a tool works on (file, command, search…). The server words most of it; the task tools are worded here.
+ */
+export function toolDetail(tool) {
+  if (tool.name === 'TodoWrite') return t('tool.todo');
+  if (tool.name === 'TaskUpdate' && tool.taskId) {
+    if (!tool.taskStatus) return t('tool.task', { id: tool.taskId });
+    const status = TASK_STATUSES.has(tool.taskStatus) ? t(`task.${tool.taskStatus}`) : tool.taskStatus;
+    return t('tool.taskStatus', { id: tool.taskId, status });
+  }
+  return tool.label ?? '';
 }
 
 export function toolText(tool) {
   if (!tool) return '';
   const name = tool.name.startsWith('mcp__') ? tool.name.split('__')[1] : tool.name;
-  return tool.label ? `${name} · ${tool.label}` : name;
+  const label = toolDetail(tool);
+  return label ? `${name} · ${label}` : name;
 }
 
 export function workingVillagers(player) {
@@ -66,40 +90,43 @@ export function isUrgent(player, now = Date.now()) {
 }
 
 /**
- * Ce que fait le joueur, en une ligne courte (étiquette et panneau).
+ * What the player is doing, in one short line (nametag, panel, tooltip).
  */
 export function playerActivity(player, now = Date.now()) {
   switch (player.status) {
     case 'waiting': {
-      const what = WAITING_TEXTS[player.waitingFor] ?? (player.waitingFor || 'attend ta réponse');
-      return player.waitingSince ? `${what} · depuis ${ago(player.waitingSince, now)}` : what;
+      const what = WAITING_KEYS[player.waitingFor] ? t(WAITING_KEYS[player.waitingFor]) : player.waitingFor || t('waiting.input');
+      return player.waitingSince ? t('activity.waitingSince', { what, since: ago(player.waitingSince, now) }) : what;
     }
     case 'leaving':
-      return 's\'en va…';
+      return t('activity.leaving');
     case 'working': {
-      if (player.stuck) return `rien depuis ${ago(player.lastActivityAt, now)}${player.tool ? ` · ${toolText(player.tool)}` : ''}`;
+      if (player.stuck) {
+        const idle = t('activity.stuck', { since: ago(player.lastActivityAt, now) });
+        return player.tool ? `${idle} · ${toolText(player.tool)}` : idle;
+      }
       if (player.tool) return toolText(player.tool);
-      if (player.thinking) return 'réfléchit…';
+      if (player.thinking) return t('activity.thinking');
       const helpers = workingVillagers(player);
-      return helpers ? `attend ${helpers} villageois` : 'travaille';
+      return helpers ? t('activity.helpers', { count: helpers }) : t('activity.working');
     }
     case 'done':
-      return `a fini · ${ago(player.lastActivityAt, now)}`;
+      return t('activity.done', { since: ago(player.lastActivityAt, now) });
     default:
       return ago(player.lastActivityAt, now);
   }
 }
 
-/**
- * Niveau de remplissage en bleu / jaune / orange, comme la status line (lisible en daltonisme).
- */
-// Couleurs et styles d'aile des comptes : quatre jeux, attribués dans l'ordre des comptes, puis on recommence.
+// Account colors and wing styles: four sets, given out in account order, then it starts over.
 export const ACCOUNT_SLOTS = 4;
 
 export function slotClass(slot) {
   return `slot-${(slot ?? 0) % ACCOUNT_SLOTS}`;
 }
 
+/**
+ * Fill level in blue, yellow and orange, like the status line (readable with color blindness).
+ */
 export function levelClass(pct) {
   if (pct >= 80) return 'level--high';
   if (pct >= 50) return 'level--mid';
@@ -107,7 +134,7 @@ export function levelClass(pct) {
 }
 
 /**
- * Branche git et état du dossier, comme dans la status line : ⎇ branche ✚ modifiés ? non suivis ↑ en avance.
+ * Git branch and folder state, as in the status line: ⎇ branch ✚ changed ? untracked ↑ ahead.
  */
 export function gitText(git) {
   if (!git?.branch) return '';
@@ -122,15 +149,15 @@ export function gitText(git) {
 }
 
 /**
- * Prévision d'un quota : l'heure à laquelle il sera épuisé si on continue au rythme de la dernière heure.
+ * Quota forecast: when it runs out if usage keeps the pace of the last hour.
  */
 export function forecastText(forecast, now = Date.now()) {
   if (!forecast?.eta) return '';
-  return `épuisé vers ${clockTime(forecast.eta, now)} à ce rythme`;
+  return t('forecast', { time: clockTime(forecast.eta, now) });
 }
 
 /**
- * Avancement d'une liste de tâches en une ligne : 3/7 et la tâche en cours.
+ * Progress of a task list in one line: 3/7 and the current task.
  */
 export function tasksText(tasks) {
   if (!tasks?.total) return '';

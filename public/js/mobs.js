@@ -4,8 +4,8 @@ import { loadTexture, pixelated, TEXTURE_ROOT } from './textures.js';
 import { castShadows, Entity, modelMaterials } from './entities.js';
 import { ROOM_DEPTH } from './layout.js';
 
-// Animaux le jour, monstres la nuit, un mélange des deux sous la pluie : ils se promènent dans le jardin
-// et les allées, jamais dans les pièces.
+// Animals by day, monsters by night, a mix of both in the rain: they wander around the garden
+// and the paths, never in the rooms.
 
 const PX = 1 / 16;
 const HALF_PI = Math.PI / 2;
@@ -15,8 +15,8 @@ const WANDER_RADIUS = 7;
 const WANDER_TRIES = 10;
 const SPAWN_STAGGER_S = 0.6;
 
-// Combat : un clic frappe à l'épée en diamant (7 points de dégâts, comme dans le jeu). La créature rougit, recule,
-// meurt en tombant sur le côté puis disparaît en fumée ; une autre la remplace 5 s plus tard.
+// Combat: a click strikes with a diamond sword (7 damage points, as in the game). The mob turns red, is knocked back,
+// dies by falling on its side then vanishes in smoke; another replaces it 5 s later.
 const SWORD_DAMAGE = 7;
 const RESPAWN_S = 5;
 const HURT_S = 0.5;
@@ -25,21 +25,21 @@ const DEATH_FALL_S = 0.45;
 const KNOCKBACK = 0.9;
 const KNOCK_S = 0.22;
 const KNOCK_HOP = 0.35;
-// Les animaux frappés s'enfuient en courant.
+// Hit animals run away.
 const PANIC_S = 3;
 const PANIC_SPEED = 2.2;
 const HEALTH_BAR_S = 2.5;
-// Marge autour de la créature pour la viser sans pixel près.
+// Margin around the mob so it can be targeted without pixel-perfect aim.
 const HIT_SLACK = 0.25;
 const HURT_COLOR = new THREE.Color(1, 0.35, 0.35);
 const WHITE = new THREE.Color(1, 1, 1);
 
-// Coordonnées des modèles Minecraft : y vers le bas depuis 24 (le sol), avant en -z. On les convertit.
+// Minecraft model coordinates: y points down from 24 (the floor), front at -z. They are converted.
 const pivot = (x, y, z) => [x, 24 - y, -z];
 const box = (u, v, x, y, z, w, h, d, extra = {}) => ({ uv: [u, v], from: [x, -(y + h), -(z + d)], size: [w, h, d], ...extra });
 
 /**
- * Patron de chaque créature : texture, membres (pivot, pavés, rotation), pattes qui marchent, vitesse.
+ * Template for each mob: texture, limbs (pivot, boxes, rotation), walking legs, speed.
  */
 const SPECIES = {
   pig: {
@@ -66,7 +66,7 @@ const SPECIES = {
   },
   sheep: {
     texture: 'entity/sheep/sheep', tex: [64, 32], speed: 1, health: 8, passive: true,
-    // La laine est un second calque, un peu plus gros, avec sa propre texture.
+    // Wool is a second layer, slightly bigger, with its own texture.
     overlay: 'entity/sheep/sheep_fur',
     parts: {
       head: [pivot(0, 6, -8), [box(0, 0, -3, -4, -6, 6, 6, 8)], 0, [box(0, 0, -3, -4, -4, 6, 6, 6, { inflate: 0.6 })]],
@@ -135,7 +135,7 @@ const SPECIES = {
   },
 };
 
-// Créatures des dimensions : présentes jour et nuit dans une aile passée au Nether ou à l'End.
+// Dimension mobs: present day and night in a wing switched to the Nether or the End.
 const humanoidLimbs = {
   body: [pivot(0, 0, 0), [box(16, 16, -4, 0, -2, 8, 12, 4), box(16, 32, -4, 0, -2, 8, 12, 4, { inflate: 0.25, overlay: true })]],
   arm1: [pivot(-5, 2, 0), [box(40, 16, -3, -2, -2, 4, 12, 4)]],
@@ -143,7 +143,7 @@ const humanoidLimbs = {
   leg1: [pivot(-1.9, 12, 0), [box(0, 16, -2, 0, -2, 4, 12, 4)]],
   leg2: [pivot(1.9, 12, 0), [box(16, 48, -2, 0, -2, 4, 12, 4)]],
 };
-// Tête de piglin : plus large, groin, défenses et oreilles tombantes.
+// Piglin head: wider, snout, tusks and drooping ears.
 const piglinHead = {
   head: [pivot(0, 0, 0), [
     box(0, 0, -5, -8, -4, 10, 8, 8),
@@ -161,7 +161,7 @@ Object.assign(SPECIES, {
     texture: 'entity/piglin/zombified_piglin', tex: [64, 64], speed: 1.1, legs: ['leg1', 'leg2'], armsForward: true, health: 20,
     parts: { ...piglinHead, ...humanoidLimbs },
   },
-  // Blaze : une tête qui flotte, entourée de douze bâtons qui tournent sur trois anneaux.
+  // Blaze: a floating head, surrounded by twelve rods spinning on three rings.
   blaze: {
     texture: 'entity/blaze', tex: [64, 32], speed: 0.9, legs: [], rods: 12, health: 20,
     parts: {
@@ -169,7 +169,7 @@ Object.assign(SPECIES, {
       ...Object.fromEntries(Array.from({ length: 12 }, (_, index) => [`rod${index}`, [pivot(0, 24, 0), [box(0, 16, -1, -4, -1, 2, 8, 2)]]])),
     },
   },
-  // Ghast : un grand cube blanc qui flotte au-dessus de l'aile, ses tentacules qui pendent.
+  // Ghast: a big white cube floating above the wing, its tentacles hanging down.
   ghast: {
     texture: 'entity/ghast/ghast', tex: [64, 32], speed: 0.8, legs: [], flying: true, scale: 2, health: 10,
     parts: {
@@ -179,7 +179,7 @@ Object.assign(SPECIES, {
       ])),
     },
   },
-  // Enderman : très grand, bras et jambes interminables, yeux violets qui brillent dans le noir. Frappé, il se téléporte.
+  // Enderman: very tall, endless arms and legs, purple eyes glowing in the dark. When hit, it teleports.
   enderman: {
     texture: 'entity/enderman/enderman', tex: [64, 32], speed: 1, legs: ['leg1', 'leg2'], glow: 'entity/enderman/enderman_eyes', health: 40, teleports: true,
     parts: {
@@ -201,7 +201,7 @@ const DIMENSION_MOBS = {
   end: ['enderman', 'enderman', 'enderman'],
 };
 const GHAST_HEIGHT = 7;
-// Les créatures du Nether et de l'End brillent un peu dans la pénombre de leur dimension.
+// Nether and End mobs glow a little in the dimness of their dimension.
 const GLOW_INTENSITY = 0.9;
 
 class Mob extends Entity {
@@ -233,7 +233,7 @@ class Mob extends Entity {
     this.parts = {};
     for (const [name, [at, boxes, rotation = 0, overlayBoxes, rotationZ = 0]] of Object.entries(this.species.parts)) {
       const part = limb(this.model, at, boxes, this.species.tex, materials);
-      // Calque à part (laine du mouton, yeux de l'enderman), découpé selon sa transparence.
+      // Separate layer (sheep wool, enderman eyes), cut out according to its transparency.
       if (overlayBoxes && overlayMaterials) {
         limb(part, [0, 0, 0], overlayBoxes, this.species.tex, { base: overlayMaterials.overlay, overlay: overlayMaterials.overlay });
       }
@@ -242,7 +242,7 @@ class Mob extends Entity {
       this.parts[name] = part;
     }
     if (this.species.spider) {
-      // Pattes d'araignée : écartées en éventail et pliées vers le sol.
+      // Spider legs: spread out like a fan and bent toward the floor.
       [0.6, 0.25, -0.25, -0.6].forEach((fan, index) => {
         this.parts[`right${index}`].rotation.set(0, -fan, 0.6);
         this.parts[`left${index}`].rotation.set(0, fan, -0.6);
@@ -259,7 +259,7 @@ class Mob extends Entity {
   }
 
   /**
-   * Coup d'épée : dégâts, teinte rouge, recul (`push`, déjà vérifié par le troupeau) ; vrai si le coup tue.
+   * Sword strike: damage, red tint, knockback (`push`, already checked by the herd); true if the hit kills.
    */
   hurt(push) {
     this.health -= SWORD_DAMAGE;
@@ -281,7 +281,7 @@ class Mob extends Entity {
   }
 
   /**
-   * Barre de vie au-dessus de la tête, quelques secondes après chaque coup.
+   * Health bar above the head, for a few seconds after each hit.
    */
   showHealth() {
     if (!this.healthBar) {
@@ -337,7 +337,7 @@ class Mob extends Entity {
     this.clock += dt;
     this.updateCombat(dt);
     if (this.dying !== null) {
-      // Mort à la Minecraft : la créature bascule sur le côté, toute rouge, puis part en fumée.
+      // Minecraft-style death: the mob tips over on its side, all red, then goes up in smoke.
       this.dying -= dt;
       this.posture.rotation.z = Math.min(1, (DEATH_S - this.dying) / DEATH_FALL_S) * HALF_PI;
       this.dead = this.dying <= 0;
@@ -364,7 +364,7 @@ class Mob extends Entity {
       this.parts.wing2.rotation.z = -Math.abs(Math.sin(t * 14)) * 0.6;
     }
     if (this.species.rods) {
-      // Trois anneaux de quatre bâtons, à des hauteurs et des vitesses différentes.
+      // Three rings of four rods, at different heights and speeds.
       for (let index = 0; index < this.species.rods; index++) {
         const ring = Math.floor(index / 4);
         const angle = t * [1.6, -1.2, 2][ring] + (index % 4) * HALF_PI + ring * 0.4;
@@ -377,14 +377,14 @@ class Mob extends Entity {
       this.root.position.y = GHAST_HEIGHT + Math.sin(t * 0.7) * 0.4;
       for (let index = 0; index < 9; index++) this.parts[`tentacle${index}`].rotation.x = Math.sin(t * 1.4 + index) * 0.35;
     }
-    // La tête regarde autour quand la créature ne bouge pas.
+    // The head looks around when the mob isn't moving.
     if (this.parts.head && !this.moving && !this.species.rods) this.parts.head.rotation.y = Math.sin(t * 0.6) * 0.4;
   }
 }
 
 /**
- * Cases où l'on peut marcher dans les zones d'un thème (normal, Nether, End) : jardin et allées,
- * hors pièces, portails et rangée des troncs.
+ * Tiles where one can walk in the zones of a theme (normal, Nether, End): garden and paths,
+ * excluding rooms, portals and the trunk row.
  */
 function walkableCells(layout, theme) {
   const { bounds } = layout;
@@ -402,7 +402,7 @@ function walkableCells(layout, theme) {
 }
 
 /**
- * Les créatures d'un thème : leurs cases, leur composition du moment, celles en attente d'apparition.
+ * The mobs of a theme: their tiles, their current composition, those waiting to spawn.
  */
 class Group {
   constructor(theme) {
@@ -410,7 +410,7 @@ class Group {
     this.cells = new Set();
     this.mobs = [];
     this.queue = [];
-    // Créatures tuées, en attente de leur remplaçante.
+    // Killed mobs, waiting for their replacement.
     this.respawns = [];
     this.composition = null;
     this.timer = 0;
@@ -451,7 +451,7 @@ export class Herd {
   }
 
   wander(group, mob) {
-    // Le ghast survole son aile : il peut aller n'importe où au-dessus.
+    // The ghast flies over its wing: it can go anywhere above it.
     if (mob.species.flying) {
       const spot = this.randomCell(group);
       if (spot) mob.moveTo(spot.x, mob.root.position.y, spot.z);
@@ -481,7 +481,7 @@ export class Herd {
       const group = this.groups.get(theme) ?? new Group(theme);
       this.groups.set(theme, group);
       group.cells = walkableCells(layout, theme);
-      // Une créature restée hors de ses cases (la maison ou les thèmes ont changé) disparaît.
+      // A mob left outside its tiles (the house or the themes changed) disappears.
       group.mobs = group.mobs.filter((mob) => {
         const keep = group.cells.has(`${Math.floor(mob.root.position.x)},${Math.floor(mob.root.position.z)}`);
         if (!keep) this.remove(mob);
@@ -491,8 +491,8 @@ export class Herd {
     }
   }
 
-  // Remet en file les créatures qui manquent à la composition : celles qui viennent de disparaître, ou toute la
-  // population quand une aile revient du Nether ou de l'End et que le groupe retrouve des cases.
+  // Requeues the mobs missing from the composition: those that just disappeared, or the whole
+  // population when a wing comes back from the Nether or the End and the group gets tiles again.
   refill(group) {
     if (!group.composition || !group.cells.size) return;
     const missing = [...group.composition];
@@ -504,7 +504,7 @@ export class Herd {
   }
 
   /**
-   * Créature sous le rayon de la souris, la plus proche de la caméra.
+   * Mob under the mouse ray, the closest to the camera.
    */
   mobAt(ray) {
     let best = null;
@@ -520,7 +520,7 @@ export class Herd {
   }
 
   /**
-   * Coup d'épée sur la créature visée : elle recule dans l'axe du regard, si la case d'arrivée est praticable.
+   * Sword strike on the targeted mob: it is knocked back along the line of sight, if the landing tile is walkable.
    */
   hit({ mob, group }, ray) {
     const position = mob.root.position;
@@ -549,7 +549,7 @@ export class Herd {
   }
 
   /**
-   * Met la population à jour : nouveau plan, nouvelle heure ou nouvelle météo.
+   * Updates the population: new plan, new time of day or new weather.
    */
   update(dt, conditions, layout) {
     if (layout.signature !== this.signature) {
@@ -590,7 +590,7 @@ export class Herd {
         if (mob.dead) this.bury(group, mob);
         if (mob.dying !== null || mob.knock || mob.moving) continue;
         mob.idle -= dt;
-        // Un animal qui vient d'être frappé repart aussitôt ailleurs.
+        // An animal that was just hit immediately heads off elsewhere.
         if (mob.idle <= 0 || mob.panic > 0) {
           mob.idle = IDLE_MIN_S + Math.random() * (IDLE_MAX_S - IDLE_MIN_S);
           mob.restYaw = mob.root.rotation.y;

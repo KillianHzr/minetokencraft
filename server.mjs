@@ -15,7 +15,7 @@ import { refreshLimits, startLimits } from './lib/limits.mjs';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const HEARTBEAT_MS = 15000;
 
-// Préfixe d'URL -> dossier servi.
+// URL prefix -> served folder.
 const STATIC_ROUTES = [
   ['/assets/', ASSETS_DIR],
   ['/vendor/three/', path.join(root, 'node_modules', 'three')],
@@ -38,7 +38,7 @@ let lastState = null;
 
 async function serveStatic(pathname, res) {
   const [prefix, dir] = STATIC_ROUTES.find(([routePrefix]) => pathname.startsWith(routePrefix));
-  // La page de test (/demo) est la même page, nourrie par des sessions factices.
+  // The test page (/demo) is the same page, fed with fake sessions.
   const relative = pathname === '/' || pathname === '/demo' ? 'index.html' : decodeURIComponent(pathname.slice(prefix.length));
   const file = path.resolve(dir, relative);
   if (!file.startsWith(dir + path.sep)) {
@@ -72,7 +72,7 @@ async function poll() {
   try {
     const state = await collectState();
     const payload = JSON.stringify(state);
-    // `now` change à chaque tour : on ne compare que le reste.
+    // `now` changes on every tick: only the rest is compared.
     if (payload.slice(payload.indexOf(',')) !== lastPayload?.slice(lastPayload.indexOf(','))) {
       lastPayload = payload;
       for (const client of clients) client.write(`data: ${payload}\n\n`);
@@ -80,7 +80,7 @@ async function poll() {
     await notifyChanges(lastState, state);
     lastState = state;
   } catch (error) {
-    console.error('lecture des sessions impossible :', error);
+    console.error('cannot read sessions:', error);
   }
   setTimeout(poll, POLL_MS);
 }
@@ -96,8 +96,8 @@ async function readBody(req) {
   return body ? JSON.parse(body) : {};
 }
 
-// Les requêtes qui agissent exigent du JSON : un autre site ouvert dans le navigateur ne peut pas en envoyer
-// sans demande préalable, que ce serveur refuse.
+// Requests that act require JSON: another site open in the browser cannot send any
+// without a preflight request, which this server refuses.
 function isJsonPost(req) {
   return req.method === 'POST' && req.headers['content-type']?.startsWith('application/json');
 }
@@ -107,13 +107,13 @@ async function handleApi(req, res, pathname) {
   if (resource === 'state') return res.writeHead(200, { 'Content-Type': MIME_TYPES['.json'] }).end(lastPayload ?? '{}');
   if (resource === 'history') {
     const player = knownPlayer(id);
-    if (!player?.file) return sendJson(res, 404, { error: 'session inconnue' });
+    if (!player?.file) return sendJson(res, 404, { error: 'unknown session' });
     return sendJson(res, 200, { events: await sessionHistory(player.file) });
   }
   if (resource === 'focus' && isJsonPost(req)) {
     const player = knownPlayer(id);
     const data = lastState?.players.find((candidate) => candidate.id === id);
-    if (!player || !data) return sendJson(res, 404, { ok: false, message: 'Session inconnue.' });
+    if (!player || !data) return sendJson(res, 404, { ok: false, code: 'unknown' });
     return sendJson(res, 200, await focusSession({ ...player, name: data.name }));
   }
   if (resource === 'accounts') return sendJson(res, 200, await accountsOverview());
@@ -122,24 +122,24 @@ async function handleApi(req, res, pathname) {
     try {
       const patch = await readBody(req);
       const settings = await updateSettings(patch);
-      // Nouveau compte, libellé, dossier ou ville : visible dès la prochaine lecture, sans attendre.
+      // New account, label, folder or city: visible from the next read, without waiting.
       await allAccounts({ fresh: true });
       if (typeof patch.city === 'string') refreshWeather();
-      // Clé de session ou accès au trousseau : les quotas sont relus tout de suite (macOS peut alors demander la
-      // permission d'ouvrir le trousseau ; la réponse arrive sans faire attendre la page).
+      // Session key or Keychain access: quotas are re-read right away (macOS may then ask for
+      // permission to open the Keychain; the response comes back without making the page wait).
       for (const [id, change] of Object.entries(patch.accounts ?? {})) {
         if ('sessionKey' in change || 'keychain' in change) refreshLimits(id).catch(() => {});
       }
       return sendJson(res, 200, settings);
     } catch (error) {
-      return sendJson(res, 400, { ok: false, message: error.message });
+      return sendJson(res, 400, { ok: false, code: error.code ?? 'refused', message: error.message });
     }
   }
-  return sendJson(res, 404, { error: 'introuvable' });
+  return sendJson(res, 404, { error: 'not found' });
 }
 
-// Seuls les noms de la machine locale sont acceptés : une page web malveillante ne peut pas atteindre le serveur en
-// faisant pointer un de ses domaines vers 127.0.0.1 (rebinding DNS).
+// Only local machine names are accepted: a malicious web page cannot reach the server by
+// pointing one of its domains at 127.0.0.1 (DNS rebinding).
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 
 function isLocalHost(req) {
@@ -164,13 +164,13 @@ setInterval(() => {
 startWeather();
 startLimits();
 await poll();
-// Fichier de PID : `minetokencraft stop` s'en sert pour arrêter un serveur lancé en arrière-plan.
+// PID file: `minetokencraft stop` uses it to stop a server started in the background.
 const PID_FILE = path.join(CACHE_DIR, 'server.pid');
 
 server.listen(PORT, HOST, async () => {
   await fs.mkdir(CACHE_DIR, { recursive: true });
   await fs.writeFile(PID_FILE, String(process.pid));
-  console.log(`MineTokenCraft : http://localhost:${PORT}`);
+  console.log(`MineTokenCraft: http://localhost:${PORT}`);
 });
 
 for (const signal of ['SIGINT', 'SIGTERM']) {
