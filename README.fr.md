@@ -185,6 +185,7 @@ printf '%s' "$input" | minetokencraft statusline --quiet
 | Un joueur dans le fauteuil, cadre bleu | Il a fini |
 | De la fumée noire au-dessus de la pièce | Au travail mais rien d'écrit depuis 8 minutes : peut-être bloqué |
 | Des villageois | Les sous-agents, au bloc de métier de leur type (Explore est cartographe, Plan bibliothécaire…) |
+| Un loup ou un chat | L'animal de la session : le loup reste près de son joueur et remue la queue quand il travaille (plus vite quand il t'attend), le chat se promène et fait la sieste près du fauteuil une fois la session finie |
 | Des lampes de redstone au mur du fond | L'avancement de la liste de tâches ; la tâche en cours clignote |
 | Des toiles d'araignée | La fenêtre de contexte qui se remplit (60, 75, 85, 95 %) |
 | Des blocs d'émeraude | Le coût de la session, un de plus à chaque fois qu'il double |

@@ -68,6 +68,9 @@ const TEXTURES = [
     'ender_eye', 'painting', 'redstone', 'stick', 'iron_sword', 'diamond_sword', 'bell', 'map', 'clock_00', 'goat_horn',
   ].map((name) => `item/${name}`),
   'entity/villager/villager',
+  // Pets: a tamed wolf, cats of every coat.
+  'entity/wolf/wolf_tame',
+  ...['tabby', 'black', 'red', 'siamese', 'british_shorthair', 'calico', 'ragdoll', 'jellie'].map((name) => `entity/cat/${name}`),
   ...['plains', 'desert', 'jungle', 'savanna', 'snow', 'swamp', 'taiga'].map((name) => `entity/villager/type/${name}`),
   ...[
     'armorer', 'butcher', 'cartographer', 'cleric', 'farmer', 'fisherman', 'fletcher', 'leatherworker', 'librarian',

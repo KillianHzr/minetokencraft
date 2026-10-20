@@ -185,6 +185,7 @@ printf '%s' "$input" | minetokencraft statusline --quiet
 | Player in the armchair, blue frame | Done |
 | Black smoke above the room | Working but nothing written for 8 minutes: maybe stuck |
 | Villagers | Sub-agents, at the job block of their type (Explore is a cartographer, Plan a librarian…) |
+| A wolf or a cat | The session's pet: the wolf stays by its player and wags its tail as it works (faster when it waits for you), the cat strolls around and naps by the armchair once the session is done |
 | Redstone lamps on the back wall | Task list progress; the current task blinks |
 | Cobwebs | Context window filling up (60, 75, 85, 95 %) |
 | Emerald blocks | Session cost, one more each time it doubles |

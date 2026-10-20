@@ -11,6 +11,7 @@ import { StatsOverlay } from './stats.js';
 import { Environment } from './environment.js';
 import { conditionsFor, SEASONS } from './season.js';
 import { Herd } from './mobs.js';
+import { Pet, petFor } from './pets.js';
 import { emeraldCost, tasksLine, xpBar } from './widgets.js';
 import { DONE_ITEM, itemForTool } from './items.js';
 import { accountTheme, themeNotice } from './themes.js';
@@ -87,6 +88,15 @@ const TOOL_STATIONS = {
 const STATION_POSES = { carto: 'work', craft: 'work', furnace: 'work', library: 'read', chair: 'sit', front: 'wave', supervise: 'idle' };
 const TOOL_STATIONS_WITH_ITEM = new Set(['carto', 'craft', 'furnace']);
 const PARTICLE_TIMERS = { craft: 0.42, carto: 0.42, furnace: 0.3, library: 0.5, chair: 2 };
+// Where pets go in their player's room, in blocks from its back left corner: between the desks (`desks`) and the low
+// front wall (`frontmost`, closer it would hide them), between the armchair (`leftmost`) and the emerald pile
+// (`rightmost`), a nap spot by the armchair, and spots for the cat to stroll between.
+const PET_SPOTS = {
+  desks: 3.1, frontmost: 3.5, leftmost: 2.5, rightmost: 5.6, nap: [2.5, 3.4],
+  stroll: [[2.6, 3.1], [3.6, 3.0], [4.8, 3.3], [3.1, 3.5], [5.5, 2.9]],
+};
+// A sleeping cat breathes out a "z" every few seconds.
+const PET_ZZZ_S = 2.5;
 // Flames rising from the torches along the path at night, a few a second for all of them.
 const TORCH_FLAMES_PER_S = 3;
 // Ambiance of a Nether zone (rising embers) or End zone (floating portal particles), per second.
@@ -336,7 +346,7 @@ function syncVillagers(record, player, room) {
 
 function removeRecord(id, record) {
   spawnPoof(record.entity.root.position);
-  scene.remove(record.entity.root);
+  scene.remove(record.entity.root, record.pet.root);
   for (const villager of record.villagers.values()) scene.remove(villager.root);
   entities.delete(id);
 }
@@ -350,9 +360,9 @@ function syncEntities() {
     seen.add(player.id);
     let record = entities.get(player.id);
     if (!record) {
-      record = { entity: new Player(skinFor(player.id)), villagers: new Map(), timer: Math.random() };
+      record = { entity: new Player(skinFor(player.id)), pet: new Pet(petFor(player.id)), villagers: new Map(), timer: Math.random(), zzz: 0 };
       entities.set(player.id, record);
-      scene.add(record.entity.root);
+      scene.add(record.entity.root, record.pet.root);
     }
     const isNew = !record.room;
     // Room change (reorganization): it reappears there rather than walking through walls.
@@ -363,6 +373,7 @@ function syncEntities() {
     if (isNew || moved) {
       const spot = stationSpot(record);
       record.entity.placeAt(spot.x, spot.y, spot.z);
+      record.pet.placeAt(spot.x + 0.6, 0, spot.z - 0.5);
       spawnPoof(record.entity.root.position);
     }
     syncVillagers(record, player, room);
@@ -684,6 +695,21 @@ function emitZoneParticles(dt) {
   }
 }
 
+/**
+ * The pet follows its player around its room, out of it when the session ends, and naps once it is done.
+ */
+function updatePet(record, dt) {
+  const { pet, data } = record;
+  pet.follow(data, record.entity, data.status === 'leaving' ? null : record.room, PET_SPOTS, dt);
+  pet.update(dt);
+  if (pet.pose !== 'sleep') return;
+  record.zzz -= dt;
+  if (record.zzz > 0) return;
+  record.zzz = PET_ZZZ_S;
+  const { x, z } = pet.root.position;
+  particles.emit('zzz', { x, y: 0.6, z }, { spread: 0.1, velocity: [0.1, 0.35, 0], life: 1.8, size: 0.14 });
+}
+
 let torchTimer = 0;
 
 function emitTorchFlames(dt) {
@@ -762,6 +788,7 @@ function renderFrame(time) {
     for (const record of entities.values()) {
       applyStation(record, now);
       record.entity.update(dt);
+      updatePet(record, dt);
       for (const villager of record.villagers.values()) villager.update(dt);
       emitAmbient(record, dt);
       world.updateRoom(record.data, now);
@@ -1152,6 +1179,13 @@ window.minetokencraft = {
     const rect = canvas.getBoundingClientRect();
     return { player: record.data.id, id, x: Math.round(rect.left + (point.x + 1) / 2 * rect.width), y: Math.round(rect.top + (1 - point.y) / 2 * rect.height) };
   })),
+  // Pets with their pose and screen position.
+  pets: () => [...entities.values()].map((record) => {
+    const point = record.pet.root.position.clone().setY(0.4).project(camera);
+    const rect = canvas.getBoundingClientRect();
+    return { player: record.data.id, kind: record.pet.kind, pose: record.pet.pose, built: Boolean(record.pet.built),
+      x: Math.round(rect.left + (point.x + 1) / 2 * rect.width), y: Math.round(rect.top + (1 - point.y) / 2 * rect.height) };
+  }),
   // Creatures by theme, with their screen position (to aim from the console) and their health.
   mobs: () => [...herd.groups.values()].map((group) => ({
     theme: group.theme,

@@ -8,11 +8,12 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 
 - Context and cost of every session without the status line. The context is the prompt of the last request over the model's window (200k, or 1M for `[1m]` models). The cost prices each request at list prices with the real cache split (1-hour writes at twice the input price, 5-minute writes at 1.25 times), counts each request once even when a resumed session copies it, includes sub-agents, and adds up Claude Code's own ledger over every run of a resumed session.
 - A new usage screen: today hour by hour or the last 7 days day by day, in cost or tokens, with each account's share, a scale, a tooltip per column, and today compared with a usual day at the same hour.
-
 - Windows support, and Linux notifications (`notify-send`) and start at login (systemd user service). Continuous integration runs on macOS, Linux and Windows.
 - Focus mode: the scene darkens except the rooms of the sessions waiting for you, and the rest of the panel fades.
 - Double-click a room to zoom on it; Esc or another double-click to see the whole village. A single click still brings the terminal back, once a double click is ruled out.
 - Click a villager (or its line in the panel or simple mode) to see what that sub-agent did. Villagers light up under the pointer, with a tooltip.
+- A pet for every player: a wolf that stays by its side and wags its tail as the session works, or a cat that strolls around the room and naps by the armchair once the session is done.
+- Torches along the path, lighting the ground at dusk; a rainbow over the landscape once the rain stops (from the real weather of the last hours, or a rain the page saw fall).
 - A strict Content Security Policy and security headers on every answer of the server, and in the online demo.
 - Reduced motion: when the system asks for it, no lightning flashes, no blinking, still water and grass, fewer particles, no camera easing.
 - `npm test`: tests on a fake home folder (accounts, transcripts, cost, context, quotas through a fake network, settings, the HTTP server).
@@ -25,6 +26,7 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 
 ### Fixed
 
+- Rain, snow and fog are now in the scene (drops splashing on the ground, haze over the far mountains) instead of a veil over the whole screen.
 - A claude.ai session key that expires after its first use is reported as expired, and a Cloudflare block is no longer mistaken for one.
 - Account names from Windows paths.
 - Sub-agent messages logged in a session file no longer show as the session's last answer.
