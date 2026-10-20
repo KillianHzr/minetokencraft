@@ -237,7 +237,7 @@ export function diffEvents(previous, next) {
 const STORAGE_KEY = 'minetokencraft:alerts';
 
 /**
- * Page sound (a bell when a Claude waits for you, a small ding when one finishes) and macOS notifications, sent by
+ * Page sound (a bell when a Claude waits for you, a small ding when one finishes) and desktop notifications, sent by
  * the server even when the page is closed.
  */
 export class Alerts {
@@ -246,7 +246,7 @@ export class Alerts {
     this.notifyButton = notifyButton;
     this.demo = demo;
     this.settings = { sound: false };
-    this.macNotifications = null;
+    this.desktopNotifications = null;
     try {
       this.settings.sound = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').sound === true;
     } catch {
@@ -257,24 +257,26 @@ export class Alerts {
       if (this.settings.sound) this.play('chime');
       this.save();
     });
-    notifyButton.addEventListener('click', () => this.setMacNotifications(!this.macNotifications));
+    notifyButton.addEventListener('click', () => this.setDesktopNotifications(!this.desktopNotifications));
     if (!demo) {
-      fetch('api/settings').then((response) => response.json()).then(({ notifications }) => {
-        this.macNotifications = notifications;
+      fetch('api/settings').then((response) => response.json()).then(({ notifications, notificationsSupported }) => {
+        this.desktopNotifications = notifications;
+        // No desktop notifications on this machine (Windows, Linux without notify-send): no button.
+        this.notifyButton.hidden = notificationsSupported === false;
         this.refreshButtons();
       }).catch(() => {});
     }
     this.refreshButtons();
   }
 
-  async setMacNotifications(enabled) {
+  async setDesktopNotifications(enabled) {
     if (this.demo) return;
     const response = await fetch('api/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ notifications: enabled }),
     });
-    this.macNotifications = (await response.json()).notifications;
+    this.desktopNotifications = (await response.json()).notifications;
     this.refreshButtons();
   }
 
@@ -289,8 +291,8 @@ export class Alerts {
 
   refreshButtons() {
     this.soundButton.textContent = t('toolbar.sound', { state: t(this.settings.sound ? 'toolbar.on' : 'toolbar.off') });
-    const mac = this.macNotifications == null ? '…' : t(this.macNotifications ? 'toolbar.on' : 'toolbar.off');
-    this.notifyButton.textContent = t('toolbar.notifications', { state: this.demo ? t('toolbar.offDemo') : mac });
+    const desktop = this.desktopNotifications == null ? '…' : t(this.desktopNotifications ? 'toolbar.on' : 'toolbar.off');
+    this.notifyButton.textContent = t('toolbar.notifications', { state: this.demo ? t('toolbar.offDemo') : desktop });
   }
 
   play(kind) {

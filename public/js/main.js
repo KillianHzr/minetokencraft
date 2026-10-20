@@ -97,7 +97,7 @@ const languageSelect = document.getElementById('language-select');
 translatePage();
 languageSelect.innerHTML = Object.entries(LANGUAGES).map(([code, { name }]) => `<option value="${code}"${code === LANGUAGE ? ' selected' : ''}>${name}</option>`).join('');
 languageSelect.addEventListener('change', async () => {
-  // The server follows the page language for macOS notifications and the command line.
+  // The server follows the page language for desktop notifications and the command line.
   if (!DEMO) {
     await fetch('api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ language: languageSelect.value }) }).catch(() => {});
   }

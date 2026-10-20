@@ -12,7 +12,7 @@ export default {
   // Toolbar and banners
   'toolbar.simple': 'Simple mode',
   'toolbar.sound': 'Sound: {state}',
-  'toolbar.notifications': 'Mac notifications: {state}',
+  'toolbar.notifications': 'Notifications: {state}',
   'toolbar.on': 'on',
   'toolbar.off': 'off',
   'toolbar.offDemo': 'off (demo)',

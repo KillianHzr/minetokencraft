@@ -73,7 +73,10 @@ for (const [, key] of html.matchAll(/data-i18n(?:-title)?="([\w.-]+)"/g)) assert
 console.log(`translations: ${page.count} page languages, ${server.count} server languages, same keys`);
 
 // The npm package holds only what runs: no local notes, no documentation images, no maintainer scripts.
-const packed = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: root, encoding: 'utf8' }))[0].files.map((file) => file.path);
+// npm is a .cmd script on Windows, which only runs through a shell.
+const npm = process.platform === 'win32' ? ['npm.cmd', { shell: true }] : ['npm', {}];
+const packed = JSON.parse(execFileSync(npm[0], ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: root, encoding: 'utf8', ...npm[1] }))[0].files
+  .map((file) => file.path.replaceAll('\\', '/'));
 for (const file of packed) assert.doesNotMatch(file, /(^|\/)(CLAUDE\.md|\.claude\/|docs\/|_site\/)|^scripts\/(check|capture|build-pages)/, `npm package: ${file} should not be published`);
 for (const file of ['bin/minetokencraft.mjs', 'server.mjs', 'public/index.html', 'scripts/fetch-assets.mjs']) assert.ok(packed.includes(file), `npm package: ${file} is missing`);
 console.log(`npm package: ${packed.length} files`);

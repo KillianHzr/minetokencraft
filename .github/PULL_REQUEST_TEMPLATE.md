@@ -8,7 +8,7 @@
 
 ## Checklist
 
-- [ ] `npm run check` passes
+- [ ] `npm run check` and `npm test` pass
 - [ ] Tried on the test page
 - [ ] New text added to every language (`public/js/locales`, `lib/locales`)
 - [ ] `CHANGELOG.md` updated under *Unreleased*

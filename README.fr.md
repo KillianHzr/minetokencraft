@@ -10,7 +10,7 @@ Qui travaille, qui t'attend, qui a fini, à quel point chaque contexte est rempl
 [![check](https://github.com/KillianHzr/minetokencraft/actions/workflows/check.yml/badge.svg)](https://github.com/KillianHzr/minetokencraft/actions/workflows/check.yml)
 [![Licence : MIT](https://img.shields.io/badge/licence-MIT-0a66c2.svg)](LICENSE)
 [![Node.js 20+](https://img.shields.io/badge/node-%3E%3D20-339933?logo=node.js&logoColor=white)](https://nodejs.org)
-[![Plateformes](https://img.shields.io/badge/plateformes-macOS%20%7C%20Linux-555?logo=apple&logoColor=white)](#prérequis)
+[![Plateformes](https://img.shields.io/badge/plateformes-macOS%20%7C%20Linux%20%7C%20Windows-555)](#prérequis)
 [![Claude Code](https://img.shields.io/badge/pour-Claude%20Code-D97757?logo=anthropic&logoColor=white)](https://docs.anthropic.com/fr/docs/claude-code)
 [![three.js](https://img.shields.io/badge/three.js-r186-111?logo=three.js&logoColor=white)](https://threejs.org)
 [![PR bienvenues](https://img.shields.io/badge/PR-bienvenues-0a66c2.svg)](#contribuer)
@@ -83,8 +83,17 @@ Qui travaille, qui t'attend, qui a fini, à quel point chaque contexte est rempl
 ## Prérequis
 
 - [Node.js](https://nodejs.org) 20 ou plus récent
-- [Claude Code](https://docs.anthropic.com/fr/docs/claude-code), sur **macOS** ou **Linux**
-  - macOS a tout ; sous Linux, aller au terminal, les notifications et le démarrage automatique ne sont pas disponibles.
+- [Claude Code](https://docs.anthropic.com/fr/docs/claude-code), sur **macOS**, **Linux** ou **Windows**
+
+| | macOS | Linux | Windows |
+| --- | :---: | :---: | :---: |
+| Village, mode simple, quotas, contexte, coût, consommation | ✓ | ✓ | ✓ |
+| Notifications | ✓ | ✓ (avec `notify-send`) | |
+| Démarrage à l'ouverture de session (`minetokencraft autostart`) | ✓ (launchd) | ✓ (systemd) | |
+| Clic sur une pièce pour ramener son terminal | ✓ | | |
+| Lecture de la connexion Claude Code dans le trousseau | ✓ | | |
+
+Chaque modification est testée sur les trois systèmes.
 - Un navigateur avec WebGL
 
 ## Démarrage rapide
@@ -119,7 +128,7 @@ Envie de voir avant ? La [démo en ligne](https://killianhzr.github.io/minetoken
 | `minetokencraft demo` | Ouvre la page de test, avec des sessions factices |
 | `minetokencraft stop` | Arrête un serveur lancé par `minetokencraft` |
 | `minetokencraft serve` | Lance le serveur au premier plan, journal dans le terminal |
-| `minetokencraft autostart on` · `off` · `status` | Démarre le serveur à l'ouverture de session (macOS, launchd) |
+| `minetokencraft autostart on` · `off` · `status` | Démarre le serveur à l'ouverture de session (macOS avec launchd, Linux avec systemd) |
 | `minetokencraft assets [--refresh-skins] [--skins a,b,c]` | Retélécharge les ressources, ou d'autres skins |
 | `minetokencraft statusline [--quiet]` | Commande de status line pour Claude Code (facultative, [voir plus bas](#status-line-facultative)) |
 
@@ -194,8 +203,8 @@ Tout se règle depuis la page (**Réglages**). Fichiers et variables d'environne
 
 | | Par défaut |
 | --- | --- |
-| Réglages (comptes, clés de session, ville, langue) | `~/.config/minetokencraft/settings.json` (`XDG_CONFIG_HOME`) |
-| Cache (copies de la status line, historique des quotas, journal du serveur) | `~/.cache/minetokencraft/` (`XDG_CACHE_HOME`) |
+| Réglages (comptes, clés de session, ville, langue) | `~/.config/minetokencraft/settings.json` (`XDG_CONFIG_HOME` ; sous Windows `%APPDATA%\minetokencraft`) |
+| Cache (copies de la status line, historique des quotas, journal du serveur) | `~/.cache/minetokencraft/` (`XDG_CACHE_HOME` ; sous Windows `%LOCALAPPDATA%\minetokencraft`) |
 | Port | `4747` (`MINETOKENCRAFT_PORT`) |
 | Lieu de la météo | La ville de ton fuseau horaire, ou celle choisie dans les **Réglages** |
 | Langue | Celle du navigateur, ou celle choisie dans la barre d'outils ; les notifications et la ligne de commande la suivent |
@@ -267,7 +276,8 @@ Les issues et les pull requests sont les bienvenues : voir [CONTRIBUTING.md](CON
 
 ```sh
 npm install
-npm run check   # syntaxe de tous les fichiers, modules du serveur, traductions, quelques règles
+npm run check   # syntaxe de tous les fichiers, modules du serveur, traductions, contenu du paquet npm
+npm test        # tests sur un faux dossier personnel : comptes, transcripts, coût, quotas, serveur
 minetokencraft serve
 ```
 

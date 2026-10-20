@@ -7,9 +7,13 @@ export const PORT = Number(process.env.MINETOKENCRAFT_PORT || process.env.PORT) 
 // The page shows conversation excerpts: the server only listens on the local machine.
 export const HOST = '127.0.0.1';
 
-// Settings (accounts, session keys, notifications) and working data (quota history).
-export const CONFIG_DIR = path.join(process.env.XDG_CONFIG_HOME || path.join(home, '.config'), 'minetokencraft');
-export const CACHE_DIR = path.join(process.env.XDG_CACHE_HOME || path.join(home, '.cache'), 'minetokencraft');
+// Settings (accounts, session keys, notifications) and working data (quota history). On Windows, in the usual
+// AppData folders.
+const windows = process.platform === 'win32';
+const configRoot = process.env.XDG_CONFIG_HOME || (windows && process.env.APPDATA) || path.join(home, '.config');
+const cacheRoot = process.env.XDG_CACHE_HOME || (windows && process.env.LOCALAPPDATA) || path.join(home, '.cache');
+export const CONFIG_DIR = path.join(configRoot, 'minetokencraft');
+export const CACHE_DIR = path.join(cacheRoot, 'minetokencraft');
 // Textures, font and skins downloaded on first launch: in the user's folder, since the install folder may be
 // read-only.
 export const ASSETS_DIR = path.join(CACHE_DIR, 'assets');

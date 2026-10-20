@@ -27,7 +27,8 @@
     "autostart:off": "node scripts/autostart.mjs off",
     "autostart:status": "node scripts/autostart.mjs status",
     "check": "node scripts/check.mjs",
-    "capture": "node scripts/capture.mjs"
+    "capture": "node scripts/capture.mjs",
+    "test": "node scripts/test.mjs"
   },
   "dependencies": {
     "three": "^0.186.1"
@@ -37,7 +38,8 @@
   },
   "os": [
     "darwin",
-    "linux"
+    "linux",
+    "win32"
   ],
   "keywords": [
     "claude",

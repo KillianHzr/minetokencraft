@@ -1,4 +1,4 @@
-// Starts the server at macOS login (launchd agent), or removes that start.
+// Starts the server at login, or removes that start: a launchd agent on macOS, a systemd user service on Linux.
 // Usage: minetokencraft autostart on | off | status (or node scripts/autostart.mjs …)
 import { execFile } from 'node:child_process';
 import fs from 'node:fs/promises';
@@ -10,80 +10,119 @@ import { translator } from '../lib/i18n.mjs';
 
 const run = promisify(execFile);
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const LABEL = 'local.minetokencraft';
-const plistFile = path.join(os.homedir(), 'Library', 'LaunchAgents', `${LABEL}.plist`);
-const logFile = path.join(os.homedir(), 'Library', 'Logs', 'minetokencraft.log');
-const domain = `gui/${process.getuid()}`;
-// After a crash, launchd waits this long before starting again: no loop when the port is taken.
-const THROTTLE_S = 10;
+const server = path.join(root, 'server.mjs');
+// After a crash, wait this long before starting again: no loop when the port is taken.
+const RESTART_DELAY_S = 10;
 
 const escapeXml = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-function plist() {
+/**
+ * macOS: a launchd agent in ~/Library/LaunchAgents, logging to ~/Library/Logs.
+ */
+function launchd() {
+  const label = 'local.minetokencraft';
+  const file = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`);
+  const log = path.join(os.homedir(), 'Library', 'Logs', 'minetokencraft.log');
+  const domain = `gui/${process.getuid()}`;
+  const loaded = () => run('launchctl', ['print', `${domain}/${label}`]).then(() => true, () => false);
   // Absolute path of the node running this script: launchd knows neither nvm nor the terminal PATH.
   const strings = (values) => values.map((value) => `<string>${escapeXml(value)}</string>`).join('');
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  const definition = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>Label</key><string>${LABEL}</string>
-  <key>ProgramArguments</key><array>${strings([process.execPath, path.join(root, 'server.mjs')])}</array>
+  <key>Label</key><string>${label}</string>
+  <key>ProgramArguments</key><array>${strings([process.execPath, server])}</array>
   <key>WorkingDirectory</key><string>${escapeXml(root)}</string>
   <key>EnvironmentVariables</key><dict><key>PATH</key><string>/usr/bin:/bin:/usr/sbin:/sbin</string></dict>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
-  <key>ThrottleInterval</key><integer>${THROTTLE_S}</integer>
-  <key>StandardOutPath</key><string>${escapeXml(logFile)}</string>
-  <key>StandardErrorPath</key><string>${escapeXml(logFile)}</string>
+  <key>ThrottleInterval</key><integer>${RESTART_DELAY_S}</integer>
+  <key>StandardOutPath</key><string>${escapeXml(log)}</string>
+  <key>StandardErrorPath</key><string>${escapeXml(log)}</string>
 </dict>
 </plist>
 `;
+  return {
+    file,
+    log,
+    loaded,
+    async on() {
+      if (await loaded()) await run('launchctl', ['bootout', `${domain}/${label}`]);
+      await fs.mkdir(path.dirname(file), { recursive: true });
+      await fs.writeFile(file, definition);
+      await run('launchctl', ['bootstrap', domain, file]);
+    },
+    async off() {
+      if (await loaded()) await run('launchctl', ['bootout', `${domain}/${label}`]);
+      await fs.rm(file, { force: true });
+    },
+  };
 }
-
-async function loaded() {
-  try {
-    await run('launchctl', ['print', `${domain}/${LABEL}`]);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function off() {
-  if (await loaded()) await run('launchctl', ['bootout', `${domain}/${LABEL}`]);
-  await fs.rm(plistFile, { force: true });
-  console.log((await translator())('cli.autostartOff'));
-}
-
-async function on() {
-  if (await loaded()) await run('launchctl', ['bootout', `${domain}/${LABEL}`]);
-  await fs.mkdir(path.dirname(plistFile), { recursive: true });
-  await fs.writeFile(plistFile, plist());
-  await run('launchctl', ['bootstrap', domain, plistFile]);
-  console.log((await translator())('cli.autostartOn', { plist: plistFile, log: logFile }));
-}
-
-async function status() {
-  const t = await translator();
-  console.log(await loaded() ? t('cli.autostartActive', { plist: plistFile }) : t('cli.autostartInactive'));
-}
-
-const ACTIONS = { on, off, status };
 
 /**
- * Start at login: `on`, `off` or `status`. macOS only (launchd).
+ * Linux: a systemd user service, logging to the journal (`journalctl --user -u minetokencraft`).
+ */
+function systemd() {
+  const unit = 'minetokencraft.service';
+  const configHome = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
+  const file = path.join(configHome, 'systemd', 'user', unit);
+  const quote = (value) => `"${value.replace(/(["\\])/g, '\\$1')}"`;
+  const definition = `[Unit]
+Description=MineTokenCraft, Claude Code sessions in a Minecraft village
+
+[Service]
+ExecStart=${quote(process.execPath)} ${quote(server)}
+WorkingDirectory=${root}
+Restart=on-failure
+RestartSec=${RESTART_DELAY_S}
+
+[Install]
+WantedBy=default.target
+`;
+  return {
+    file,
+    log: `journalctl --user -u ${unit}`,
+    loaded: () => run('systemctl', ['--user', 'is-enabled', unit]).then(() => true, () => false),
+    async on() {
+      await fs.mkdir(path.dirname(file), { recursive: true });
+      await fs.writeFile(file, definition);
+      await run('systemctl', ['--user', 'daemon-reload']);
+      await run('systemctl', ['--user', 'enable', '--now', unit]);
+    },
+    async off() {
+      await run('systemctl', ['--user', 'disable', '--now', unit]).catch(() => {});
+      await fs.rm(file, { force: true });
+      await run('systemctl', ['--user', 'daemon-reload']).catch(() => {});
+    },
+  };
+}
+
+const SERVICES = { darwin: launchd, linux: systemd };
+
+/**
+ * Start at login: `on`, `off` or `status`, on macOS and Linux.
  */
 export async function autostart(action) {
   const t = await translator();
-  if (process.platform !== 'darwin') {
-    console.log(t('cli.autostartMacOnly'));
+  if (!SERVICES[process.platform]) {
+    console.log(t('cli.autostartUnsupported'));
     return false;
   }
-  if (!ACTIONS[action]) {
+  if (!['on', 'off', 'status'].includes(action)) {
     console.log(t('cli.autostartUsage'));
     return false;
   }
-  await ACTIONS[action]();
+  const service = SERVICES[process.platform]();
+  if (action === 'on') {
+    await service.on();
+    console.log(t('cli.autostartOn', { file: service.file, log: service.log }));
+  } else if (action === 'off') {
+    await service.off();
+    console.log(t('cli.autostartOff'));
+  } else {
+    console.log(await service.loaded() ? t('cli.autostartActive', { file: service.file }) : t('cli.autostartInactive'));
+  }
   return true;
 }
 

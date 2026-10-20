@@ -53,7 +53,7 @@ async function ensureAssets() {
 async function startServer() {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
   const log = fs.openSync(LOG_FILE, 'a');
-  const child = spawn(process.execPath, [path.join(root, 'server.mjs')], { cwd: root, detached: true, stdio: ['ignore', log, log] });
+  const child = spawn(process.execPath, [path.join(root, 'server.mjs')], { cwd: root, detached: true, windowsHide: true, stdio: ['ignore', log, log] });
   child.unref();
   for (const started = Date.now(); Date.now() - started < START_TIMEOUT_MS; await sleep(250)) {
     if (await isRunning()) return true;

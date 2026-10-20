@@ -9,6 +9,7 @@ git clone https://github.com/KillianHzr/minetokencraft.git
 cd minetokencraft
 npm install
 npm run check          # syntax, server modules, translations, npm package contents
+npm test               # tests on a fake home folder (no real Claude Code data is read)
 node bin/minetokencraft.mjs serve
 ```
 
@@ -26,7 +27,8 @@ There is no build step. The page is plain ES modules served as they are, with [t
 | `lib/locales/` | What the server says itself (notifications, command line), one file per language |
 | `public/js/` | The page: 3D world, characters, mobs, panels, simple mode |
 | `public/js/locales/` | Page strings, one file per language |
-| `scripts/` | Assets download, status line copy, autostart, checks, demo build, captures |
+| `scripts/` | Assets download, status line copy, autostart, checks, tests, demo build, captures |
+| `test/` | Tests (`node:test`), on a fake home folder built by `test/fixtures.mjs` |
 
 ## Guidelines
 
@@ -40,7 +42,8 @@ There is no build step. The page is plain ES modules served as they are, with [t
 ## Pull requests
 
 1. Fork, then create a branch from `main`.
-2. Make your change, with `npm run check` passing.
+2. Make your change, with `npm run check` and `npm test` passing. A fix comes with a test that fails without it
+   (`test/fixtures.mjs` builds a fake home folder with accounts, transcripts and sessions).
 3. Try it on the test page, in both languages if you touched text.
 4. Open the pull request with a short description and, for a visible change, a screenshot.
 

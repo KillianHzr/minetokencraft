@@ -6,7 +6,7 @@ import { ASSETS_DIR, CACHE_DIR, HOST, POLL_MS, PORT } from './config.mjs';
 import { collectState, knownPlayer } from './lib/sessions.mjs';
 import { sessionHistory } from './lib/transcript.mjs';
 import { focusSession } from './lib/focus.mjs';
-import { notifyChanges } from './lib/notify.mjs';
+import { notificationsSupported, notifyChanges } from './lib/notify.mjs';
 import { publicSettings, updateSettings } from './lib/settings.mjs';
 import { refreshWeather, startWeather } from './lib/weather.mjs';
 import { accountsOverview, allAccounts } from './lib/accounts.mjs';
@@ -118,7 +118,7 @@ async function handleApi(req, res, pathname) {
   }
   if (resource === 'accounts') return sendJson(res, 200, await accountsOverview());
   if (resource === 'settings') {
-    if (!isJsonPost(req)) return sendJson(res, 200, await publicSettings());
+    if (!isJsonPost(req)) return sendJson(res, 200, { ...await publicSettings(), notificationsSupported: await notificationsSupported() });
     try {
       const patch = await readBody(req);
       const settings = await updateSettings(patch);

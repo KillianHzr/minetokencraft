@@ -12,7 +12,7 @@ export default {
   // Barre d'outils et bandeaux
   'toolbar.simple': 'Mode simple',
   'toolbar.sound': 'Son : {state}',
-  'toolbar.notifications': 'Notifs Mac : {state}',
+  'toolbar.notifications': 'Notifs : {state}',
   'toolbar.on': 'oui',
   'toolbar.off': 'non',
   'toolbar.offDemo': 'non (test)',

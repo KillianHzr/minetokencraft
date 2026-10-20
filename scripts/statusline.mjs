@@ -34,9 +34,9 @@ export async function saveStatusline(input) {
 function line(data) {
   const parts = [data.model?.display_name, path.basename(data.workspace?.current_dir ?? data.cwd ?? '')];
   const context = data.context_window?.used_percentage;
-  if (typeof context === 'number') parts.push(`contexte ${Math.round(context)} %`);
+  if (typeof context === 'number') parts.push(`ctx ${Math.round(context)}%`);
   const fiveHour = data.rate_limits?.five_hour?.used_percentage;
-  if (typeof fiveHour === 'number') parts.push(`5 h ${Math.round(fiveHour)} %`);
+  if (typeof fiveHour === 'number') parts.push(`5h ${Math.round(fiveHour)}%`);
   return parts.filter(Boolean).join(' · ');
 }
 

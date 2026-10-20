@@ -9,9 +9,19 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 - Context and cost of every session without the status line. The context is the prompt of the last request over the model's window (200k, or 1M for `[1m]` models). The cost prices each request at list prices with the real cache split (1-hour writes at twice the input price, 5-minute writes at 1.25 times), counts each request once even when a resumed session copies it, includes sub-agents, and adds up Claude Code's own ledger over every run of a resumed session.
 - A new usage screen: today hour by hour or the last 7 days day by day, in cost or tokens, with each account's share, a scale, a tooltip per column, and today compared with a usual day at the same hour.
 
+- Windows support, and Linux notifications (`notify-send`) and start at login (systemd user service). Continuous integration runs on macOS, Linux and Windows.
+- `npm test`: tests on a fake home folder (accounts, transcripts, cost, context, quotas through a fake network, settings, the HTTP server).
+
 ### Changed
 
 - The server answers right away at startup and reads the transcripts afterwards, instead of making the page wait.
+- The notifications button is hidden on machines that cannot show them.
+
+### Fixed
+
+- A claude.ai session key that expires after its first use is reported as expired, and a Cloudflare block is no longer mistaken for one.
+- Account names from Windows paths.
+- Sub-agent messages logged in a session file no longer show as the session's last answer.
 
 ## [1.1.0] - 2026-10-20
 

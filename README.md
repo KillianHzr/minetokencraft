@@ -10,7 +10,7 @@ Who is working, who is waiting for you, who is done, how full each context is, w
 [![check](https://github.com/KillianHzr/minetokencraft/actions/workflows/check.yml/badge.svg)](https://github.com/KillianHzr/minetokencraft/actions/workflows/check.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0a66c2.svg)](LICENSE)
 [![Node.js 20+](https://img.shields.io/badge/node-%3E%3D20-339933?logo=node.js&logoColor=white)](https://nodejs.org)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-555?logo=apple&logoColor=white)](#requirements)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-555)](#requirements)
 [![Claude Code](https://img.shields.io/badge/for-Claude%20Code-D97757?logo=anthropic&logoColor=white)](https://docs.anthropic.com/en/docs/claude-code)
 [![three.js](https://img.shields.io/badge/three.js-r186-111?logo=three.js&logoColor=white)](https://threejs.org)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-0a66c2.svg)](#contributing)
@@ -83,8 +83,17 @@ English · [Français](README.fr.md)
 ## Requirements
 
 - [Node.js](https://nodejs.org) 20 or later
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code), on **macOS** or **Linux**
-  - macOS gets everything; on Linux, jumping to a terminal, notifications and autostart are not available.
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code), on **macOS**, **Linux** or **Windows**
+
+| | macOS | Linux | Windows |
+| --- | :---: | :---: | :---: |
+| Village, simple mode, quotas, context, cost, usage | ✓ | ✓ | ✓ |
+| Notifications | ✓ | ✓ (with `notify-send`) | |
+| Start at login (`minetokencraft autostart`) | ✓ (launchd) | ✓ (systemd) | |
+| Click a room to bring its terminal to the front | ✓ | | |
+| Read the Claude Code login from the Keychain | ✓ | | |
+
+Every change is tested on the three systems.
 - A browser with WebGL
 
 ## Quick start
@@ -119,7 +128,7 @@ Want to see it first? The [live demo](https://killianhzr.github.io/minetokencraf
 | `minetokencraft demo` | Opens the test page with fake sessions |
 | `minetokencraft stop` | Stops a server started by `minetokencraft` |
 | `minetokencraft serve` | Runs the server in the foreground, logs in the terminal |
-| `minetokencraft autostart on` · `off` · `status` | Starts the server at login (macOS, launchd) |
+| `minetokencraft autostart on` · `off` · `status` | Starts the server at login (macOS with launchd, Linux with systemd) |
 | `minetokencraft assets [--refresh-skins] [--skins a,b,c]` | Downloads the assets again, or other skins |
 | `minetokencraft statusline [--quiet]` | Status line command for Claude Code (optional, [see below](#optional-status-line)) |
 
@@ -194,8 +203,8 @@ Everything is set from the page (**Settings**). Files and environment variables,
 
 | | Default |
 | --- | --- |
-| Settings (accounts, session keys, city, language) | `~/.config/minetokencraft/settings.json` (`XDG_CONFIG_HOME`) |
-| Cache (status line copies, quota history, server log) | `~/.cache/minetokencraft/` (`XDG_CACHE_HOME`) |
+| Settings (accounts, session keys, city, language) | `~/.config/minetokencraft/settings.json` (`XDG_CONFIG_HOME`; on Windows `%APPDATA%\minetokencraft`) |
+| Cache (status line copies, quota history, server log) | `~/.cache/minetokencraft/` (`XDG_CACHE_HOME`; on Windows `%LOCALAPPDATA%\minetokencraft`) |
 | Port | `4747` (`MINETOKENCRAFT_PORT`) |
 | Weather location | The city of your time zone, or the one set in **Settings** |
 | Language | Your browser's, or the one picked in the toolbar; notifications and the command line follow it |
@@ -267,7 +276,8 @@ Issues and pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md) for
 
 ```sh
 npm install
-npm run check   # syntax of every file, server modules, translations, a few rules
+npm run check   # syntax of every file, server modules, translations, npm package contents
+npm test        # tests on a fake home folder: accounts, transcripts, cost, quotas, server
 minetokencraft serve
 ```
 
