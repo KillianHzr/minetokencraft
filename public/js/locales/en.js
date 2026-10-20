@@ -217,6 +217,7 @@ export default {
   'demo.condition.storm': 'Storm',
   'demo.condition.snow': 'Snow',
   'demo.condition.fog': 'Fog',
+  'demo.condition.rainbow': 'Rainbow',
   'demo.season.real': 'Real season',
   'demo.season.winter': 'Winter',
   'demo.season.spring': 'Spring',

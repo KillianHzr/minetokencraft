@@ -31,8 +31,9 @@ const RIVER = {
   deep: -2,
   shallow: -1,
 };
-// The path going around the property, just outside the garden.
+// The path going around the property, just outside the garden, lined with a torch every few blocks.
 const PATH_WIDTH = 1;
+const TORCH_EVERY = 6;
 // Trees on a 5-block grid, at most one per cell, randomly offset within its cell.
 const TREE_GRID = 5;
 // In front and to the right, trees stay far away: closer, they would overlap the house on screen.
@@ -250,6 +251,12 @@ export function buildTerrain(blocks, { flat, cover, ceiling }, season, flora) {
         continue;
       }
       if (steep || surface === 'path') continue;
+      // Torches along the outer edge of the path, on its straight sides.
+      if (top === 0 && !bank && Math.abs(awayFromFlat(x, z) - PATH_WIDTH - 1) < 0.01 && (((x + z) % TORCH_EVERY) + TORCH_EVERY) % TORCH_EVERY === 0) {
+        blocks.plants.push({ type: 'torch', x, y: top, z });
+        blocks.torches.push({ x: x + 0.5, y: top, z: z + 0.5 });
+        continue;
+      }
       // Sugar cane at the water's edge.
       if (bank && !frozen && nextToWater(x, z) && noise(x, z, 67) < 0.3) {
         const height = 1 + Math.floor(noise(x, z, 68) * 3);

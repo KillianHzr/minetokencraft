@@ -50,7 +50,7 @@ const TEXTURES = [
     // Landscape around the house: mountains, river, forests.
     'water_still', 'sand', 'gravel', 'andesite', 'calcite', 'coarse_dirt', 'mossy_cobblestone', 'clay', 'ice', 'packed_ice',
     'spruce_leaves', 'birch_log', 'birch_log_top', 'birch_leaves', 'podzol_top', 'podzol_side', 'sugar_cane', 'lily_pad',
-    'fern', 'tall_grass_bottom', 'tall_grass_top', 'pumpkin_side', 'pumpkin_top', 'sweet_berry_bush_stage3',
+    'fern', 'tall_grass_bottom', 'tall_grass_top', 'pumpkin_side', 'pumpkin_top', 'sweet_berry_bush_stage3', 'torch',
   ].map((name) => `block/${name}`),
   'item/diamond',
   // Animals by day, monsters by night.
@@ -178,12 +178,18 @@ export async function assetsReady() {
 }
 
 /**
- * Downloads the fonts that are missing: a server started at login gets the ones a newer version added.
+ * Downloads the fonts and textures that are missing: a server started at login gets the ones a newer version
+ * added, without downloading everything again.
  */
-export async function ensureFonts() {
+export async function fillMissingAssets() {
+  const missing = (file) => fs.stat(file).then(() => false, () => true);
   for (const [url, name] of [[FONT_URL, 'Minecraft.otf'], [UI_FONT_URL, 'Montserrat.woff2']]) {
     const file = path.join(assetsDir, 'fonts', name);
-    if (!(await fs.stat(file).then(() => true, () => false))) await download(url, file);
+    if (await missing(file)) await download(url, file);
+  }
+  for (const name of new Set(TEXTURES)) {
+    const file = path.join(assetsDir, 'textures', `${name}.png`);
+    if (await missing(file)) await download(`${TEXTURES_BASE}${name}.png`, file).catch(() => {});
   }
 }
 

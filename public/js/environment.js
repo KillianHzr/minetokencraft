@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { windUniforms } from './wind.js';
-import { reducedMotion } from './motion.js';
+import { REDUCED_PARTICLES, reducedMotion } from './motion.js';
 import { TEXTURE_ROOT } from './textures.js';
 
 // Sky, light, weather and seasons: everything that changes with the real time and the weather outside.
@@ -16,8 +16,27 @@ const SKIES = {
 };
 const NIGHT_SKY = ['#070b22', '#1a2550'];
 const GOLDEN_SKY = ['#f19a68', '#ffd6a0'];
-// Veil over the scene: fog, light rain or flakes.
-const VEILS = { clear: 0, cloudy: 0.04, rain: 0.12, storm: 0.2, snow: 0.14, fog: 0.38 };
+// Weather haze inside the scene (three.js fog) rather than a veil over the screen: the far mountains fade first, the
+// house stays clear. Start and end past the camera's distance to the house, in blocks; the color of the haze by day.
+const HAZES = {
+  clear: { near: 400, far: 800, color: '#c6dcff' },
+  cloudy: { near: 50, far: 260, color: '#c8d0dc' },
+  rain: { near: 12, far: 150, color: '#8a94a4' },
+  storm: { near: 4, far: 110, color: '#5a6170' },
+  snow: { near: 12, far: 160, color: '#e4e9f0' },
+  fog: { near: -20, far: 75, color: '#c4c9d0' },
+};
+// Seconds for the haze to follow a change of weather.
+const HAZE_EASE = 0.4;
+// Share of the raindrops that splash where they land (on the ground around the house).
+const SPLASH_SHARE = 0.15;
+// Rainbow after rain: half a ring standing just behind the house, facing the camera, red outside and violet inside.
+// Its size follows the house (radius over its width) and its feet sink into the ground. The view shows hardly any
+// sky, so it is layered: drawn over the landscape, under the house (World draws the house after it).
+const RAINBOW = { inner: 0.84, outer: 1, radius: 0.36, sink: 0.12, behind: 2, opacity: 0.55, fadeSeconds: 6 };
+const RAINBOW_ORDER = 1;
+// A rain that stopped less than this ago still leaves a rainbow (when the page saw it fall).
+const RAINBOW_AFTER_MS = 20 * 60 * 1000;
 // Light: weaker when overcast; at night, the moon lights in blue.
 const OVERCAST = { clear: 1, cloudy: 0.8, rain: 0.65, storm: 0.5, snow: 0.75, fog: 0.7 };
 // Night stays readable: the moon gives enough light to tell rooms and creatures apart.
@@ -52,11 +71,16 @@ function starsDataUrl() {
 }
 
 export class Environment {
-  constructor(scene, { sky, veil, flash, hemisphere, sun }) {
+  constructor(scene, { sky, flash, hemisphere, sun, cameraDirection, cameraDistance }) {
     this.scene = scene;
     this.sky = sky;
-    this.veil = veil;
     this.flash = flash;
+    this.cameraDistance = cameraDistance;
+    this.haze = new THREE.Fog('#c6dcff', cameraDistance + HAZES.clear.near, cameraDistance + HAZES.clear.far);
+    scene.fog = this.haze;
+    this.lastRainAt = 0;
+    this.rainbow = this.makeRainbow(cameraDirection);
+    scene.add(this.rainbow);
     this.hemisphere = hemisphere;
     this.sun = sun;
     this.lightningIn = LIGHTNING_MIN_S;
@@ -84,6 +108,50 @@ export class Environment {
     return rain;
   }
 
+  /**
+   * The rainbow: half a flat ring, in a plane facing the camera, upright on the screen. Its colors come from the
+   * distance to the center, in the shader.
+   */
+  makeRainbow(cameraDirection) {
+    const geometry = new THREE.RingGeometry(RAINBOW.inner, RAINBOW.outer, 96, 1, 0, Math.PI);
+    // Added light, in the opaque pass: that is what lets the house be drawn over it afterwards.
+    const material = new THREE.ShaderMaterial({
+      transparent: false,
+      blending: THREE.AdditiveBlending,
+      depthTest: false,
+      depthWrite: false,
+      uniforms: { uOpacity: { value: 0 }, uInner: { value: RAINBOW.inner }, uOuter: { value: RAINBOW.outer } },
+      vertexShader: `
+        uniform float uInner;
+        uniform float uOuter;
+        varying float vBand;
+        void main() {
+          vBand = (length(position.xy) - uInner) / (uOuter - uInner);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        uniform float uOpacity;
+        varying float vBand;
+        vec3 hue(float h) {
+          return clamp(abs(mod(h * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
+        }
+        void main() {
+          // Red on the outside, violet on the inside, soft on both edges.
+          float edge = smoothstep(0.0, 0.18, vBand) * smoothstep(1.0, 0.82, vBand);
+          gl_FragColor = vec4(hue((1.0 - vBand) * 0.78) * uOpacity * edge, 1.0);
+        }`,
+    });
+    const rainbow = new THREE.Mesh(geometry, material);
+    const facing = cameraDirection.clone().normalize();
+    const up = new THREE.Vector3(0, 1, 0).addScaledVector(facing, -facing.y).normalize();
+    const right = new THREE.Vector3().crossVectors(up, facing);
+    rainbow.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(right, up, facing));
+    rainbow.visible = false;
+    rainbow.frustumCulled = false;
+    rainbow.renderOrder = RAINBOW_ORDER;
+    return rainbow;
+  }
+
   makeSnow() {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(SNOW_FLAKES * 3), 3));
@@ -108,6 +176,7 @@ export class Environment {
     for (let i = 0; i < RAIN_DROPS; i++) {
       const at = i * 6;
       if (!this.rain.userData.seeded || positions[at + 1] < 0) {
+        if (this.rain.userData.seeded) this.splash(positions[at], positions[at + 2], bounds);
         const [x, y, z] = this.randomSpot(bounds);
         positions[at] = x;
         positions[at + 1] = this.rain.userData.seeded ? SKY_HEIGHT : y;
@@ -123,6 +192,16 @@ export class Environment {
     }
     this.rain.userData.seeded = true;
     this.rain.geometry.attributes.position.needsUpdate = true;
+  }
+
+  /**
+   * A raindrop reaching the ground around the house splashes; further away, nobody would see it.
+   */
+  splash(x, z, bounds) {
+    const near = this.splashArea;
+    if (!this.particles || !near || x < near.x0 || x > near.x1 + 1 || z < near.z0 || z > near.z1 + 1) return;
+    if (Math.random() > SPLASH_SHARE * (reducedMotion() ? REDUCED_PARTICLES : 1)) return;
+    this.particles.emit('splash', { x, y: 0.08, z }, { spread: 0, velocity: [0, 0.6, 0], gravity: 4, life: 0.28, size: 0.22 });
   }
 
   updateSnow(dt, bounds, wind, time) {
@@ -161,8 +240,37 @@ export class Environment {
     const phase = Math.floor((((now - NEW_MOON) % LUNAR_CYCLE_MS) / LUNAR_CYCLE_MS) * 8) % 8;
     this.moonDisc.style.backgroundPosition = `${-(phase % 4) * 100}% ${-Math.floor(phase / 4) * 100}%`;
     this.moonDisc.style.opacity = night && clearSky ? 1 : night ? 0.3 : 0;
-    this.veil.style.opacity = VEILS[condition] ?? 0;
-    this.veil.dataset.condition = condition;
+  }
+
+  /**
+   * Haze of the weather, darker at night, easing from one weather to the next.
+   */
+  updateHaze(dt, conditions) {
+    const target = HAZES[conditions.condition] ?? HAZES.clear;
+    const ease = Math.min(1, dt * HAZE_EASE);
+    this.haze.near += (this.cameraDistance + target.near - this.haze.near) * ease;
+    this.haze.far += (this.cameraDistance + target.far - this.haze.far) * ease;
+    this.haze.color.lerp(color.set(mix(NIGHT_SKY[1], target.color, conditions.day)), ease);
+  }
+
+  /**
+   * A rainbow in daylight once the rain stops: when the weather says it rained in the last hours, or when the
+   * page saw it fall. It stands behind the house and fades in and out.
+   */
+  updateRainbow(dt, conditions, layout, now) {
+    const raining = ['rain', 'storm'].includes(conditions.condition);
+    if (raining) this.lastRainAt = now;
+    const after = conditions.rainedRecently || now - this.lastRainAt < RAINBOW_AFTER_MS;
+    const shown = !raining && after && ['clear', 'cloudy'].includes(conditions.condition) && conditions.day > 0.5 && layout;
+    const uniforms = this.rainbow.material.uniforms;
+    const target = shown ? RAINBOW.opacity * (conditions.condition === 'cloudy' ? 0.6 : 1) : 0;
+    uniforms.uOpacity.value += Math.sign(target - uniforms.uOpacity.value) * Math.min(Math.abs(target - uniforms.uOpacity.value), dt * RAINBOW.opacity / RAINBOW.fadeSeconds);
+    this.rainbow.visible = uniforms.uOpacity.value > 0.001;
+    if (!layout) return;
+    const { bounds } = layout;
+    const radius = (bounds.x1 - bounds.x0 + 1) * RAINBOW.radius;
+    this.rainbow.scale.setScalar(radius);
+    this.rainbow.position.set((bounds.x0 + bounds.x1 + 1) / 2, -radius * RAINBOW.sink, bounds.z0 - RAINBOW.behind);
   }
 
   updateLights(conditions) {
@@ -225,12 +333,16 @@ export class Environment {
     const wind = reducedMotion() ? 0 : Math.max(0.15, conditions.wind);
     windUniforms.uWind.value += (wind - windUniforms.uWind.value) * Math.min(1, dt);
     this.updateSky(conditions, now);
+    this.updateHaze(dt, conditions);
+    this.updateRainbow(dt, conditions, layout, now);
     const direction = this.updateLights(conditions);
     this.updateLightning(dt, conditions);
     const precipitation = conditions.condition === 'snow' ? 'snow' : ['rain', 'storm'].includes(conditions.condition) ? 'rain' : null;
     this.rain.visible = precipitation === 'rain';
     this.snow.visible = precipitation === 'snow';
     if (layout) {
+      this.particles = particles;
+      this.splashArea = layout.bounds;
       if (this.rain.visible) this.updateRain(dt, layout.weatherArea ?? layout.bounds, conditions.wind);
       if (this.snow.visible) this.updateSnow(dt, layout.weatherArea ?? layout.bounds, conditions.wind, now);
       this.updateFalling(dt, conditions, layout.bounds, particles);

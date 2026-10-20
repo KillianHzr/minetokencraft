@@ -12,7 +12,7 @@ import { publicSettings, updateSettings } from './lib/settings.mjs';
 import { refreshWeather, startWeather } from './lib/weather.mjs';
 import { accountsOverview, allAccounts } from './lib/accounts.mjs';
 import { refreshLimits, startLimits } from './lib/limits.mjs';
-import { ensureFonts } from './scripts/fetch-assets.mjs';
+import { fillMissingAssets } from './scripts/fetch-assets.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const HEARTBEAT_MS = 15000;
@@ -204,7 +204,7 @@ setInterval(() => {
 
 startWeather();
 startLimits();
-ensureFonts().catch((error) => console.error('cannot download fonts:', error.message));
+fillMissingAssets().catch((error) => console.error('cannot download assets:', error.message));
 // PID file: `minetokencraft stop` uses it to stop a server started in the background.
 const PID_FILE = path.join(CACHE_DIR, 'server.pid');
 

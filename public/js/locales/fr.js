@@ -217,6 +217,7 @@ export default {
   'demo.condition.storm': 'Orage',
   'demo.condition.snow': 'Neige',
   'demo.condition.fog': 'Brouillard',
+  'demo.condition.rainbow': 'Arc-en-ciel',
   'demo.season.real': 'Saison réelle',
   'demo.season.winter': 'Hiver',
   'demo.season.spring': 'Printemps',

@@ -49,7 +49,10 @@ export function daylight(now, weather) {
 export function conditionsFor(now, weather, override = {}) {
   const season = override.season ?? seasonFor(new Date(now));
   const light = override.hour != null ? daylight(atHour(now, override.hour), null) : daylight(now, weather);
-  let condition = override.condition ?? weather?.condition ?? 'clear';
+  // The test page's "rainbow" is a clear sky right after rain.
+  const rainbowTest = override.condition === 'rainbow';
+  let condition = rainbowTest ? 'clear' : override.condition ?? weather?.condition ?? 'clear';
+  const rainedRecently = rainbowTest || (!override.condition && Boolean(weather?.rainedRecently));
   // In winter, rain falls as snow.
   if (season === 'winter' && (condition === 'rain' || condition === 'storm')) condition = 'snow';
   const wind = override.condition ? (condition === 'storm' ? 1 : condition === 'clear' ? 0.25 : 0.5) : clamp((weather?.wind ?? 10) / WIND_MAX_KMH);
@@ -57,5 +60,5 @@ export function conditionsFor(now, weather, override = {}) {
   // overcast sky. It is what turns on the lamps, well before nightfall.
   const sunHeight = Math.sin(Math.PI * light.course);
   const gloom = clamp(1 - light.day * (1 - (WEATHER_GLOOM[condition] ?? 0)) * (0.45 + 0.55 * sunHeight));
-  return { season, condition, wind, gloom, ...light };
+  return { season, condition, wind, gloom, rainedRecently, ...light };
 }

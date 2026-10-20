@@ -87,6 +87,8 @@ const TOOL_STATIONS = {
 const STATION_POSES = { carto: 'work', craft: 'work', furnace: 'work', library: 'read', chair: 'sit', front: 'wave', supervise: 'idle' };
 const TOOL_STATIONS_WITH_ITEM = new Set(['carto', 'craft', 'furnace']);
 const PARTICLE_TIMERS = { craft: 0.42, carto: 0.42, furnace: 0.3, library: 0.5, chair: 2 };
+// Flames rising from the torches along the path at night, a few a second for all of them.
+const TORCH_FLAMES_PER_S = 3;
 // Ambiance of a Nether zone (rising embers) or End zone (floating portal particles), per second.
 const ZONE_PARTICLES = {
   nether: { type: 'ember', rate: 10, velocity: [0, 0.9, 0], spread: 0.3, life: 2.6, size: 0.12 },
@@ -682,13 +684,25 @@ function emitZoneParticles(dt) {
   }
 }
 
+let torchTimer = 0;
+
+function emitTorchFlames(dt) {
+  if (lastGloom < 0.12 || !world.torches.length) return;
+  torchTimer -= dt;
+  if (torchTimer > 0) return;
+  torchTimer = 1 / (TORCH_FLAMES_PER_S * (reducedMotion() ? REDUCED_PARTICLES : 1));
+  const torch = world.torches[Math.floor(Math.random() * world.torches.length)];
+  particles.emit('flame', { x: torch.x, y: torch.y + 0.68, z: torch.z }, { spread: 0.04, velocity: [0, 0.35, 0], life: 0.45, size: 0.1 });
+}
+
 const timer = new THREE.Timer();
 const environment = new Environment(scene, {
   sky: document.getElementById('sky'),
-  veil: document.getElementById('veil'),
   flash: document.getElementById('flash'),
   hemisphere,
   sun,
+  cameraDirection,
+  cameraDistance: CAMERA_DISTANCE,
 });
 const herd = new Herd(scene, particles);
 // Time, weather and season forced by the test page; empty in normal operation.
@@ -758,6 +772,7 @@ function renderFrame(time) {
     world.animate(now);
     expireDepartures(now);
     emitZoneParticles(dt);
+    emitTorchFlames(dt);
   });
   timed('environment', () => updateEnvironment(dt));
   timed('particles', () => particles.update(dt));
@@ -1061,7 +1076,7 @@ function startDemo() {
   // Forced time, weather and season, to see each ambiance without waiting for it to come.
   const environmentSelects = [
     ['hour', [['', 'real'], ['9', 'morning'], ['13', 'noon'], ['18.6', 'sunset'], ['23', 'night']]],
-    ['condition', ['', 'clear', 'cloudy', 'rain', 'storm', 'snow', 'fog'].map((condition) => [condition, condition || 'real'])],
+    ['condition', ['', 'clear', 'cloudy', 'rain', 'storm', 'snow', 'fog', 'rainbow'].map((condition) => [condition, condition || 'real'])],
     ['season', ['', ...SEASONS].map((season) => [season, season || 'real'])],
   ];
   for (const [key, options] of environmentSelects) {

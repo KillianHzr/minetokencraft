@@ -51,7 +51,7 @@ English · [Français](README.fr.md)
 - 📊 **Quotas for every account.** 5-hour and weekly usage as Minecraft boss bars at the top of the screen, with a forecast of when the 5-hour quota runs out at this pace. An account that hits its 5-hour limit moves its whole wing to the **Nether**; its weekly limit, to the **End**.
 - 🧠 **Context, tasks and cost per session.** An XP bar for the context window, cobwebs creeping into the room as it fills up, redstone lamps lighting up as the task list advances, emerald blocks piling up with the cost. All read from the transcripts: no setup needed.
 - 📈 **Usage over the day and the week.** Cost or tokens hour by hour today, day by day over 7 days, per account, compared with a usual day.
-- 🌦️ **A living world.** Real time of day, real local weather (rain, storms, snow, fog), seasons (spring meadows, autumn leaves, winter snow), wind in the grass, animals by day, monsters at night: and you can fight them with a diamond sword.
+- 🌦️ **A living world.** Real time of day, real local weather (rain splashing on the ground, storms, snow, fog drifting over the mountains), a rainbow once the rain stops, torches lighting the path at night, seasons (spring meadows, autumn leaves, winter snow), wind in the grass, animals by day, monsters at night: and you can fight them with a diamond sword.
 - 🏷️ **Out of the way.** Just a nametag over each player; hover a room for a Minecraft-style tooltip with the details.
 - ♿ **Calm when asked.** With *reduce motion* turned on in the system, no lightning flashes, no blinking, still water and grass, fewer particles.
 - 🖱️ **Click a room to jump to its terminal** (Terminal, iTerm, JetBrains IDEs on macOS), or open the session history.
