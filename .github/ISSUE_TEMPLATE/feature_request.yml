@@ -1,0 +1,16 @@
+name: Idea
+description: Suggest something new or better
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What would you like to see, and what would it help you with?
+    validations:
+      required: true
+  - type: textarea
+    id: how
+    attributes:
+      label: How it could look
+      description: In the village, in simple mode, or both. Sketches and Minecraft references are welcome.

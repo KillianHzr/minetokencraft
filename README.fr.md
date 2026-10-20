@@ -260,7 +260,7 @@ Aucune session Claude Code ne tourne, ou elles sont toutes inactives depuis plus
 
 ## Contribuer
 
-Les issues et les pull requests sont les bienvenues.
+Les issues et les pull requests sont les bienvenues : voir [CONTRIBUTING.md](CONTRIBUTING.md) (en anglais) pour l'organisation du code et les règles, [CHANGELOG.md](CHANGELOG.md) pour les nouveautés de chaque version, et [SECURITY.md](SECURITY.md) pour signaler une faille en privé.
 
 ```sh
 npm install

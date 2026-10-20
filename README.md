@@ -260,7 +260,7 @@ No Claude Code session is running, or they are all idle for more than an hour (t
 
 ## Contributing
 
-Issues and pull requests are welcome.
+Issues and pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md) for the layout of the code and the guidelines, [CHANGELOG.md](CHANGELOG.md) for what changed in each version, and [SECURITY.md](SECURITY.md) to report a vulnerability privately.
 
 ```sh
 npm install

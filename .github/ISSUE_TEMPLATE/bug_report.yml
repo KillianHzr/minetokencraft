@@ -1,0 +1,49 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time! Please do not paste tokens, session keys or private transcripts here.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you saw instead. A screenshot helps a lot.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `minetokencraft`
+        2. …
+  - type: dropdown
+    id: view
+    attributes:
+      label: Where
+      options:
+        - The 3D village
+        - Simple mode
+        - Settings
+        - The command line
+        - The live demo
+        - Somewhere else
+  - type: input
+    id: version
+    attributes:
+      label: MineTokenCraft version
+      placeholder: 1.1.0
+  - type: input
+    id: system
+    attributes:
+      label: System, Node.js and browser
+      placeholder: macOS 15, Node 22, Chrome 141
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server log
+      description: The output of `minetokencraft serve`, or `~/.cache/minetokencraft/server.log`. Check it holds nothing private first.
+      render: text
