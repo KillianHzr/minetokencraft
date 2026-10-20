@@ -6,10 +6,11 @@ import { LANGUAGE } from './i18n.js';
 // Demo text in each language: { en, fr }, English when the page language has no translation.
 const local = (text) => (typeof text === 'string' ? text : text[LANGUAGE] ?? text.en);
 
-// Two fake accounts: `personal` (the ~/.claude folder) and `work` (a second config folder).
+// Two fake Claude Code accounts, `personal` (the ~/.claude folder) and `work` (a second config folder), and Codex.
 const ACCOUNTS = [
-  { id: 'claude', label: { en: 'personal', fr: 'perso' }, slot: 0, plan: 'Max 5x' },
-  { id: 'claude-work', label: { en: 'work', fr: 'travail' }, slot: 1, plan: 'Team' },
+  { id: 'claude', label: { en: 'personal', fr: 'perso' }, slot: 0, plan: 'Max 5x', tool: 'claude' },
+  { id: 'claude-work', label: { en: 'work', fr: 'travail' }, slot: 1, plan: 'Team', tool: 'claude' },
+  { id: 'codex', label: 'Codex', slot: 2, plan: 'Plus', tool: 'codex' },
 ];
 
 // Labels in the locales, under demo.scenario.<id>.
@@ -96,6 +97,12 @@ const SESSIONS = [
     account: 'claude', name: { en: 'Personal blog', fr: 'Blog personnel' }, project: 'blog', status: 'done', context: 52, cost: 44,
     text: { en: 'The RSS feed is in place and validated.', fr: 'Le flux RSS est en place et validé.' },
   },
+  {
+    account: 'codex', name: { en: 'Translate the docs', fr: 'Traduire la doc' }, project: 'docs', status: 'working', context: 47, cost: 3.9,
+    prompt: { en: 'Translate the user guide to Spanish', fr: 'Traduis le guide utilisateur en espagnol' },
+    tasks: [{ en: 'Glossary', fr: 'Glossaire' }, { en: 'Guide', fr: 'Guide' }, { en: 'Screenshots', fr: 'Captures' }],
+    git: { branch: 'docs/es', changed: 4 },
+  },
 ];
 
 /**
@@ -166,7 +173,7 @@ function demoStats(now) {
   const localDay = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   return {
     days: days.map(localDay),
-    accounts: { 'claude-work': series(10, 90e6, 4, 7, true), claude: series(20, 140e6, 3, 8, false) },
+    accounts: { 'claude-work': series(10, 90e6, 4, 7, true), claude: series(20, 140e6, 3, 8, false), codex: series(15, 35e6, 2, 1, true) },
   };
 }
 

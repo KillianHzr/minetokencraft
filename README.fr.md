@@ -46,6 +46,7 @@ Qui travaille, qui t'attend, qui a fini, à quel point chaque contexte est rempl
 
 ## Fonctionnalités
 
+- 🤝 **Codex et Gemini CLI aussi.** Tu t'en es servi récemment ? Il a son aile, avec ses sessions, son plan, ses sous-agents, son contexte, son coût et (pour Codex) ses quotas, lus dans ses journaux.
 - 🏠 **Une aile par compte, une pièce par session.** Chaque session Claude Code est un joueur avec un vrai skin Minecraft ; chaque sous-agent est un villageois qui travaille à son bloc de métier, dans la même pièce.
 - 🚦 **Un état lisible depuis l'autre bout de la pièce.** T'attend (orange, il fait signe, avec un `!` qui grossit à mesure que l'attente dure), travaille (jaune, au meuble de l'outil utilisé), a fini (bleu, assis dans le fauteuil), peut-être bloqué (fumée noire).
 - 📊 **Les quotas de chaque compte.** L'utilisation sur 5 heures et sur la semaine en barres de boss Minecraft en haut de l'écran, avec une prévision de l'heure à laquelle le quota 5 h sera épuisé à ce rythme. Un compte qui atteint sa limite de 5 h envoie toute son aile dans le **Nether** ; sa limite de la semaine, dans l'**End**.
@@ -145,6 +146,10 @@ Un compte, c'est un dossier de config Claude Code. MineTokenCraft les trouve san
 - tout dossier ajouté dans les **Réglages**
 
 Chacun a son aile, sa couleur et son style, dans cet ordre. Dans les **Réglages**, tu peux renommer un compte, le masquer ou ajouter un dossier.
+
+### Codex et Gemini CLI
+
+Si [Codex CLI](https://github.com/openai/codex) (`~/.codex`, ou `CODEX_HOME`) ou [Gemini CLI](https://github.com/google-gemini/gemini-cli) (`~/.gemini`) a servi ces 8 derniers jours, il a une aile après les comptes Claude Code. Aucun des deux ne tient la liste de ses sessions en cours : une session est affichée tant que son journal bouge, au travail pendant un tour, en attente quand Codex te pose une question, finie après. Les quotas de Codex (5 heures et semaine) viennent de ses journaux ; Gemini CLI n'en écrit pas. Cliquer sur une de leurs pièces ne peut pas ramener de terminal : ils ne disent pas lequel fait tourner la session.
 
 ### D'où viennent les quotas
 

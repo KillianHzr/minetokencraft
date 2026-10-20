@@ -149,12 +149,15 @@ async function handleApi(req, res, pathname) {
     const player = knownPlayer(id);
     const file = agentId ? player?.agents?.get(agentId) : player?.file;
     if (!file) return sendJson(res, 404, { error: 'unknown session' });
-    return sendJson(res, 200, { events: await sessionHistory(file) });
+    // Another assistant reads its own log format.
+    return sendJson(res, 200, { events: !agentId && player.history ? await player.history() : await sessionHistory(file) });
   }
   if (resource === 'focus' && isJsonPost(req)) {
     const player = knownPlayer(id);
     const data = lastState?.players.find((candidate) => candidate.id === id);
     if (!player || !data) return sendJson(res, 404, { ok: false, code: 'unknown' });
+    // Codex and Gemini CLI do not say which process runs a session.
+    if (!player.pid) return sendJson(res, 200, { ok: false, code: 'noTerminal' });
     return sendJson(res, 200, await focusSession({ ...player, name: data.name }));
   }
   if (resource === 'accounts') return sendJson(res, 200, await accountsOverview());

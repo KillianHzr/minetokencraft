@@ -46,6 +46,7 @@ English · [Français](README.fr.md)
 
 ## Features
 
+- 🤝 **Codex and Gemini CLI too.** Used one of them lately? It gets a wing of its own, with its sessions, plan, sub-agents, context, cost and (for Codex) its quotas, read from its logs.
 - 🏠 **One wing per account, one room per session.** Every Claude Code session is a player with a real Minecraft skin; every sub-agent is a villager working at its job block in the same room.
 - 🚦 **Status you can read from across the room.** Waiting for you (orange, waving, with a `!` that grows the longer you wait), working (yellow, at the furniture of the tool in use), done (blue, sitting in the armchair), possibly stuck (black smoke).
 - 📊 **Quotas for every account.** 5-hour and weekly usage as Minecraft boss bars at the top of the screen, with a forecast of when the 5-hour quota runs out at this pace. An account that hits its 5-hour limit moves its whole wing to the **Nether**; its weekly limit, to the **End**.
@@ -145,6 +146,10 @@ An account is a Claude Code config folder. MineTokenCraft finds them without any
 - any folder you add in **Settings**
 
 Each one gets its own wing, color and style, in that order. In **Settings** you can rename an account, hide it, or add a folder.
+
+### Codex and Gemini CLI
+
+If [Codex CLI](https://github.com/openai/codex) (`~/.codex`, or `CODEX_HOME`) or [Gemini CLI](https://github.com/google-gemini/gemini-cli) (`~/.gemini`) was used in the last 8 days, it gets a wing after the Claude Code accounts. Neither keeps a list of running sessions, so a session is shown while its log moves: working during a turn, waiting when Codex asks you something, done after. Codex's quotas (5 hours and week) come from its logs; Gemini CLI writes none. Clicking one of their rooms cannot bring a terminal to the front: they do not say which one runs the session.
 
 ### Where quotas come from
 

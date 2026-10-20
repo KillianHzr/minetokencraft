@@ -90,7 +90,7 @@ export class HistoryDrawer {
 
 // Time to answer the macOS Keychain prompt, before reading the account state again.
 const KEYCHAIN_CHECK_MS = 8000;
-const SOURCES = { oauth: 'settings.source.oauth', sessionKey: 'settings.source.sessionKey' };
+const SOURCES = { oauth: 'settings.source.oauth', sessionKey: 'settings.source.sessionKey', logs: 'settings.source.logs' };
 
 /**
  * Where Claude Code keeps its login for this account, and what can be done about it.
@@ -199,11 +199,12 @@ export class SettingsDialog {
         <div class="settings__meta"><code>${escapeHtml(account.dir)}</code>${account.plan ? ` · ${escapeHtml(account.plan)}` : ''}
           · ${escapeHtml(quotaSource(account))}
           ${account.custom ? `<button type="button" data-action="remove-dir" data-dir="${escapeHtml(account.dir)}">${t('settings.removeDir')}</button>` : ''}</div>
+        ${account.tool && account.tool !== 'claude' ? `<div class="settings__line"><span class="settings__ok">${t('settings.otherTool')}</span></div>` : `
         <div class="settings__line">${connectionLine(account)}</div>
         <div class="settings__line">${account.hasSessionKey
           ? `<span class="settings__ok">${t('settings.keyStored')}</span><button type="button" data-action="remove-key">${t('settings.remove')}</button>`
           : `<input data-field="key" type="password" autocomplete="off" spellcheck="false" placeholder="${escapeHtml(t('settings.keyPlaceholder'))}" aria-label="${t('settings.key')}">
-             <button type="button" data-action="save-key">${t('settings.save')}</button>`}</div>
+             <button type="button" data-action="save-key">${t('settings.save')}</button>`}</div>`}
       </li>`).join('');
     this.element.innerHTML = `<div class="settings__panel" role="dialog" aria-label="${t('settings.title')}">
       <header class="settings__head"><h2>${t('settings.title')}</h2><button type="button" data-close title="${t('close')}">✕</button></header>
