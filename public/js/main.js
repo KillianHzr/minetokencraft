@@ -18,6 +18,7 @@ import { DEMO_SCENARIOS, demoHistory, demoState } from './demo.js';
 import { biomeFor, hash, professionFor } from './identity.js';
 import { loadImage, TEXTURE_ROOT } from './textures.js';
 import { SITE } from './site.js';
+import { REDUCED_PARTICLES, reducedMotion } from './motion.js';
 import { LANGUAGE, LANGUAGES, setLanguage, t, translatePage } from './i18n.js';
 import {
   clockTime,
@@ -459,7 +460,7 @@ function frameTarget() {
 function updateCamera(dt) {
   if (!framing.target) return;
   if (!framing.current) framing.current = { ...framing.target, center: framing.target.center.clone() };
-  const ease = 1 - Math.exp(-FRAMING_EASE * dt);
+  const ease = reducedMotion() ? 1 : 1 - Math.exp(-FRAMING_EASE * dt);
   for (const key of ['left', 'right', 'top', 'bottom']) {
     framing.current[key] += (framing.target[key] - framing.current[key]) * ease;
   }
@@ -583,11 +584,12 @@ function emitAmbient(record, dt) {
   }
   const frameMaterial = objects.frame.userData.material;
   frameMaterial.color.set(STATUS_COLORS[record.data.status]);
-  frameMaterial.opacity = record.data.status === 'waiting' ? 0.45 + 0.55 * Math.abs(Math.sin(record.entity.clock * 4)) : 0.9;
+  const pulse = record.data.status === 'waiting' && !reducedMotion();
+  frameMaterial.opacity = pulse ? 0.45 + 0.55 * Math.abs(Math.sin(record.entity.clock * 4)) : 0.9;
   record.timer -= dt;
   if (record.timer > 0) return;
   const { entity, station } = record;
-  record.timer = PARTICLE_TIMERS[station] ?? 1;
+  record.timer = (PARTICLE_TIMERS[station] ?? 1) / (reducedMotion() ? REDUCED_PARTICLES : 1);
   const at = ([x, y, z]) => ({ x, y, z });
   if (entity.moving) {
     record.timer = 0.4;
@@ -617,7 +619,7 @@ function emitZoneParticles(dt) {
   for (const wing of layout.wings) {
     const effect = ZONE_PARTICLES[wing.theme];
     if (!effect) continue;
-    let count = effect.rate * dt;
+    let count = effect.rate * dt * (reducedMotion() ? REDUCED_PARTICLES : 1);
     while (count > 0) {
       if (count < 1 && Math.random() > count) break;
       count -= 1;

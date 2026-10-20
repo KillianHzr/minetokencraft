@@ -53,6 +53,7 @@ English · [Français](README.fr.md)
 - 📈 **Usage over the day and the week.** Cost or tokens hour by hour today, day by day over 7 days, per account, compared with a usual day.
 - 🌦️ **A living world.** Real time of day, real local weather (rain, storms, snow, fog), seasons (spring meadows, autumn leaves, winter snow), wind in the grass, animals by day, monsters at night: and you can fight them with a diamond sword.
 - 🏷️ **Out of the way.** Just a nametag over each player; hover a room for a Minecraft-style tooltip with the details.
+- ♿ **Calm when asked.** With *reduce motion* turned on in the system, no lightning flashes, no blinking, still water and grass, fewer particles.
 - 🖱️ **Click a room to jump to its terminal** (Terminal, iTerm, JetBrains IDEs on macOS), or open the session history.
 - 🧾 **Simple mode.** A clean, light dashboard with the same information, no game.
 - ⚡ **Light on resources.** About 200 draw calls a frame, 30 fps when focused, 20 when not, nothing when the tab is hidden.
@@ -214,11 +215,12 @@ Everything is set from the page (**Settings**). Files and environment variables,
 
 - The server listens on `127.0.0.1` only, and rejects requests whose `Host` is not local (no DNS rebinding).
 - Requests that change something must be JSON, which another website open in your browser cannot send.
+- The page runs under a strict Content Security Policy: it only loads its own scripts, styles, fonts and images, and only talks to the local server.
 - Session keys and tokens never reach the page. Settings are stored with `0600` permissions.
 - Network calls MineTokenCraft makes, and nothing else:
   - [Open-Meteo](https://open-meteo.com) for the weather (no key, only coordinates of a city);
   - Anthropic (`api.anthropic.com`) and, if you set a session key, `claude.ai`, for your quotas;
-  - GitHub and Mojang, once, to download the textures and skins.
+  - GitHub, jsDelivr and Mojang, once, to download the textures, the fonts and the skins. The page itself never calls any other site (no Google Fonts, no CDN).
 - No telemetry, no analytics.
 
 ## Performance

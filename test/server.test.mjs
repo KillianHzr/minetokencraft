@@ -57,6 +57,16 @@ test('the state is JSON, with the accounts found in the home folder', async () =
   assert.deepEqual(state.players, []);
 });
 
+test('the page forbids anything it does not load itself', async () => {
+  const page = await new Promise((resolve) => http.get({ host: '127.0.0.1', port, path: '/', headers: { Host: `localhost:${port}` } }, resolve));
+  page.resume();
+  const policy = page.headers['content-security-policy'];
+  assert.match(policy, /default-src 'none'/);
+  assert.match(policy, /script-src 'self' 'sha256-[\w+/=]+'/);
+  assert.match(policy, /frame-ancestors 'none'/);
+  assert.equal(page.headers['x-content-type-options'], 'nosniff');
+});
+
 test('a request for another host is refused (DNS rebinding)', async () => {
   assert.equal((await request('/api/state', { host: 'evil.example:4747' })).status, 421);
 });

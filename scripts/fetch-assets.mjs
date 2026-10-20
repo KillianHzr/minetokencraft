@@ -10,6 +10,8 @@ const assetsDir = ASSETS_DIR;
 
 export const TEXTURES_BASE = 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21.1/assets/minecraft/textures/';
 export const FONT_URL = 'https://raw.githubusercontent.com/IdreesInc/Minecraft-Font/main/Minecraft.otf';
+// Montserrat (SIL Open Font License) for simple mode, served by the page itself rather than by Google Fonts.
+export const UI_FONT_URL = 'https://cdn.jsdelivr.net/npm/@fontsource-variable/montserrat@5.2.8/files/montserrat-latin-wght-normal.woff2';
 
 const TEXTURES = [
   ...[
@@ -171,11 +173,23 @@ async function fetchSkins({ refresh, players }) {
  */
 export async function assetsReady() {
   const exists = (file) => fs.stat(path.join(assetsDir, file)).then(() => true, () => false);
-  return (await exists('fonts/Minecraft.otf')) && (await exists('textures/block/grass_block_top.png')) && (await exists('skins/index.json'));
+  return (await exists('fonts/Minecraft.otf')) && (await exists('fonts/Montserrat.woff2')) && (await exists('textures/block/grass_block_top.png'))
+    && (await exists('skins/index.json'));
+}
+
+/**
+ * Downloads the fonts that are missing: a server started at login gets the ones a newer version added.
+ */
+export async function ensureFonts() {
+  for (const [url, name] of [[FONT_URL, 'Minecraft.otf'], [UI_FONT_URL, 'Montserrat.woff2']]) {
+    const file = path.join(assetsDir, 'fonts', name);
+    if (!(await fs.stat(file).then(() => true, () => false))) await download(url, file);
+  }
 }
 
 export async function fetchAssets({ refreshSkins = false, players = DEFAULT_PLAYERS } = {}) {
   await download(FONT_URL, path.join(assetsDir, 'fonts', 'Minecraft.otf'));
+  await download(UI_FONT_URL, path.join(assetsDir, 'fonts', 'Montserrat.woff2'));
   await fetchTextures();
   await fetchSkins({ refresh: refreshSkins || players !== DEFAULT_PLAYERS, players });
 }

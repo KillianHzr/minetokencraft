@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -11,6 +12,7 @@ import { publicSettings, updateSettings } from './lib/settings.mjs';
 import { refreshWeather, startWeather } from './lib/weather.mjs';
 import { accountsOverview, allAccounts } from './lib/accounts.mjs';
 import { refreshLimits, startLimits } from './lib/limits.mjs';
+import { ensureFonts } from './scripts/fetch-assets.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const HEARTBEAT_MS = 15000;
@@ -30,7 +32,40 @@ const MIME_TYPES = {
   '.png': 'image/png',
   '.svg': 'image/svg+xml',
   '.otf': 'font/otf',
+  '.woff2': 'font/woff2',
 };
+
+// Headers of every answer: no sniffing, no referrer, not readable or embeddable by another site.
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'no-referrer',
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Resource-Policy': 'same-origin',
+};
+
+/**
+ * Content Security Policy of the page: only its own scripts (the inline import map by its hash), its own styles plus
+ * style attributes, its own images and those it draws, its own fonts, and requests to this server only. No frames,
+ * no forms, no plugins, nothing loaded from elsewhere.
+ */
+function contentSecurityPolicy(html) {
+  const inline = [...html.matchAll(/<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/g)]
+    .map(([, code]) => `'sha256-${crypto.createHash('sha256').update(code).digest('base64')}'`);
+  return [
+    "default-src 'none'",
+    `script-src 'self' ${inline.join(' ')}`,
+    "style-src 'self'",
+    "style-src-elem 'self'",
+    "style-src-attr 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self'",
+    "connect-src 'self'",
+    "manifest-src 'self'",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
+  ].join('; ');
+}
 
 const clients = new Set();
 let lastPayload = null;
@@ -47,9 +82,12 @@ async function serveStatic(pathname, res) {
   }
   try {
     const body = await fs.readFile(file);
+    const page = path.extname(file) === '.html';
     res.writeHead(200, {
+      ...SECURITY_HEADERS,
       'Content-Type': MIME_TYPES[path.extname(file)] ?? 'application/octet-stream',
       'Cache-Control': 'no-cache',
+      ...(page ? { 'Content-Security-Policy': contentSecurityPolicy(body.toString('utf8')) } : {}),
     });
     res.end(body);
   } catch {
@@ -59,6 +97,7 @@ async function serveStatic(pathname, res) {
 
 function openEventStream(res) {
   res.writeHead(200, {
+    ...SECURITY_HEADERS,
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
     Connection: 'keep-alive',
@@ -86,7 +125,7 @@ async function poll() {
 }
 
 function sendJson(res, status, body) {
-  res.writeHead(status, { 'Content-Type': MIME_TYPES['.json'] });
+  res.writeHead(status, { ...SECURITY_HEADERS, 'Content-Type': MIME_TYPES['.json'], 'Cache-Control': 'no-store' });
   res.end(JSON.stringify(body));
 }
 
@@ -104,7 +143,7 @@ function isJsonPost(req) {
 
 async function handleApi(req, res, pathname) {
   const [, , resource, id] = pathname.split('/').map(decodeURIComponent);
-  if (resource === 'state') return res.writeHead(200, { 'Content-Type': MIME_TYPES['.json'] }).end(lastPayload ?? '{}');
+  if (resource === 'state') return res.writeHead(200, { ...SECURITY_HEADERS, 'Content-Type': MIME_TYPES['.json'], 'Cache-Control': 'no-store' }).end(lastPayload ?? '{}');
   if (resource === 'history') {
     const player = knownPlayer(id);
     if (!player?.file) return sendJson(res, 404, { error: 'unknown session' });
@@ -163,6 +202,7 @@ setInterval(() => {
 
 startWeather();
 startLimits();
+ensureFonts().catch((error) => console.error('cannot download fonts:', error.message));
 // PID file: `minetokencraft stop` uses it to stop a server started in the background.
 const PID_FILE = path.join(CACHE_DIR, 'server.pid');
 

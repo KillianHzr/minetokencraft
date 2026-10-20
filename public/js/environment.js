@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { windUniforms } from './wind.js';
+import { reducedMotion } from './motion.js';
 import { TEXTURE_ROOT } from './textures.js';
 
 // Sky, light, weather and seasons: everything that changes with the real time and the weather outside.
@@ -191,7 +192,8 @@ export class Environment {
     this.flashLeft = Math.max(0, this.flashLeft - dt);
     // Double flash: two close peaks.
     const strobe = this.flashLeft > 0.18 || (this.flashLeft > 0.04 && this.flashLeft < 0.1);
-    this.flash.style.opacity = strobe ? 0.55 : 0;
+    // No strobe for those who asked the system for less motion.
+    this.flash.style.opacity = strobe && !reducedMotion() ? 0.55 : 0;
     if (strobe) this.hemisphere.intensity += 1.2;
   }
 
@@ -220,7 +222,8 @@ export class Environment {
    */
   update(dt, conditions, layout, particles, now) {
     windUniforms.uTime.value += dt;
-    windUniforms.uWind.value += (Math.max(0.15, conditions.wind) - windUniforms.uWind.value) * Math.min(1, dt);
+    const wind = reducedMotion() ? 0 : Math.max(0.15, conditions.wind);
+    windUniforms.uWind.value += (wind - windUniforms.uWind.value) * Math.min(1, dt);
     this.updateSky(conditions, now);
     const direction = this.updateLights(conditions);
     this.updateLightning(dt, conditions);

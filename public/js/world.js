@@ -6,6 +6,7 @@ import { hash } from './identity.js';
 import { noise } from './noise.js';
 import { buildTerrain, oakTree } from './terrain.js';
 import { addWind } from './wind.js';
+import { reducedMotion } from './motion.js';
 
 const GRASS_TINT = '#91bd59';
 const FOLIAGE_TINT = '#77ab2f';
@@ -720,7 +721,7 @@ export class World {
    * Rippling water: we scroll through the frames of its animated texture.
    */
   animate(time) {
-    if (!waterMap) return;
+    if (!waterMap || reducedMotion()) return;
     const frames = waterMap.image.height / waterMap.image.width;
     waterMap.offset.y = 1 - ((Math.floor(time / WATER.frameMs) % frames) + 1) / frames;
   }

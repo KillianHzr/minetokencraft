@@ -1541,3 +1541,17 @@ body {
   color: #fff;
   background: #3a3a3a;
 }
+
+/* --- Reduced motion ------------------------------------------------------------- */
+
+/* The system asks for less motion: no blinking, no sliding, no pulsing (the 3D scene follows in motion.js). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

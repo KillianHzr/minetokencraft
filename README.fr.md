@@ -53,6 +53,7 @@ Qui travaille, qui t'attend, qui a fini, à quel point chaque contexte est rempl
 - 📈 **La consommation du jour et de la semaine.** Le coût ou les tokens heure par heure aujourd'hui, jour par jour sur 7 jours, par compte, comparés à une journée habituelle.
 - 🌦️ **Un monde vivant.** La vraie heure, la vraie météo locale (pluie, orages, neige, brouillard), les saisons (prairies au printemps, feuilles d'automne, neige l'hiver), le vent dans l'herbe, des animaux le jour, des monstres la nuit : et tu peux les combattre à l'épée en diamant.
 - 🏷️ **Discret.** Juste un nametag au-dessus de chaque joueur ; survole une pièce pour une infobulle façon Minecraft avec les détails.
+- ♿ **Calme quand on le demande.** Avec *réduire les animations* activé dans le système : pas d'éclairs, pas de clignotements, eau et herbe immobiles, moins de particules.
 - 🖱️ **Clique sur une pièce pour aller à son terminal** (Terminal, iTerm, IDE JetBrains sur macOS), ou ouvre l'historique de la session.
 - 🧾 **Mode simple.** Un tableau de bord clair et épuré avec les mêmes informations, sans le jeu.
 - ⚡ **Léger.** Environ 200 appels de dessin par image, 30 i/s quand la fenêtre a le focus, 20 sinon, rien quand l'onglet est caché.
@@ -214,11 +215,12 @@ Tout se règle depuis la page (**Réglages**). Fichiers et variables d'environne
 
 - Le serveur n'écoute que sur `127.0.0.1`, et refuse les requêtes dont le `Host` n'est pas local (pas de rebinding DNS).
 - Les requêtes qui modifient quelque chose doivent être en JSON, ce qu'un autre site ouvert dans ton navigateur ne peut pas envoyer.
+- La page tourne sous une politique de sécurité du contenu (CSP) stricte : elle ne charge que ses propres scripts, styles, polices et images, et ne parle qu'au serveur local.
 - Les clés de session et les jetons n'arrivent jamais jusqu'à la page. Les réglages sont enregistrés avec les droits `0600`.
 - Les appels réseau de MineTokenCraft, et rien d'autre :
   - [Open-Meteo](https://open-meteo.com) pour la météo (sans clé, seulement les coordonnées d'une ville) ;
   - Anthropic (`api.anthropic.com`) et, si tu as mis une clé de session, `claude.ai`, pour tes quotas ;
-  - GitHub et Mojang, une fois, pour télécharger les textures et les skins.
+  - GitHub, jsDelivr et Mojang, une fois, pour télécharger les textures, les polices et les skins. La page elle-même n'appelle jamais aucun autre site (ni Google Fonts, ni CDN).
 - Pas de télémétrie, pas de statistiques d'usage.
 
 ## Performances
