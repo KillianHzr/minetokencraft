@@ -21,6 +21,7 @@ import { SITE } from './site.js';
 import { REDUCED_PARTICLES, reducedMotion } from './motion.js';
 import { LANGUAGE, LANGUAGES, setLanguage, t, translatePage } from './i18n.js';
 import {
+  ago,
   clockTime,
   escapeHtml,
   formatPct,
@@ -29,6 +30,7 @@ import {
   playerActivity,
   slotClass,
   STATUS_ICONS,
+  toolText,
   truncate,
   workingVillagers,
 } from './format.js';
@@ -58,6 +60,14 @@ const TOOLTIP_VILLAGERS = 6;
 const TOOLTIP_OFFSET_PX = 16;
 // Colors of the game's boss bars, one per account in order.
 const BOSS_BAR_COLORS = ['blue', 'yellow', 'purple', 'white'];
+// A click on a room waits this long before bringing its terminal back, in case it is the start of a double click
+// (which zooms on the room instead).
+const DOUBLE_CLICK_MS = 250;
+// Blocks of margin around a room the camera zooms on.
+const ZOOM_MARGIN = 1.5;
+const FOCUS_STORAGE_KEY = 'minetokencraft:focus';
+// Hit box of a villager under the pointer, around its feet: width and height in blocks.
+const VILLAGER_HIT = { width: 0.8, height: 2.2 };
 
 // Room furniture by tool: furnace for commands, bookshelf for reading and searching,
 // cartography table for the web, crafting table for writing and everything else.
@@ -94,6 +104,10 @@ const bossBars = document.getElementById('bossbars');
 const tooltip = document.getElementById('tooltip');
 const simpleToggle = document.getElementById('simple-toggle');
 const languageSelect = document.getElementById('language-select');
+const zoomHint = document.getElementById('zoom-hint');
+const focusMask = document.getElementById('focus-mask');
+const focusEmpty = document.getElementById('focus-empty');
+const focusToggle = document.getElementById('focus-toggle');
 
 translatePage();
 languageSelect.innerHTML = Object.entries(LANGUAGES).map(([code, { name }]) => `<option value="${code}"${code === LANGUAGE ? ' selected' : ''}>${name}</option>`).join('');
@@ -143,6 +157,7 @@ document.getElementById('stats-toggle').addEventListener('click', () => statsOve
 const history = new HistoryDrawer(document.getElementById('history'), { onFocus: focusPlayer });
 const settingsDialog = new SettingsDialog(document.getElementById('settings'), { onChange: () => refreshState() });
 document.getElementById('settings-toggle').addEventListener('click', () => settingsDialog.open());
+focusToggle.addEventListener('click', () => setFocus(!focus));
 // Online demo: no settings or notifications, there is no server on the visitor's machine.
 if (SITE.standalone) for (const id of ['settings-toggle', 'notify-toggle']) document.getElementById(id).hidden = true;
 const dashboard = new Dashboard(document.getElementById('dashboard'), { onFocus: focusPlayer, onHistory: openHistory });
@@ -182,6 +197,9 @@ let layout = null;
 let viewport = { width: 1, height: 1 };
 let paused = false;
 let simple = false;
+// Player the camera zooms on (double click on its room), and focus mode.
+let zoomed = null;
+let focus = false;
 
 /**
  * Skin assigned to each player: stable for its whole life (and after a reload), without duplicates if possible.
@@ -365,7 +383,19 @@ function sessionTooltip(player) {
     <div class="mc-tooltip__status mc-tooltip__status--${player.stuck ? 'stuck' : player.status}">${icon} ${escapeHtml(truncate(playerActivity(player), 80))}</div>
     ${tasksLine(player.tasks, 52)}
     <div class="mc-tooltip__line">${xpBar(player.context)}${emeraldCost(player.costUSD)}</div>
-    ${villagers ? `<ul class="mc-tooltip__villagers">${villagers}</ul>` : ''}`;
+    ${villagers ? `<ul class="mc-tooltip__villagers">${villagers}</ul>` : ''}
+    <div class="mc-tooltip__hint">${t(zoomed === player.id ? 'tooltip.hintZoomed' : 'tooltip.hint')}</div>`;
+}
+
+/**
+ * Tooltip of a villager: its task, its kind, what it does, and a reminder that a click opens its history.
+ */
+function villagerTooltip(player, villager) {
+  const doing = villager.status === 'working' ? toolText(villager.tool) || t('activity.working') : t('activity.done', { since: ago(villager.endedAt ?? Date.now()) });
+  return `<div class="mc-tooltip__title">${escapeHtml(truncate(villager.description || villager.type, 80))}</div>
+    <div class="mc-tooltip__muted">${escapeHtml(villager.type)} · ${escapeHtml(truncate(player.name, 50))}</div>
+    <div class="mc-tooltip__status mc-tooltip__status--${villager.status}">${STATUS_ICONS[villager.status]} ${escapeHtml(truncate(doing, 80))}</div>
+    <div class="mc-tooltip__hint">${t('tooltip.villagerHint')}</div>`;
 }
 
 function anchorAt(x, y, z) {
@@ -395,12 +425,13 @@ function refreshLabels() {
       ids.add(nameKey);
       const player = record.data ?? room.player;
       const icon = player.stuck ? '⚠' : STATUS_ICONS[player.status];
-      const flags = [highlighted === player.id && 'nametag--hl', isUrgent(player) && 'nametag--urgent', player.stuck && 'nametag--stuck'];
+      const flags = [highlighted === player.id && 'nametag--hl', isUrgent(player) && 'nametag--urgent', player.stuck && 'nametag--stuck',
+        focus && player.status !== 'waiting' && 'nametag--dim'];
       labels.upsert(nameKey, record.entity.labelAnchor, `<span class="status-icon">${icon}</span> ${escapeHtml(truncate(player.name, NAMETAG_CHARS))}`,
         `nametag nametag--${player.status} ${flags.filter(Boolean).join(' ')}`, LABEL_PRIORITY.room);
     }
   }
-  const record = highlighted && entities.get(highlighted);
+  const record = entities.get(highlighted ?? zoomed);
   if (record) {
     for (const [villagerId, villager] of record.villagers) {
       const key = `villager:${villagerId}`;
@@ -433,8 +464,10 @@ function renderBossBars() {
   }).join('');
 }
 
-function frameTarget() {
-  const { bounds } = layout;
+/**
+ * Camera framing that fits a box (the whole house by default) in the view.
+ */
+function frameTarget(bounds = layout.bounds) {
   const center = new THREE.Vector3((bounds.x0 + bounds.x1 + 1) / 2, (bounds.y0 + bounds.y1) / 2, (bounds.z0 + bounds.z1 + 1) / 2);
   const inverse = new THREE.Matrix4().lookAt(cameraDirection, new THREE.Vector3(), new THREE.Vector3(0, 1, 0)).invert();
   let minX = Infinity; let maxX = -Infinity; let minY = Infinity; let maxY = -Infinity;
@@ -457,14 +490,29 @@ function frameTarget() {
   return { center, left: cx - halfWidth, right: cx + halfWidth, top: cy + halfHeight, bottom: cy - halfHeight };
 }
 
+/**
+ * Framing of the room the camera zooms on, or null when it is gone.
+ */
+function zoomTarget() {
+  const room = zoomed && layout.rooms.get(zoomed);
+  if (!room) return null;
+  return frameTarget({
+    x0: room.x0 - ZOOM_MARGIN, x1: room.x0 + room.width - 1 + ZOOM_MARGIN,
+    y0: 0, y1: 3,
+    z0: room.z0 - ZOOM_MARGIN, z1: room.z0 + ROOM_DEPTH - 1 + ZOOM_MARGIN,
+  });
+}
+
 function updateCamera(dt) {
   if (!framing.target) return;
-  if (!framing.current) framing.current = { ...framing.target, center: framing.target.center.clone() };
+  const target = zoomTarget() ?? framing.target;
+  if (zoomed && target === framing.target) setZoom(null);
+  if (!framing.current) framing.current = { ...target, center: target.center.clone() };
   const ease = reducedMotion() ? 1 : 1 - Math.exp(-FRAMING_EASE * dt);
   for (const key of ['left', 'right', 'top', 'bottom']) {
-    framing.current[key] += (framing.target[key] - framing.current[key]) * ease;
+    framing.current[key] += (target[key] - framing.current[key]) * ease;
   }
-  framing.current.center.lerp(framing.target.center, ease);
+  framing.current.center.lerp(target.center, ease);
   Object.assign(camera, { left: framing.current.left, right: framing.current.right, top: framing.current.top, bottom: framing.current.bottom });
   camera.position.copy(framing.current.center).addScaledVector(cameraDirection, CAMERA_DISTANCE);
   camera.lookAt(framing.current.center);
@@ -563,6 +611,7 @@ function applyState(next) {
   state = next;
   relayout();
   renderTexts();
+  updateFocusEmpty();
   for (const event of events) chat.say(event.html, event.kind);
   alerts.announce(events);
   const waiting = state.players.filter((player) => player.status === 'waiting').length;
@@ -713,6 +762,7 @@ function renderFrame(time) {
   timed('environment', () => updateEnvironment(dt));
   timed('particles', () => particles.update(dt));
   updateCamera(dt);
+  if (focus) updateFocusMask();
   timed('render', () => renderer.render(scene, camera));
   timed('labels', () => labels.update(camera, viewport.width, viewport.height));
 }
@@ -743,16 +793,19 @@ function setSimple(value) {
   if (!state) return;
   if (!value) resize();
   renderTexts();
+  updateFocusEmpty();
 }
 
 async function start() {
   try {
     skinAssignments = JSON.parse(localStorage.getItem(SKINS_STORAGE_KEY) ?? '{}');
     simple = localStorage.getItem(SIMPLE_STORAGE_KEY) === '1';
+    focus = localStorage.getItem(FOCUS_STORAGE_KEY) === '1';
   } catch {
     skinAssignments = {};
   }
   setSimple(simple);
+  setFocus(focus);
   simpleToggle.addEventListener('change', () => setSimple(simpleToggle.checked));
   skins = await (await fetch(SITE.skinsIndex)).json();
   new ResizeObserver(resize).observe(stage);
@@ -810,15 +863,21 @@ async function focusPlayer(id) {
   }
 }
 
-function openHistory(id) {
+/**
+ * History of a session, or of one of its sub-agents when `villagerId` is given.
+ */
+function openHistory(id, villagerId = null) {
   const player = state?.players.find((candidate) => candidate.id === id);
   if (!player) return;
-  history.open(player, async (playerId) => (DEMO ? demoHistory(player)
-    : (await (await fetch(`api/history/${encodeURIComponent(playerId)}`)).json()).events));
+  const villager = villagerId ? player.villagers.find((candidate) => candidate.id === villagerId) : null;
+  if (villagerId && !villager) return;
+  const url = `api/history/${encodeURIComponent(id)}${villager ? `/${encodeURIComponent(villager.id)}` : ''}`;
+  history.open(player, async () => (DEMO ? demoHistory(player, villager) : (await (await fetch(url)).json()).events), villager);
 }
 
 /**
- * What is under the pointer: a creature first, otherwise the room where the camera ray hits the ground.
+ * What is under the pointer: a creature first, then a villager, otherwise the room where the camera ray hits the
+ * ground.
  */
 const raycaster = new THREE.Raycaster();
 const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -829,11 +888,101 @@ function aimAt(event) {
   raycaster.setFromCamera(pointer, camera);
   const mob = herd.mobAt(raycaster.ray);
   if (mob) return { mob };
+  const villager = villagerAt(raycaster.ray);
+  if (villager) return { villager };
   const hit = raycaster.ray.intersectPlane(groundPlane, new THREE.Vector3());
   if (!hit) return {};
   const room = [...layout.rooms.values()].find((candidate) => hit.x >= candidate.x0 && hit.x <= candidate.x0 + candidate.width
     && hit.z >= candidate.z0 - 1 && hit.z <= candidate.z0 + ROOM_DEPTH + 1);
   return { room };
+}
+
+const villagerBox = new THREE.Box3();
+
+/**
+ * The closest villager the ray goes through, with its player: { record, villagerId, entity }.
+ */
+function villagerAt(ray) {
+  let best = null;
+  for (const record of entities.values()) {
+    for (const [villagerId, entity] of record.villagers) {
+      const { x, y, z } = entity.root.position;
+      const half = VILLAGER_HIT.width / 2;
+      villagerBox.min.set(x - half, y, z - half);
+      villagerBox.max.set(x + half, y + VILLAGER_HIT.height, z + half);
+      const point = ray.intersectBox(villagerBox, new THREE.Vector3());
+      const distance = point?.distanceTo(ray.origin);
+      if (point && (!best || distance < best.distance)) best = { record, villagerId, entity, distance };
+    }
+  }
+  return best;
+}
+
+function setZoom(id) {
+  zoomed = id;
+  zoomHint.hidden = !id;
+  if (state && !simple) refreshLabels();
+}
+
+function setFocus(value) {
+  focus = value;
+  document.body.classList.toggle('focus', value);
+  // An SVG element has no `hidden` property: the attribute itself.
+  focusMask.toggleAttribute('hidden', !value);
+  try {
+    localStorage.setItem(FOCUS_STORAGE_KEY, value ? '1' : '0');
+  } catch {
+    // The choice will not survive a reload.
+  }
+  if (state) {
+    updateFocusEmpty();
+    if (!simple) refreshLabels();
+  }
+}
+
+function updateFocusEmpty() {
+  focusEmpty.hidden = !focus || simple || state.players.some((player) => player.status === 'waiting');
+}
+
+/**
+ * Focus mode: a dark mask over the scene with a hole for each room that waits for you, the outline of its walls as
+ * seen by the camera.
+ */
+function updateFocusMask() {
+  const corners = [];
+  const holes = [];
+  for (const player of state.players) {
+    const room = player.status === 'waiting' && layout.rooms.get(player.id);
+    if (!room) continue;
+    corners.length = 0;
+    for (const x of [room.x0 - 0.3, room.x0 + room.width + 0.3]) {
+      for (const y of [0, 3.2]) {
+        for (const z of [room.z0 - 0.3, room.z0 + ROOM_DEPTH + 1.3]) {
+          const point = new THREE.Vector3(x, y, z).project(camera);
+          corners.push([(point.x + 1) / 2 * viewport.width, (1 - point.y) / 2 * viewport.height]);
+        }
+      }
+    }
+    holes.push(`M${convexHull(corners).map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join('L')}Z`);
+  }
+  focusMask.setAttribute('viewBox', `0 0 ${viewport.width} ${viewport.height}`);
+  focusMask.firstElementChild.setAttribute('d', `M-50,-50H${viewport.width + 50}V${viewport.height + 50}H-50Z${holes.join('')}`);
+}
+
+/**
+ * Convex hull of screen points (monotone chain), to cut a room out of the focus mask.
+ */
+function convexHull(points) {
+  const sorted = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const half = (list) => list.reduce((hull, point) => {
+    while (hull.length >= 2 && cross(hull.at(-2), hull.at(-1), point) <= 0) hull.pop();
+    hull.push(point);
+    return hull;
+  }, []);
+  const lower = half(sorted);
+  const upper = half([...sorted].reverse());
+  return [...lower.slice(0, -1), ...upper.slice(0, -1)];
 }
 
 // Over a creature, the pointer becomes a diamond sword.
@@ -848,25 +997,50 @@ loadImage(`${TEXTURE_ROOT}item/diamond_sword.png`).then((image) => {
   swordCursor = `url(${icon.toDataURL()}) 29 3, crosshair`;
 }).catch(() => {});
 
+let pendingClick = null;
+let hoveredVillager = null;
+
 canvas.addEventListener('click', (event) => {
-  const { mob, room } = aimAt(event);
-  if (mob) herd.hit(mob, raycaster.ray);
-  else if (room?.player) focusPlayer(room.player.id);
+  const { mob, villager, room } = aimAt(event);
+  if (mob) return herd.hit(mob, raycaster.ray);
+  if (villager) return openHistory(villager.record.data.id, villager.villagerId);
+  clearTimeout(pendingClick);
+  // The second click of a double click: the dblclick event zooms instead.
+  if (!room?.player || event.detail > 1) return;
+  const id = room.player.id;
+  pendingClick = setTimeout(() => focusPlayer(id), DOUBLE_CLICK_MS);
 });
+canvas.addEventListener('dblclick', (event) => {
+  clearTimeout(pendingClick);
+  const { room } = aimAt(event);
+  setZoom(room?.player && zoomed !== room.player.id ? room.player.id : null);
+});
+document.addEventListener('keydown', (event) => event.key === 'Escape' && zoomed && setZoom(null));
 canvas.addEventListener('mousemove', (event) => {
-  const { mob, room } = aimAt(event);
-  canvas.style.cursor = mob ? swordCursor : room?.player ? 'pointer' : 'default';
-  showTooltip(!mob && room?.player ? entities.get(room.player.id)?.data ?? room.player : null, event);
+  const { mob, villager, room } = aimAt(event);
+  canvas.style.cursor = mob ? swordCursor : villager || room?.player ? 'pointer' : 'default';
+  if (hoveredVillager !== villager?.entity) {
+    hoveredVillager?.highlight(false);
+    hoveredVillager = villager?.entity ?? null;
+    hoveredVillager?.highlight(true);
+  }
+  if (villager) showTooltip(villagerTooltip(villager.record.data, villager.entity.data), event);
+  else showTooltip(!mob && room?.player ? sessionTooltip(entities.get(room.player.id)?.data ?? room.player) : null, event);
 });
-canvas.addEventListener('mouseleave', () => showTooltip(null));
+canvas.addEventListener('mouseleave', () => {
+  hoveredVillager?.highlight(false);
+  hoveredVillager = null;
+  showTooltip(null);
+});
 
 /**
- * Tooltip of the hovered room, styled like a Minecraft item tooltip, next to the pointer without leaving the scene.
+ * Tooltip of the hovered room or villager, styled like a Minecraft item tooltip, next to the pointer without
+ * leaving the scene.
  */
-function showTooltip(player, event) {
-  tooltip.hidden = !player;
-  if (!player) return;
-  tooltip.innerHTML = sessionTooltip(player);
+function showTooltip(html, event) {
+  tooltip.hidden = !html;
+  if (!html) return;
+  tooltip.innerHTML = html;
   const stageBox = stage.getBoundingClientRect();
   const x = Math.min(event.clientX - stageBox.left + TOOLTIP_OFFSET_PX, stageBox.width - tooltip.offsetWidth - 4);
   const y = Math.min(event.clientY - stageBox.top + TOOLTIP_OFFSET_PX, stageBox.height - tooltip.offsetHeight - 4);
@@ -957,6 +1131,12 @@ window.minetokencraft = {
     const rect = canvas.getBoundingClientRect();
     return { id: room.player?.id ?? null, status: room.player?.status ?? null, x: Math.round(rect.left + (point.x + 1) / 2 * rect.width), y: Math.round(rect.top + (1 - point.y) / 2 * rect.height) };
   }),
+  // Villagers with the screen position of their body, to point at them.
+  villagers: () => [...entities.values()].flatMap((record) => [...record.villagers].map(([id, entity]) => {
+    const point = entity.root.position.clone().setY(1).project(camera);
+    const rect = canvas.getBoundingClientRect();
+    return { player: record.data.id, id, x: Math.round(rect.left + (point.x + 1) / 2 * rect.width), y: Math.round(rect.top + (1 - point.y) / 2 * rect.height) };
+  })),
   // Creatures by theme, with their screen position (to aim from the console) and their health.
   mobs: () => [...herd.groups.values()].map((group) => ({
     theme: group.theme,

@@ -19,6 +19,13 @@ export default {
   'toolbar.stats': 'Usage',
   'toolbar.settings': 'Settings',
   'toolbar.language': 'Language',
+  'toolbar.focus': 'Focus',
+  'toolbar.focusHint': 'Dim everything but the sessions waiting for you',
+  'focusMode.nobody': 'Focus: nobody is waiting for you.',
+  'zoom.back': 'Double-click or Esc to see the whole village',
+  'tooltip.hint': 'Click: terminal · Double-click: zoom',
+  'tooltip.hintZoomed': 'Click: terminal · Double-click: whole village',
+  'tooltip.villagerHint': 'Click: what this villager did',
   'banner.empty': 'Everyone is asleep.',
   'banner.offline': 'Server unreachable, trying again…',
 
@@ -54,8 +61,10 @@ export default {
   'session.goToTerminal': 'Go to terminal',
   'session.clickToTerminal': 'click to go to the terminal',
   'session.history': 'History',
+  'session.villagerHistory': 'See what this sub-agent did',
   'session.background': 'background task',
   'history.you': 'You',
+  'history.task': 'Task',
   'history.empty': 'No readable history for this session.',
 
   // Quotas

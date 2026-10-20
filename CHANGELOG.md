@@ -10,6 +10,9 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 - A new usage screen: today hour by hour or the last 7 days day by day, in cost or tokens, with each account's share, a scale, a tooltip per column, and today compared with a usual day at the same hour.
 
 - Windows support, and Linux notifications (`notify-send`) and start at login (systemd user service). Continuous integration runs on macOS, Linux and Windows.
+- Focus mode: the scene darkens except the rooms of the sessions waiting for you, and the rest of the panel fades.
+- Double-click a room to zoom on it; Esc or another double-click to see the whole village. A single click still brings the terminal back, once a double click is ruled out.
+- Click a villager (or its line in the panel or simple mode) to see what that sub-agent did. Villagers light up under the pointer, with a tooltip.
 - A strict Content Security Policy and security headers on every answer of the server, and in the online demo.
 - Reduced motion: when the system asks for it, no lightning flashes, no blinking, still water and grass, fewer particles, no camera easing.
 - `npm test`: tests on a fake home folder (accounts, transcripts, cost, context, quotas through a fake network, settings, the HTTP server).

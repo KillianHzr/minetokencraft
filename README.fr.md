@@ -192,7 +192,7 @@ printf '%s' "$input" | minetokencraft statusline --quiet
 | Un cadre d'obsidienne et des yeux de l'Ender près de la maison | Les mêmes quotas, qui construisent un portail du Nether et un portail de l'End |
 | Une aile transformée en Nether ou en End | Ce compte n'a plus de quota 5 h, ou plus de quota de la semaine |
 
-Clique sur une pièce ou une carte pour ramener son terminal au premier plan. L'icône du livre ouvre l'historique de la session. Et clique sur un monstre : il prend un coup d'épée en diamant, et réapparaît 5 secondes après sa mort.
+Clique sur une pièce ou une carte pour ramener son terminal au premier plan. Double-clique sur une pièce pour zoomer dessus (de nouveau un double-clic, ou Échap, pour revoir tout le village). Clique sur un villageois, ou sur sa ligne dans le panneau, pour voir ce qu'a fait ce sous-agent. L'icône du livre ouvre l'historique de la session. **Focus** dans la barre d'outils assombrit tout sauf les sessions qui t'attendent. Et clique sur un monstre : il prend un coup d'épée en diamant, et réapparaît 5 secondes après sa mort.
 
 ## Mode simple
 

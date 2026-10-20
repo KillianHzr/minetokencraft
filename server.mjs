@@ -142,12 +142,14 @@ function isJsonPost(req) {
 }
 
 async function handleApi(req, res, pathname) {
-  const [, , resource, id] = pathname.split('/').map(decodeURIComponent);
+  const [, , resource, id, agentId] = pathname.split('/').map(decodeURIComponent);
   if (resource === 'state') return res.writeHead(200, { ...SECURITY_HEADERS, 'Content-Type': MIME_TYPES['.json'], 'Cache-Control': 'no-store' }).end(lastPayload ?? '{}');
   if (resource === 'history') {
+    // A session's history, or one of its sub-agents' (/api/history/<player>/<villager>).
     const player = knownPlayer(id);
-    if (!player?.file) return sendJson(res, 404, { error: 'unknown session' });
-    return sendJson(res, 200, { events: await sessionHistory(player.file) });
+    const file = agentId ? player?.agents?.get(agentId) : player?.file;
+    if (!file) return sendJson(res, 404, { error: 'unknown session' });
+    return sendJson(res, 200, { events: await sessionHistory(file) });
   }
   if (resource === 'focus' && isJsonPost(req)) {
     const player = knownPlayer(id);

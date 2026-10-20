@@ -1097,3 +1097,24 @@ body.simple .settings__message {
   background: var(--ui-blue-soft);
   border-radius: 8px;
 }
+
+/* Focus mode: only what waits for you stays bright. */
+body.simple.focus .ui-summary,
+body.simple.focus .ui-column:not(.ui-column--waiting),
+body.simple.focus .ui-idle {
+  opacity: 0.35;
+}
+
+body.simple.focus #focus-toggle {
+  color: var(--ui-contrast);
+  background: var(--ui-primary);
+  border-color: transparent;
+}
+
+.ui-item__agents li[data-villager] {
+  cursor: pointer;
+}
+
+.ui-item__agents li[data-villager]:hover span {
+  text-decoration: underline;
+}

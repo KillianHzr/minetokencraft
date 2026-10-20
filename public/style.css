@@ -1542,6 +1542,68 @@ body {
   background: #3a3a3a;
 }
 
+/* --- Focus mode and zoom ----------------------------------------------------------- */
+
+/* Focus: the scene darkens except the rooms that wait for you, cut out of the mask. */
+#focus-mask {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  /* On the whole drawing: Chrome ignores CSS filters on the shapes inside an SVG. */
+  filter: blur(6px);
+}
+
+#focus-mask path {
+  fill: rgba(8, 6, 14, 0.7);
+}
+
+.nametag--dim {
+  opacity: 0.3;
+}
+
+body.focus #panel .group:not(.group--waiting),
+body.focus #panel .usage,
+body.focus #bossbars {
+  opacity: 0.35;
+}
+
+body.focus #focus-toggle {
+  color: #000;
+  background: var(--waiting);
+  text-shadow: none;
+}
+
+.zoom-hint {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: 14px;
+  margin: 0;
+  padding: 4px 10px;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #fff;
+  text-shadow: var(--shadow);
+  background: rgba(16, 0, 16, 0.8);
+  pointer-events: none;
+}
+
+.mc-tooltip__hint {
+  color: #8a8a8a;
+  font-size: 11px;
+}
+
+/* Villager lines open the villager's history. */
+.villager[data-villager] {
+  cursor: pointer;
+}
+
+.villager[data-villager]:hover {
+  text-decoration: underline;
+}
+
 /* --- Reduced motion ------------------------------------------------------------- */
 
 /* The system asks for less motion: no blinking, no sliding, no pulsing (the 3D scene follows in motion.js). */

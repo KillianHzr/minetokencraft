@@ -307,6 +307,14 @@ export class Villager extends Entity {
     setSpriteItem(this.icon, itemName);
   }
 
+  /**
+   * Under the pointer: a wider, brighter ring tells it can be clicked.
+   */
+  highlight(on) {
+    this.ring.scale.setScalar(on ? 1.6 : 1);
+    this.ring.material.opacity = on ? 1 : 0.85;
+  }
+
   update(dt) {
     this.clock += dt;
     this.updateMovement(dt);

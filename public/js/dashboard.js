@@ -72,7 +72,7 @@ function agentList(player) {
   if (!player.villagers.length) return '';
   const rows = player.villagers.slice(0, AGENTS_LISTED).map((agent) => {
     const doing = agent.status === 'working' && agent.tool ? `<span class="ui-muted"> · ${escapeHtml(truncate(toolText(agent.tool), 28))}</span>` : '';
-    return `<li><i class="ui-dot ui-dot--${agent.status}"></i><span>${escapeHtml(truncate(agent.description, 48))}${doing}</span></li>`;
+    return `<li data-villager="${escapeHtml(agent.id)}" title="${escapeHtml(t('session.villagerHistory'))}"><i class="ui-dot ui-dot--${agent.status}"></i><span>${escapeHtml(truncate(agent.description, 48))}${doing}</span></li>`;
   });
   const more = player.villagers.length - AGENTS_LISTED;
   if (more > 0) rows.push(`<li class="ui-muted">${t('dashboard.moreAgents', { count: more })}</li>`);
@@ -128,6 +128,8 @@ export class Dashboard {
     element.addEventListener('click', (event) => {
       const history = event.target.closest('[data-history]');
       if (history) return onHistory(history.dataset.history);
+      const agent = event.target.closest('[data-villager]');
+      if (agent) return onHistory(agent.closest('[data-player]').dataset.player, agent.dataset.villager);
       const item = event.target.closest('[data-player]');
       if (item) onFocus(item.dataset.player);
     });

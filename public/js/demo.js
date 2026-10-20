@@ -122,9 +122,18 @@ const DEMO_HISTORY = [
   ['text', null, { en: 'Tests pass. I am reading the diff again before showing it to you.', fr: 'Les tests passent. Je relis le diff avant de te le montrer.' }],
 ];
 
-export function demoHistory() {
+// What a test sub-agent did: its task, a search, a read, its answer.
+const DEMO_VILLAGER_HISTORY = [
+  ['tool', 'Grep', 'syncPayment'],
+  ['tool', 'Read', 'src/payments/webhook.ts'],
+  ['tool', 'Read', 'src/payments/queue.ts'],
+  ['text', null, { en: 'Found 3 calls: the webhook is sent from queue.ts before the commit.', fr: 'Trouvé 3 appels : le webhook part de queue.ts avant le commit.' }],
+];
+
+export function demoHistory(player, villager = null) {
   const now = Date.now();
-  return DEMO_HISTORY.map(([kind, tool, text], index) => ({ at: now - (DEMO_HISTORY.length - index) * 90 * 1000, kind, tool, text: local(text) }));
+  const events = villager ? [['prompt', null, villager.description], ...DEMO_VILLAGER_HISTORY] : DEMO_HISTORY;
+  return events.map(([kind, tool, text], index) => ({ at: now - (events.length - index) * 90 * 1000, kind, tool, text: local(text) }));
 }
 
 const SLEEPERS = [

@@ -14,7 +14,8 @@
     <label class="switch"><input id="simple-toggle" type="checkbox"><span class="switch__track"></span><span data-i18n="toolbar.simple">Simple mode</span></label>
     <button id="sound-toggle" type="button"></button>
     <button id="notify-toggle" type="button"></button>
-    <button id="stats-toggle" type="button" data-i18n="toolbar.stats">Today</button>
+    <button id="focus-toggle" type="button" data-i18n="toolbar.focus" data-i18n-title="toolbar.focusHint">Focus</button>
+    <button id="stats-toggle" type="button" data-i18n="toolbar.stats">Usage</button>
     <button id="settings-toggle" type="button" data-i18n="toolbar.settings">Settings</button>
     <select id="language-select" data-i18n-title="toolbar.language" aria-label="Language"></select>
   </div>
@@ -28,11 +29,14 @@
       <canvas id="world"></canvas>
       <div id="veil"></div>
       <div id="flash"></div>
+      <svg id="focus-mask" aria-hidden="true" hidden><path fill-rule="evenodd"></path></svg>
       <div id="labels"></div>
       <div id="bossbars"></div>
       <div id="tooltip" class="mc-tooltip" hidden></div>
       <div id="chat"></div>
       <p id="empty" class="banner" data-i18n="banner.empty" hidden>Everyone is asleep.</p>
+      <p id="focus-empty" class="banner" data-i18n="focusMode.nobody" hidden>Nobody is waiting for you.</p>
+      <p id="zoom-hint" class="zoom-hint" data-i18n="zoom.back" hidden>Double-click or Esc to see the whole village</p>
       <p id="offline" class="banner banner--alert" data-i18n="banner.offline" hidden>Server unreachable, trying again…</p>
     </section>
     <aside id="panel"></aside>

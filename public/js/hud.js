@@ -92,7 +92,7 @@ function villagerList(player) {
   if (!player.villagers.length) return '';
   const rows = player.villagers.slice(0, VILLAGERS_LISTED).map((villager) => {
     const doing = villager.status === 'working' && villager.tool ? ` <span class="muted">· ${escapeHtml(truncate(toolText(villager.tool), 28))}</span>` : '';
-    return `<li class="villager villager--${villager.status}"><span class="status-icon">${STATUS_ICONS[villager.status]}</span> ${escapeHtml(truncate(villager.description, 34))}${doing}</li>`;
+    return `<li class="villager villager--${villager.status}" data-villager="${escapeHtml(villager.id)}" title="${escapeHtml(t('session.villagerHistory'))}"><span class="status-icon">${STATUS_ICONS[villager.status]}</span> ${escapeHtml(truncate(villager.description, 34))}${doing}</li>`;
   });
   const more = player.villagers.length - VILLAGERS_LISTED;
   if (more > 0) rows.push(`<li class="muted">${t('panel.more', { count: more })}</li>`);
@@ -130,10 +130,12 @@ export class Panel {
     this.element = element;
     element.addEventListener('mouseover', (event) => onHover(event.target.closest('[data-player]')?.dataset.player ?? null));
     element.addEventListener('mouseleave', () => onHover(null));
-    // Clicking a card brings its terminal back; the book opens its history.
+    // Clicking a card brings its terminal back; the book opens its history, a villager line the villager's.
     element.addEventListener('click', (event) => {
       const history = event.target.closest('[data-history]');
       if (history) return onHistory(history.dataset.history);
+      const villager = event.target.closest('[data-villager]');
+      if (villager) return onHistory(villager.closest('[data-player]').dataset.player, villager.dataset.villager);
       const card = event.target.closest('[data-player]');
       if (card) onFocus(card.dataset.player);
     });

@@ -19,6 +19,13 @@ export default {
   'toolbar.stats': 'Consommation',
   'toolbar.settings': 'Réglages',
   'toolbar.language': 'Langue',
+  'toolbar.focus': 'Focus',
+  'toolbar.focusHint': 'Assombrit tout sauf les sessions qui t\'attendent',
+  'focusMode.nobody': 'Focus : personne ne t\'attend.',
+  'zoom.back': 'Double-clic ou Échap pour revoir tout le village',
+  'tooltip.hint': 'Clic : terminal · Double-clic : zoom',
+  'tooltip.hintZoomed': 'Clic : terminal · Double-clic : tout le village',
+  'tooltip.villagerHint': 'Clic : ce qu\'a fait ce villageois',
   'banner.empty': 'Tout le monde dort.',
   'banner.offline': 'Serveur injoignable, nouvelle tentative…',
 
@@ -54,8 +61,10 @@ export default {
   'session.goToTerminal': 'Aller au terminal',
   'session.clickToTerminal': 'clic pour aller au terminal',
   'session.history': 'Historique',
+  'session.villagerHistory': 'Voir ce qu\'a fait ce sous-agent',
   'session.background': 'tâche de fond',
   'history.you': 'Toi',
+  'history.task': 'Tâche',
   'history.empty': 'Pas d\'historique lisible pour cette session.',
 
   // Quotas

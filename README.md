@@ -192,7 +192,7 @@ printf '%s' "$input" | minetokencraft statusline --quiet
 | Obsidian frame and eyes of ender by the house | Same quotas, building a Nether portal and an End portal |
 | Wing turned into the Nether or the End | That account is out of 5-hour or weekly quota |
 
-Click a room or a card to bring its terminal to the front. The book icon opens the session history. And click a mob: it takes a diamond sword hit, and respawns 5 seconds after dying.
+Click a room or a card to bring its terminal to the front. Double-click a room to zoom on it (double-click again, or Esc, to see the whole village). Click a villager, or its line in the side panel, to see what that sub-agent did. The book icon opens the session history. **Focus** in the toolbar darkens everything but the sessions waiting for you. And click a mob: it takes a diamond sword hit, and respawns 5 seconds after dying.
 
 ## Simple mode
 

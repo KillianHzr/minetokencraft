@@ -29,7 +29,8 @@ function eventIcon(event) {
 }
 
 /**
- * History drawer of a session: its latest messages and tools, and a button to go to its terminal.
+ * History drawer of a session or of one of its sub-agents: the latest messages and tools, and a button to go to the
+ * session's terminal.
  */
 export class HistoryDrawer {
   constructor(element, { onFocus }) {
@@ -46,34 +47,41 @@ export class HistoryDrawer {
   close() {
     this.element.hidden = true;
     this.playerId = null;
+    this.showing = null;
   }
 
-  async open(player, loadEvents) {
+  async open(player, loadEvents, villager = null) {
+    const showing = `${player.id}/${villager?.id ?? ''}`;
     this.playerId = player.id;
+    this.showing = showing;
     this.element.hidden = false;
-    this.element.innerHTML = this.frame(player, `<p class="history__empty">${t('loading')}</p>`);
+    this.element.innerHTML = this.frame(player, `<p class="history__empty">${t('loading')}</p>`, villager);
     let events;
     try {
-      events = await loadEvents(player.id);
+      events = await loadEvents();
     } catch {
       events = null;
     }
-    if (this.playerId !== player.id) return;
+    if (this.showing !== showing) return;
     const now = Date.now();
-    const author = (event) => (event.kind === 'prompt' ? t('history.you') : event.kind === 'tool' ? escapeHtml(toolText({ name: event.tool })) : 'Claude');
+    // A sub-agent's first message is its task, given by the session, not by you.
+    const author = (event) => (event.kind === 'prompt' ? t(villager ? 'history.task' : 'history.you')
+      : event.kind === 'tool' ? escapeHtml(toolText({ name: event.tool })) : 'Claude');
     const list = events?.length
       ? `<ol class="history__list">${[...events].reverse().map((event) => `<li class="history__item history__item--${event.kind}">
           ${itemIcon(eventIcon(event), 'history__icon')}
           <div><div class="history__meta">${author(event)}${event.at ? ` · ${ago(event.at, now)}` : ''}</div>
           <div class="history__text">${escapeHtml(event.kind === 'tool' ? toolDetail({ ...event, name: event.tool, label: event.text }) : event.text || '')}</div></div></li>`).join('')}</ol>`
       : `<p class="history__empty">${t('history.empty')}</p>`;
-    this.element.innerHTML = this.frame(player, list);
+    this.element.innerHTML = this.frame(player, list, villager);
   }
 
-  frame(player, body) {
+  frame(player, body, villager) {
+    const title = villager ? villager.description || villager.type : player.name;
+    const sub = villager ? `${villager.type} · ${player.name}` : `${player.accountLabel} · ${player.project}`;
     return `<div class="history__panel">
-      <header class="history__head"><div><div class="history__title">${escapeHtml(player.name)}</div>
-        <div class="history__sub">${escapeHtml(player.accountLabel)} · ${escapeHtml(player.project)}</div></div>
+      <header class="history__head"><div><div class="history__title">${escapeHtml(title)}</div>
+        <div class="history__sub">${escapeHtml(sub)}</div></div>
         <button type="button" data-focus>${t('session.goToTerminal')}</button><button type="button" data-close title="${t('close')}">✕</button></header>
       ${body}
     </div>`;
