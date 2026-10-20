@@ -12,8 +12,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     env:
-      # Publishing to npm needs an automation token in the NPM_TOKEN secret; without it, only the GitHub release is made.
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # Publishing to npm needs a token in the NPM_TOKEN secret; without it, only the GitHub release is made.
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -39,5 +39,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Publish to npm
-        if: env.NODE_AUTH_TOKEN != ''
+        if: env.NPM_TOKEN != ''
         run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}
