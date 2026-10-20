@@ -75,6 +75,12 @@ English · [Français](README.fr.md)
     <td align="center"><sub>Winter, with snow falling</sub></td>
   </tr>
   <tr>
+    <td colspan="2"><img src="docs/screenshots/usage.jpg" alt="The usage screen: cost over the last 7 days, per account, as stacked bars"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><sub>Usage over the last 7 days, per account</sub></td>
+  </tr>
+  <tr>
     <td colspan="2"><img src="docs/screenshots/simple.jpg" alt="Simple mode: a light dashboard with quotas and three columns"></td>
   </tr>
   <tr>

@@ -75,6 +75,12 @@ Qui travaille, qui t'attend, qui a fini, à quel point chaque contexte est rempl
     <td align="center"><sub>L'hiver, sous la neige</sub></td>
   </tr>
   <tr>
+    <td colspan="2"><img src="docs/screenshots/usage.jpg" alt="L'écran de consommation : le coût des 7 derniers jours, par compte, en barres empilées"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><sub>La consommation des 7 derniers jours, par compte</sub></td>
+  </tr>
+  <tr>
     <td colspan="2"><img src="docs/screenshots/simple.jpg" alt="Mode simple : un tableau de bord clair avec les quotas et trois colonnes"></td>
   </tr>
   <tr>

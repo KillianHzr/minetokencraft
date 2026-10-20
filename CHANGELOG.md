@@ -4,6 +4,8 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-20
+
 ### Added
 
 - Context and cost of every session without the status line. The context is the prompt of the last request over the model's window (200k, or 1M for `[1m]` models). The cost prices each request at list prices with the real cache split (1-hour writes at twice the input price, 5-minute writes at 1.25 times), counts each request once even when a resumed session copies it, includes sub-agents, and adds up Claude Code's own ledger over every run of a resumed session.
@@ -67,6 +69,7 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 - `minetokencraft` command: open, demo, stop, serve, autostart, assets, statusline.
 - A live demo on GitHub Pages.
 
-[Unreleased]: https://github.com/KillianHzr/minetokencraft/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/KillianHzr/minetokencraft/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/KillianHzr/minetokencraft/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/KillianHzr/minetokencraft/releases/tag/v1.0.0

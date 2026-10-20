@@ -163,11 +163,18 @@ async function screenshots(page) {
   await page.shoot(path.join(SHOTS, 'simple.jpg'));
   console.log('docs/screenshots/simple.jpg');
   await page.setSimple(false);
+  // The usage screen, over the last 7 days.
+  await page.setScene({ scenario: 'normal', hour: '13', condition: 'clear', season: 'summer' });
+  await page.evaluate(`document.getElementById('stats-toggle').click(); document.querySelector('[data-period=week]').click(); true`);
+  await sleep(1000);
+  await page.shoot(path.join(SHOTS, 'usage.jpg'));
+  console.log('docs/screenshots/usage.jpg');
+  await page.evaluate(`document.querySelector('#stats [data-close]').click(); true`);
 }
 
 /**
  * README animation: a day in the village, the tooltip of a waiting session, both accounts out of quota, a rainy
- * night, then simple mode.
+ * night, the rainbow after it, then simple mode.
  */
 async function animation(page) {
   const frames = await fs.mkdtemp(path.join(os.tmpdir(), 'minetokencraft-frames-'));
@@ -195,6 +202,9 @@ async function animation(page) {
   await record(3);
   await page.setScene({ scenario: 'nether-end', hour: '23', condition: 'rain', season: 'summer' });
   await record(2.5);
+  await page.setScene({ scenario: 'normal', hour: '13', condition: 'rainbow', season: 'summer' });
+  await sleep(3000);
+  await record(2);
   await page.setSimple(true);
   await record(2);
   await page.setSimple(false);
