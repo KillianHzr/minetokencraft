@@ -105,3 +105,20 @@ test('usage is bucketed by local hour over the last 7 days', async () => {
   close(day.hours[9].cost, requestCost('claude-opus-5-5', { input: 0, output: 500, cacheRead: 0, write5m: 0, write1h: 0, webSearches: 0 }));
   assert.equal(day.sessions, 1);
 });
+
+test('a session\'s work counts its tools once each, sub-agents included, and its file edits', async () => {
+  const main = path.join(projects, 'worker.jsonl');
+  const agent = path.join(projects, 'worker', 'subagents', 'agent-w1.jsonl');
+  const tool = (id, name) => entries.toolUse(id, name, {});
+  writeJsonl(main, [
+    entries.assistant(now, { id: 'msg_w1', content: [tool('t1', 'Bash'), tool('t2', 'Edit')] }),
+    // The same request written again: its tools do not count twice.
+    entries.assistant(now, { id: 'msg_w1', content: [tool('t1', 'Bash'), tool('t2', 'Edit')] }),
+    entries.assistant(now, { id: 'msg_w2', content: [tool('t3', 'Bash'), tool('t4', 'TaskUpdate'), tool('t5', 'Write')] }),
+  ]);
+  writeJsonl(agent, [entries.assistant(now, { id: 'msg_w3', content: [tool('t6', 'Grep'), tool('t7', 'Grep'), tool('t8', 'Grep')] })]);
+  await trackFile(main, 'claude', 'worker');
+  await trackFile(agent, 'claude', 'worker', true);
+  const { sessionWork } = await import('../lib/tracker.mjs');
+  assert.deepEqual(sessionWork('claude', 'worker'), { tools: [{ name: 'Grep', count: 3 }, { name: 'Bash', count: 2 }], edits: 2 });
+});

@@ -68,6 +68,8 @@ const TEXTURES = [
     'ender_eye', 'painting', 'redstone', 'stick', 'iron_sword', 'diamond_sword', 'bell', 'map', 'clock_00', 'goat_horn',
   ].map((name) => `item/${name}`),
   'entity/villager/villager',
+  // The room of a session: chests and item frames.
+  'entity/chest/normal', 'block/item_frame',
   // Pets: a tamed wolf, cats of every coat.
   'entity/wolf/wolf_tame',
   ...['tabby', 'black', 'red', 'siamese', 'british_shorthair', 'calico', 'ragdoll', 'jellie'].map((name) => `entity/cat/${name}`),

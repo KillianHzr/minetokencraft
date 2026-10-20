@@ -12,6 +12,7 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 - Focus mode: the scene darkens except the rooms of the sessions waiting for you, and the rest of the panel fades.
 - Double-click a room to zoom on it; Esc or another double-click to see the whole village. A single click still brings the terminal back, once a double click is ruled out.
 - Click a villager (or its line in the panel or simple mode) to see what that sub-agent did. Villagers light up under the pointer, with a tooltip.
+- The room lives with its session: a painting after an hour, item frames on the desks with its two most used tools, chests that pile up as it edits files (the newest opens while it writes).
 - A pet for every player: a wolf that stays by its side and wags its tail as the session works, or a cat that strolls around the room and naps by the armchair once the session is done.
 - Torches along the path, lighting the ground at dusk; a rainbow over the landscape once the rain stops (from the real weather of the last hours, or a rain the page saw fall).
 - A strict Content Security Policy and security headers on every answer of the server, and in the online demo.

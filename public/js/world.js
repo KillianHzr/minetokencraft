@@ -7,6 +7,7 @@ import { noise } from './noise.js';
 import { buildTerrain, oakTree } from './terrain.js';
 import { addWind } from './wind.js';
 import { reducedMotion } from './motion.js';
+import { roomLife } from './roomlife.js';
 
 const GRASS_TINT = '#91bd59';
 const FOLIAGE_TINT = '#77ab2f';
@@ -524,6 +525,7 @@ function furnishRoom(blocks, group, room, style, roomObjects) {
   for (const villager of room.villagers) {
     if (villager.block) blocks.set(villager.block, x0 + villager.slot.block[0], 0, z0 + villager.slot.block[1]);
   }
+  const life = roomLife(group, room, { lamps: Boolean(lamps) });
   const light = new THREE.PointLight(style.light, ROOM_LIGHT.intensity, ROOM_LIGHT.distance, ROOM_LIGHT.decay);
   light.position.set(x0 + width / 2, ROOM_LIGHT.height, z0 + ROOM_DEPTH / 2);
   group.add(light);
@@ -537,6 +539,7 @@ function furnishRoom(blocks, group, room, style, roomObjects) {
     emeralds,
     cobwebs,
     lamps,
+    life,
     stations: {
       craft: [craftX + 0.5, 1.05, craftZ + 0.5],
       carto: [cartoX + 0.5, 1.05, cartoZ + 0.5],
@@ -761,6 +764,7 @@ export class World {
   release() {
     const shared = new Set([unitBox, carpetBox, waterQuad, cross, ghostMaterial, ...shapeCache.values(), ...materialCache.values()]);
     this.group.traverse((object) => {
+      if (object.userData.keepResources) return;
       if (object.isInstancedMesh) object.dispose();
       if (object.geometry && !shared.has(object.geometry)) object.geometry.dispose();
       for (const mat of [object.material ?? []].flat()) if (!shared.has(mat)) mat.dispose();
@@ -783,6 +787,7 @@ export class World {
   updateRoom(player, time) {
     const room = this.rooms.get(player.id);
     if (!room) return;
+    room.life.update(player);
     const cost = player.costUSD ?? 0;
     room.emeralds.set(Math.min(EMERALD_LEVELS, cost > 0 ? Math.floor(Math.log2(cost + 1)) + 1 : 0));
     const pct = player.context?.pct ?? 0;

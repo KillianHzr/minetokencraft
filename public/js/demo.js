@@ -23,6 +23,7 @@ export const DEMO_SCENARIOS = [
 ];
 
 const HOUR = 60 * 60 * 1000;
+const DEMO_TOOLS = [{ name: 'Bash', count: 42 }, { name: 'Edit', count: 31 }, { name: 'Read', count: 27 }, { name: 'Grep', count: 18 }, { name: 'WebSearch', count: 9 }];
 // null: no tool running, the player thinks at the bookshelf.
 const TOOL_CYCLE = [
   { name: 'Bash', label: 'npm run build' },
@@ -207,6 +208,8 @@ export function demoState(scenarioId, tick, { now = Date.now(), hidden = new Set
       waitingSince: session.waitingMinutes ? now - session.waitingMinutes * 60 * 1000 : null,
       stuck: session.stuck ?? false,
       tasks: demoTasks(session.tasks, tick, session.tasksDone),
+      // Some of everything for the room to show: frames of the most used tools, chests by file edits.
+      work: { tools: [DEMO_TOOLS[index % DEMO_TOOLS.length], DEMO_TOOLS[(index + 2) % DEMO_TOOLS.length]], edits: [3, 0, 25, 80, 140, 12, 45][index] ?? 0 },
       git: session.git ? { ahead: 0, behind: 0, changed: 0, untracked: 0, conflicts: 0, ...session.git } : null,
       tool,
       thinking: session.status === 'working' && !tool,

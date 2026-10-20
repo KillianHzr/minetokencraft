@@ -189,6 +189,9 @@ printf '%s' "$input" | minetokencraft statusline --quiet
 | Des lampes de redstone au mur du fond | L'avancement de la liste de tâches ; la tâche en cours clignote |
 | Des toiles d'araignée | La fenêtre de contexte qui se remplit (60, 75, 85, 95 %) |
 | Des blocs d'émeraude | Le coût de la session, un de plus à chaque fois qu'il double |
+| Un tableau au mur du fond | La session tourne depuis plus d'une heure |
+| Des cadres sur les bureaux | Les deux outils que la session utilise le plus |
+| Des coffres près du fauteuil | Les fichiers modifiés : un coffre, un deuxième à 20 modifications, un troisième à 60 ; le plus récent s'ouvre pendant l'écriture d'un fichier |
 | Les barres de boss en haut | Le quota 5 h (en haut) et celui de la semaine (en bas) de chaque compte, qui se remplissent avec l'utilisation |
 | Un cadre d'obsidienne et des yeux de l'Ender près de la maison | Les mêmes quotas, qui construisent un portail du Nether et un portail de l'End |
 | Une aile transformée en Nether ou en End | Ce compte n'a plus de quota 5 h, ou plus de quota de la semaine |

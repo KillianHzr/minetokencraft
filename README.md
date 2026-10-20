@@ -189,6 +189,9 @@ printf '%s' "$input" | minetokencraft statusline --quiet
 | Redstone lamps on the back wall | Task list progress; the current task blinks |
 | Cobwebs | Context window filling up (60, 75, 85, 95 %) |
 | Emerald blocks | Session cost, one more each time it doubles |
+| A painting on the back wall | The session has been running for more than an hour |
+| Item frames on the desks | The two tools the session uses the most |
+| Chests by the armchair | Files edited: one chest, a second at 20 edits, a third at 60; the newest opens while a file is being written |
 | Boss bars at the top | Each account's 5-hour (top) and weekly (bottom) quota, filling up as it is used |
 | Obsidian frame and eyes of ender by the house | Same quotas, building a Nether portal and an End portal |
 | Wing turned into the Nether or the End | That account is out of 5-hour or weekly quota |
