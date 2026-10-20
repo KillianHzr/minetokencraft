@@ -19,7 +19,7 @@ Qui travaille, qui t'attend, qui a fini, à quel point chaque contexte est rempl
 
 [English](README.md) · Français
 
-<img src="docs/screenshots/village.jpg" alt="Le village : une aile par compte Claude, une pièce par session, le paysage autour" width="100%">
+<img src="docs/demo.gif" alt="MineTokenCraft en action : des sessions au travail, l'infobulle d'une session qui attend, des comptes sans quota qui partent dans le Nether et l'End, une nuit de pluie, le mode simple" width="100%">
 
 </div>
 
@@ -57,6 +57,12 @@ Qui travaille, qui t'attend, qui a fini, à quel point chaque contexte est rempl
 - ⚡ **Léger.** Environ 200 appels de dessin par image, 30 i/s quand la fenêtre a le focus, 20 sinon, rien quand l'onglet est caché.
 
 <table>
+  <tr>
+    <td colspan="2"><img src="docs/screenshots/village.jpg" alt="Le village de jour : une aile par compte Claude, une pièce par session"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><sub>Une journée au village, chaque session au meuble de son outil</sub></td>
+  </tr>
   <tr>
     <td width="50%"><img src="docs/screenshots/nether-end.jpg" alt="Un compte sans quota 5 h dans le Nether, l'autre sans quota de la semaine dans l'End, de nuit"></td>
     <td width="50%"><img src="docs/screenshots/winter.jpg" alt="L'hiver : neige au sol et sur les arbres, rivière gelée"></td>

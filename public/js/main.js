@@ -890,6 +890,7 @@ function startDemo() {
   ];
   for (const [key, options] of environmentSelects) {
     const control = document.createElement('select');
+    control.id = `demo-${key}`;
     control.innerHTML = options.map(([value, label]) => `<option value="${value}">${t(`demo.${key}.${label}`)}</option>`).join('');
     control.addEventListener('change', () => {
       envOverride = { ...envOverride, [key]: control.value === '' ? undefined : key === 'hour' ? Number(control.value) : control.value };
@@ -897,6 +898,7 @@ function startDemo() {
     document.getElementById('toolbar').append(control);
   }
   const leave = document.createElement('button');
+  leave.id = 'demo-leave';
   leave.type = 'button';
   leave.textContent = t('demo.leave');
   leave.addEventListener('click', () => {
@@ -947,6 +949,12 @@ window.minetokencraft = {
   applyState,
   state: () => structuredClone(state),
   pause: (value = true) => (paused = value),
+  // Rooms with the screen position of their center, to point at them from the console (or the capture script).
+  rooms: () => [...(layout?.rooms.values() ?? [])].map((room) => {
+    const point = new THREE.Vector3(room.x0 + room.width / 2, 1, room.z0 + ROOM_DEPTH / 2).project(camera);
+    const rect = canvas.getBoundingClientRect();
+    return { id: room.player?.id ?? null, status: room.player?.status ?? null, x: Math.round(rect.left + (point.x + 1) / 2 * rect.width), y: Math.round(rect.top + (1 - point.y) / 2 * rect.height) };
+  }),
   // Creatures by theme, with their screen position (to aim from the console) and their health.
   mobs: () => [...herd.groups.values()].map((group) => ({
     theme: group.theme,

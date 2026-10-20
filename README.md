@@ -19,7 +19,7 @@ Who is working, who is waiting for you, who is done, how full each context is, w
 
 English · [Français](README.fr.md)
 
-<img src="docs/screenshots/village.jpg" alt="The village: one wing per Claude account, one room per session, the landscape around" width="100%">
+<img src="docs/demo.gif" alt="MineTokenCraft in action: sessions at work, the tooltip of a waiting session, accounts out of quota moving to the Nether and the End, a rainy night, simple mode" width="100%">
 
 </div>
 
@@ -57,6 +57,12 @@ English · [Français](README.fr.md)
 - ⚡ **Light on resources.** About 200 draw calls a frame, 30 fps when focused, 20 when not, nothing when the tab is hidden.
 
 <table>
+  <tr>
+    <td colspan="2"><img src="docs/screenshots/village.jpg" alt="The village by day: one wing per Claude account, one room per session"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><sub>A day in the village, each session at the furniture of its tool</sub></td>
+  </tr>
   <tr>
     <td width="50%"><img src="docs/screenshots/nether-end.jpg" alt="One account out of 5-hour quota in the Nether, the other out of weekly quota in the End, at night"></td>
     <td width="50%"><img src="docs/screenshots/winter.jpg" alt="Winter: snow on the ground and on the trees, frozen river"></td>

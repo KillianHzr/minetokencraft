@@ -14,7 +14,8 @@
     "autostart": "node scripts/autostart.mjs on",
     "autostart:off": "node scripts/autostart.mjs off",
     "autostart:status": "node scripts/autostart.mjs status",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "capture": "node scripts/capture.mjs"
   },
   "dependencies": {
     "three": "^0.186.1"
