@@ -28,6 +28,7 @@ There is no build step. The page is plain ES modules served as they are, with [t
 | `public/js/` | The page: 3D world, characters, mobs, panels, simple mode |
 | `public/js/locales/` | Page strings, one file per language |
 | `scripts/` | Assets download, status line copy, autostart, checks, tests, demo build, captures |
+| `macos/` | The menu bar app (Swift), built on the user's machine by `scripts/menubar.mjs` |
 | `test/` | Tests (`node:test`), on a fake home folder built by `test/fixtures.mjs` |
 
 ## Guidelines

@@ -4,7 +4,8 @@
 //   minetokencraft                    starts (in the background) and opens the page
 //   minetokencraft demo               opens the test page, with fake sessions
 //   minetokencraft stop               stops the server started by minetokencraft
-//   minetokencraft autostart on|off|status   starts at login (macOS)
+//   minetokencraft autostart on|off|status   starts at login (macOS, Linux)
+//   minetokencraft menubar on|off|status     menu bar app (macOS)
 //   minetokencraft assets [--refresh-skins] [--skins a,b]   downloads textures, font and skins (again)
 //   minetokencraft statusline [--quiet]      status line for Claude Code (see the README)
 import { spawn } from 'node:child_process';
@@ -98,6 +99,11 @@ switch (command) {
   case 'autostart': {
     const { autostart } = await import('../scripts/autostart.mjs');
     process.exitCode = (await autostart(args[0])) ? 0 : 1;
+    break;
+  }
+  case 'menubar': {
+    const { menubar } = await import('../scripts/menubar.mjs');
+    process.exitCode = (await menubar(args[0])) ? 0 : 1;
     break;
   }
   case 'assets': {
