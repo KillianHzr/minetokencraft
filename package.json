@@ -16,9 +16,7 @@
     "scripts/statusline.mjs",
     "config.mjs",
     "server.mjs",
-    "README.fr.md",
-    "scripts/menubar.mjs",
-    "macos/"
+    "README.fr.md"
   ],
   "scripts": {
     "start": "node bin/minetokencraft.mjs serve",

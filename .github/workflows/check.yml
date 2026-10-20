@@ -26,6 +26,3 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm test
-      - name: Menu bar app compiles
-        if: runner.os == 'macOS'
-        run: swiftc -typecheck macos/MenuBar.swift

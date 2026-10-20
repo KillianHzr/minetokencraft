@@ -98,7 +98,6 @@ Qui travaille, qui t'attend, qui a fini, à quel point chaque contexte est rempl
 | Village, mode simple, quotas, contexte, coût, consommation | ✓ | ✓ | ✓ |
 | Notifications | ✓ | ✓ (avec `notify-send`) | |
 | Démarrage à l'ouverture de session (`minetokencraft autostart`) | ✓ (launchd) | ✓ (systemd) | |
-| App de barre de menus (`minetokencraft menubar`) | ✓ | | |
 | Clic sur une pièce pour ramener son terminal | ✓ | | |
 | Lecture de la connexion Claude Code dans le trousseau | ✓ | | |
 
@@ -127,17 +126,6 @@ minetokencraft
 
 </details>
 
-<details>
-<summary>L'app de barre de menus (macOS)</summary>
-
-```sh
-minetokencraft menubar on
-```
-
-Compile une petite app native avec le compilateur Swift des outils en ligne de commande de Xcode (`xcode-select --install` s'il manque), la range dans `~/Applications/MineTokenCraft Bar.app` et la lance à l'ouverture de session. Un marteau dans la barre de menus affiche le nombre de sessions qui t'attendent ; son menu les liste (un clic ramène le terminal), donne les quotas de chaque compte, et rouvre la page après que tu as fermé son onglet. `minetokencraft menubar off` la retire.
-
-</details>
-
 Envie de voir avant ? La [démo en ligne](https://killianhzr.github.io/minetokencraft/) tourne dans ton navigateur avec des sessions factices dans tous les états, et permet de changer l'heure, la météo, la saison et le scénario de quota. `minetokencraft demo` ouvre la même page en local.
 
 ## Commandes
@@ -149,7 +137,6 @@ Envie de voir avant ? La [démo en ligne](https://killianhzr.github.io/minetoken
 | `minetokencraft stop` | Arrête un serveur lancé par `minetokencraft` |
 | `minetokencraft serve` | Lance le serveur au premier plan, journal dans le terminal |
 | `minetokencraft autostart on` · `off` · `status` | Démarre le serveur à l'ouverture de session (macOS avec launchd, Linux avec systemd) |
-| `minetokencraft menubar on` · `off` · `status` | Une app de barre de menus (macOS) : les sessions qui t'attendent, les quotas, un clic pour ramener un terminal, et la page à rouvrir |
 | `minetokencraft assets [--refresh-skins] [--skins a,b,c]` | Retélécharge les ressources, ou d'autres skins |
 | `minetokencraft statusline [--quiet]` | Commande de status line pour Claude Code (facultative, [voir plus bas](#status-line-facultative)) |
 

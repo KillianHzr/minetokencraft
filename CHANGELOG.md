@@ -4,6 +4,10 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 
 ## [Unreleased]
 
+### Removed
+
+- The menu bar app for macOS: too much for what it brought. `minetokencraft menubar off` from 1.2.0 removes an installed one.
+
 ## [1.2.0] - 2026-10-20
 
 ### Added

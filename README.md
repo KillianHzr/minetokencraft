@@ -98,7 +98,6 @@ English · [Français](README.fr.md)
 | Village, simple mode, quotas, context, cost, usage | ✓ | ✓ | ✓ |
 | Notifications | ✓ | ✓ (with `notify-send`) | |
 | Start at login (`minetokencraft autostart`) | ✓ (launchd) | ✓ (systemd) | |
-| Menu bar app (`minetokencraft menubar`) | ✓ | | |
 | Click a room to bring its terminal to the front | ✓ | | |
 | Read the Claude Code login from the Keychain | ✓ | | |
 
@@ -127,17 +126,6 @@ minetokencraft
 
 </details>
 
-<details>
-<summary>The menu bar app (macOS)</summary>
-
-```sh
-minetokencraft menubar on
-```
-
-Builds a small native app with the Swift compiler of the Xcode command line tools (`xcode-select --install` if it is missing), puts it in `~/Applications/MineTokenCraft Bar.app` and starts it at login. A hammer in the menu bar shows how many sessions wait for you; its menu lists them (a click brings the terminal back), shows each account's quotas, and opens the page again after you closed its tab. `minetokencraft menubar off` removes it.
-
-</details>
-
 Want to see it first? The [live demo](https://killianhzr.github.io/minetokencraft/) runs in your browser with fake sessions in every state, and lets you switch the time, weather, season and quota scenario. `minetokencraft demo` opens the same page locally.
 
 ## Commands
@@ -149,7 +137,6 @@ Want to see it first? The [live demo](https://killianhzr.github.io/minetokencraf
 | `minetokencraft stop` | Stops a server started by `minetokencraft` |
 | `minetokencraft serve` | Runs the server in the foreground, logs in the terminal |
 | `minetokencraft autostart on` · `off` · `status` | Starts the server at login (macOS with launchd, Linux with systemd) |
-| `minetokencraft menubar on` · `off` · `status` | A menu bar app (macOS): sessions waiting for you, quotas, a click to bring a terminal back, and the page to open again |
 | `minetokencraft assets [--refresh-skins] [--skins a,b,c]` | Downloads the assets again, or other skins |
 | `minetokencraft statusline [--quiet]` | Status line command for Claude Code (optional, [see below](#optional-status-line)) |
 
