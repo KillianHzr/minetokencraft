@@ -212,7 +212,7 @@ Clique sur une pièce ou une carte pour ramener son terminal au premier plan. Do
 
 ## Mode simple
 
-L'interrupteur **Mode simple** remplace le village par un tableau de bord clair : les quotas de chaque compte, puis *À toi de jouer*, *En cours*, *Terminé*, et les sessions inactives. Il se resserre pour tenir dans l'écran sans défiler. Le choix est retenu.
+L'interrupteur **Mode simple** remplace le village par un tableau de bord clair : les quotas de chaque compte, puis *À toi de jouer*, *En cours*, *Terminé*, et les sessions inactives. Les sous-agents d'une session sont rangés sous sa carte, ceux qui travaillent en premier, avec l'outil qu'ils utilisent. Il se resserre pour tenir dans l'écran sans défiler. Le choix est retenu.
 
 ## Configuration
 

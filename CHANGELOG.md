@@ -4,6 +4,10 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 
 ## [Unreleased]
 
+### Changed
+
+- Simple mode: the sub-agents hang under their session like a tree, those at work first with their tool (or "thinking…"). The ones at work now stay when the columns shrink to fit the screen; only the finished ones go.
+
 ## [1.2.2] - 2026-10-23
 
 ### Removed

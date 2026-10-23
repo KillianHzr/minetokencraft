@@ -112,7 +112,8 @@ export default {
   'dashboard.stuck': 'Stuck?',
   'dashboard.background': 'Background task',
   'dashboard.context': 'Context used',
-  'dashboard.moreAgents': { one: '+ {count} agent', other: '+ {count} agents' },
+  'dashboard.moreAgents.working': { one: '+ {count} more at work', other: '+ {count} more at work' },
+  'dashboard.moreAgents.done': { one: '+ {count} more done', other: '+ {count} more done' },
   'dashboard.active': { one: '{count} active', other: '{count} active' },
   'dashboard.idle': 'Idle for more than an hour',
 

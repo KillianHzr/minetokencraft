@@ -474,7 +474,8 @@ body.simple .switch input:checked + .switch__track::after {
   display: flex;
   flex: none;
   flex-direction: column;
-  gap: 8px;
+  --ui-item-gap: 8px;
+  gap: var(--ui-item-gap);
   padding: 10px 10px 10px 14px;
   overflow: hidden;
   background: var(--ui-inset);
@@ -659,25 +660,49 @@ body.simple .switch input:checked + .switch__track::after {
   text-overflow: ellipsis;
 }
 
+/* The sub-agents hang from their session like a tree, the trunk under the avatar. */
 .ui-item__agents {
   display: grid;
   gap: 4px;
   margin: 0;
-  padding: 0 0 0 2px;
+  padding: 0 0 0 10px;
   list-style: none;
-  font-size: 10px;
-  line-height: 12px;
+  font-size: 11px;
+  line-height: 14px;
   color: var(--ui-secondary);
 }
 
-.ui-item__agents li {
+.ui-agent {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
+  padding-left: 14px;
 }
 
-.ui-item__agents li span {
+/* Branch from the row above (or from the session for the first one) down to the middle of this row. */
+.ui-agent::before {
+  content: '';
+  position: absolute;
+  top: calc(-50% - 4px);
+  bottom: 50%;
+  left: 0;
+  width: 8px;
+  border-bottom: 1px solid var(--ui-border);
+  border-left: 1px solid var(--ui-border);
+  border-bottom-left-radius: 4px;
+}
+
+.ui-agent:first-child::before {
+  top: calc(-1 * var(--ui-item-gap));
+}
+
+.ui-agent--done {
+  color: var(--ui-muted);
+}
+
+.ui-agent span {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -772,13 +797,13 @@ body.simple .switch input:checked + .switch__track::after {
 /* --- compaction when a column overflows ------------------------------------------------------------------ */
 
 #dashboard:is([data-density='compact'], [data-density='tiny'], [data-density='micro'], [data-density='nano']) .ui-item__quote,
-#dashboard:is([data-density='tiny'], [data-density='micro'], [data-density='nano']) .ui-item__agents,
+#dashboard:is([data-density='tiny'], [data-density='micro'], [data-density='nano']) :is(.ui-agent--done, .ui-item__agents:not(:has(.ui-agent--working))),
 #dashboard:is([data-density='micro'], [data-density='nano']) :is(.ui-item__git, .ui-item__tasks) {
   display: none;
 }
 
 #dashboard:is([data-density='micro'], [data-density='nano']) .ui-item {
-  gap: 6px;
+  --ui-item-gap: 6px;
   padding-top: 8px;
   padding-bottom: 8px;
 }
@@ -1111,10 +1136,10 @@ body.simple.focus #focus-toggle {
   border-color: transparent;
 }
 
-.ui-item__agents li[data-villager] {
+.ui-agent[data-villager] {
   cursor: pointer;
 }
 
-.ui-item__agents li[data-villager]:hover span {
+.ui-agent[data-villager]:hover span {
   text-decoration: underline;
 }

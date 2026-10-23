@@ -212,7 +212,7 @@ Click a room or a card to bring its terminal to the front. Double-click a room t
 
 ## Simple mode
 
-The **Simple mode** switch replaces the village with a light dashboard: quotas per account, then *Your turn*, *In progress*, *Done*, and the idle sessions. It shrinks itself to fit the screen without scrolling. The choice is remembered.
+The **Simple mode** switch replaces the village with a light dashboard: quotas per account, then *Your turn*, *In progress*, *Done*, and the idle sessions. The sub-agents of a session hang under its card, those at work first, with the tool they are using. It shrinks itself to fit the screen without scrolling. The choice is remembered.
 
 ## Configuration
 

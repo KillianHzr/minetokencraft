@@ -20,8 +20,9 @@ import { LOCALE, t } from './i18n.js';
 // accent, rectangular badges). States keep the blue / yellow / orange palette, readable with color blindness.
 const COLUMNS = ['waiting', 'working', 'done'];
 const AGENTS_LISTED = 4;
-// Compaction steps when a column overflows: the quote, then the agents, then the branch and the tasks, then the
-// margins. Context and cost always stay; past the last step, the column scrolls rather than cutting.
+// Compaction steps when a column overflows: the quote, then the finished agents, then the branch and the tasks, then
+// the margins. Context, cost and the agents at work always stay; past the last step, the column scrolls rather than
+// cutting.
 const DENSITIES = ['', 'compact', 'tiny', 'micro', 'nano'];
 
 // Level of a filling gauge (quota, context): blue, then yellow, then orange.
@@ -68,15 +69,25 @@ function accountCard(account, now) {
     </section>`;
 }
 
+function agentRow(agent) {
+  const doing = agent.status !== 'working' ? '' : agent.tool ? toolText(agent.tool) : t('activity.thinking');
+  return `<li class="ui-agent ui-agent--${agent.status}" data-villager="${escapeHtml(agent.id)}" title="${escapeHtml(t('session.villagerHistory'))}">
+      <i class="ui-dot ui-dot--${agent.status}"></i><span>${escapeHtml(truncate(agent.description || agent.type, 48))}${doing ? `<span class="ui-muted"> · ${escapeHtml(truncate(doing, 28))}</span>` : ''}</span></li>`;
+}
+
+/**
+ * The sub-agents under their session, those at work first: they stay at every density, the finished ones leave with
+ * the first compaction steps.
+ */
 function agentList(player) {
-  if (!player.villagers.length) return '';
-  const rows = player.villagers.slice(0, AGENTS_LISTED).map((agent) => {
-    const doing = agent.status === 'working' && agent.tool ? `<span class="ui-muted"> · ${escapeHtml(truncate(toolText(agent.tool), 28))}</span>` : '';
-    return `<li data-villager="${escapeHtml(agent.id)}" title="${escapeHtml(t('session.villagerHistory'))}"><i class="ui-dot ui-dot--${agent.status}"></i><span>${escapeHtml(truncate(agent.description, 48))}${doing}</span></li>`;
-  });
-  const more = player.villagers.length - AGENTS_LISTED;
-  if (more > 0) rows.push(`<li class="ui-muted">${t('dashboard.moreAgents', { count: more })}</li>`);
-  return `<ul class="ui-item__agents">${rows.join('')}</ul>`;
+  const working = player.villagers.filter((agent) => agent.status === 'working');
+  const done = player.villagers.filter((agent) => agent.status !== 'working');
+  const doneShown = done.slice(0, Math.max(0, AGENTS_LISTED - working.length));
+  const rows = [...working.slice(0, AGENTS_LISTED), ...doneShown].map(agentRow);
+  const more = (status, count) => `<li class="ui-agent ui-agent--${status} ui-muted">${t(`dashboard.moreAgents.${status}`, { count })}</li>`;
+  if (working.length > AGENTS_LISTED) rows.push(more('working', working.length - AGENTS_LISTED));
+  if (done.length > doneShown.length) rows.push(more('done', done.length - doneShown.length));
+  return rows.length ? `<ul class="ui-item__agents">${rows.join('')}</ul>` : '';
 }
 
 function sessionItem(player, now) {

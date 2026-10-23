@@ -112,7 +112,8 @@ export default {
   'dashboard.stuck': 'Bloquée ?',
   'dashboard.background': 'Tâche de fond',
   'dashboard.context': 'Contexte utilisé',
-  'dashboard.moreAgents': { one: '+ {count} agent', other: '+ {count} agents' },
+  'dashboard.moreAgents.working': { one: '+ {count} autre au travail', other: '+ {count} autres au travail' },
+  'dashboard.moreAgents.done': { one: '+ {count} autre terminé', other: '+ {count} autres terminés' },
   'dashboard.active': { one: '{count} active', other: '{count} actives' },
   'dashboard.idle': 'Inactives depuis plus d\'une heure',
 
