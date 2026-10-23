@@ -10,6 +10,7 @@ cd minetokencraft
 npm install
 npm run check          # syntax, server modules, translations, npm package contents
 npm test               # tests on a fake home folder (no real Claude Code data is read)
+npm run smoke          # the npm package installed like users do, its pages opened in Chrome (-- --browser)
 node bin/minetokencraft.mjs serve
 ```
 
@@ -51,4 +52,6 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 
 ## Releases
 
-Maintainers bump the version with `npm version minor` (or `patch`), move the `Unreleased` notes of `CHANGELOG.md` under the new version, and push the tag: the release workflow creates the GitHub release and publishes to npm.
+Maintainers bump the version with `npm version minor` (or `patch`), move the `Unreleased` notes of `CHANGELOG.md` under the new version, and push the tag. The release workflow first runs every check (three systems, three Node versions, the package test), then checks that the tag matches `package.json` and is on `main`, publishes to npm, and creates the GitHub release. If any check fails, nothing is published.
+
+Publishing uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers): no token is stored, npm trusts `release.yml` of this repository, and the package gets a signed provenance. It is set on npmjs.com, in the package settings, under *Trusted publishing*: GitHub Actions, user `KillianHzr`, repository `minetokencraft`, workflow `release.yml`, with `npm publish` allowed.

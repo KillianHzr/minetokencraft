@@ -296,6 +296,7 @@ Les issues et les pull requests sont les bienvenues : voir [CONTRIBUTING.md](CON
 npm install
 npm run check   # syntaxe de tous les fichiers, modules du serveur, traductions, contenu du paquet npm
 npm test        # tests sur un faux dossier personnel : comptes, transcripts, coût, quotas, serveur
+npm run smoke   # le paquet npm installé comme chez un utilisateur (ajouter -- --browser pour ouvrir ses pages dans Chrome)
 minetokencraft serve
 ```
 

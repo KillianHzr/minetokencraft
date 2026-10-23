@@ -28,7 +28,8 @@
     "autostart:status": "node scripts/autostart.mjs status",
     "check": "node scripts/check.mjs",
     "capture": "node scripts/capture.mjs",
-    "test": "node scripts/test.mjs"
+    "test": "node scripts/test.mjs",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "three": "^0.186.1"

@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   pull_request:
+  # The release workflow runs all of it before publishing anything.
+  workflow_call:
+
+permissions:
+  contents: read
 
 jobs:
   check:
@@ -26,3 +31,20 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm test
+
+  # The npm package as users get it: installed globally and hoisted like npx, the command, the server, and both pages
+  # opened in headless Chrome (installed on GitHub's runners).
+  package:
+    name: package · ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm run smoke -- --browser

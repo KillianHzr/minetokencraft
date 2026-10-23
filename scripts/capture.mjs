@@ -2,12 +2,13 @@
 // run it after a visible change, with the server running (`minetokencraft serve`).
 // Usage: npm run capture [-- --only screenshots|gif|preview] [--url http://localhost:4747]
 // Needs Google Chrome or Chromium (CHROME_PATH to point at another one), and ffmpeg for the animation.
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PORT } from '../config.mjs';
+import { closeChrome, launchChrome, Page, sleep } from './chrome.mjs';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SHOTS = path.join(root, 'docs', 'screenshots');
@@ -15,14 +16,6 @@ const args = process.argv.slice(2);
 const option = (name, fallback) => (args.includes(name) ? args[args.indexOf(name) + 1] : fallback);
 const BASE = option('--url', `http://localhost:${PORT}`);
 const ONLY = option('--only', null);
-const CHROME_PATHS = [
-  process.env.CHROME_PATH,
-  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-  '/Applications/Chromium.app/Contents/MacOS/Chromium',
-  '/usr/bin/google-chrome',
-  '/usr/bin/chromium',
-  '/usr/bin/chromium-browser',
-].filter(Boolean);
 // Screenshot and animation sizes. The animation stays under 5 MB: 720 pixels wide, 8 frames a second, 128 colors.
 const SHOT_SIZE = { width: 1456, height: 825 };
 const GIF_SIZE = { width: 1280, height: 720 };
@@ -32,60 +25,10 @@ const PREVIEW_SIZE = { width: 1280, height: 640 };
 // Time for textures, skins and the first layout before shooting.
 const SETTLE_MS = 7000;
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 /**
- * Minimal Chrome DevTools Protocol client over the page WebSocket.
+ * The test page, with the controls the captures need.
  */
-class Page {
-  static async open(chrome) {
-    const port = await chromePort(chrome.profile);
-    const targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
-    const page = new Page(targets.find((target) => target.type === 'page').webSocketDebuggerUrl);
-    await page.ready;
-    return page;
-  }
-
-  constructor(url) {
-    this.socket = new WebSocket(url);
-    this.pending = new Map();
-    this.nextId = 1;
-    this.ready = new Promise((resolve) => this.socket.addEventListener('open', resolve, { once: true }));
-    this.socket.addEventListener('message', (event) => {
-      const message = JSON.parse(event.data);
-      const pending = this.pending.get(message.id);
-      if (!pending) return;
-      this.pending.delete(message.id);
-      if (message.error) pending.reject(new Error(`${pending.method}: ${message.error.message}`));
-      else pending.resolve(message.result);
-    });
-  }
-
-  send(method, params = {}) {
-    const id = this.nextId++;
-    this.socket.send(JSON.stringify({ id, method, params }));
-    return new Promise((resolve, reject) => this.pending.set(id, { resolve, reject, method }));
-  }
-
-  async evaluate(expression) {
-    const { result, exceptionDetails } = await this.send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
-    if (exceptionDetails) throw new Error(exceptionDetails.exception?.description ?? exceptionDetails.text);
-    return result.value;
-  }
-
-  async resize({ width, height }) {
-    await this.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
-  }
-
-  async shoot(file, { format = 'jpeg', quality = 88 } = {}) {
-    const { data } = await this.send('Page.captureScreenshot', { format, quality: format === 'jpeg' ? quality : undefined });
-    await fs.writeFile(file, Buffer.from(data, 'base64'));
-  }
-
-  async hover(x, y) {
-    await this.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });
-  }
-
+class DemoPage extends Page {
   /**
    * Opens the test page in English, with the toolbar hidden, and waits for the village to be drawn.
    */
@@ -119,26 +62,6 @@ class Page {
   async setSimple(simple) {
     await this.evaluate(`(() => { const toggle = document.getElementById('simple-toggle'); if (toggle.checked !== ${simple}) toggle.click(); return true; })()`);
   }
-}
-
-async function chromePort(profile) {
-  for (let i = 0; i < 100; i++) {
-    const file = await fs.readFile(path.join(profile, 'DevToolsActivePort'), 'utf8').catch(() => null);
-    if (file) return Number(file.split('\n')[0]);
-    await sleep(100);
-  }
-  throw new Error('Chrome did not open its DevTools port');
-}
-
-async function launchChrome() {
-  const binary = (await Promise.all(CHROME_PATHS.map(async (file) => (await fs.access(file).then(() => file, () => null))))).find(Boolean);
-  if (!binary) throw new Error('Chrome not found: set CHROME_PATH');
-  const profile = await fs.mkdtemp(path.join(os.tmpdir(), 'minetokencraft-capture-'));
-  const child = spawn(binary, [
-    '--headless=new', `--user-data-dir=${profile}`, '--remote-debugging-port=0', '--hide-scrollbars', '--mute-audio',
-    '--no-first-run', '--no-default-browser-check', '--lang=en-US', '--enable-unsafe-swiftshader', 'about:blank',
-  ], { stdio: 'ignore' });
-  return { child, profile };
 }
 
 /**
@@ -250,12 +173,10 @@ if (!(await fetch(`${BASE}/api/state`).then((response) => response.ok, () => fal
 }
 const chrome = await launchChrome();
 try {
-  const page = await Page.open(chrome);
+  const page = await DemoPage.open(chrome);
   if (!ONLY || ONLY === 'screenshots') await screenshots(page);
   if (!ONLY || ONLY === 'gif') await animation(page);
   if (!ONLY || ONLY === 'preview') await preview(page);
 } finally {
-  chrome.child.kill();
-  await sleep(300);
-  await fs.rm(chrome.profile, { recursive: true, force: true });
+  await closeChrome(chrome);
 }
