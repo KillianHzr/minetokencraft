@@ -4,6 +4,10 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 
 ## [Unreleased]
 
+### Fixed
+
+- `npx minetokencraft` and local installs: the village is drawn again. The server looked for three.js inside its own folder, where npm does not put it in these installs.
+
 ## [1.2.3] - 2026-10-23
 
 ### Changed

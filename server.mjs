@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import http from 'node:http';
 import fs from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ASSETS_DIR, CACHE_DIR, HOST, POLL_MS, PORT } from './config.mjs';
@@ -16,11 +17,14 @@ import { fillMissingAssets } from './scripts/fetch-assets.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const HEARTBEAT_MS = 15000;
+// Where Node finds three.js: next to the server in a clone or a global install, higher up when npm hoists it (npx, a
+// local install).
+const THREE_DIR = path.join(path.dirname(createRequire(import.meta.url).resolve('three')), '..');
 
 // URL prefix -> served folder.
 const STATIC_ROUTES = [
   ['/assets/', ASSETS_DIR],
-  ['/vendor/three/', path.join(root, 'node_modules', 'three')],
+  ['/vendor/three/', THREE_DIR],
   ['/', path.join(root, 'public')],
 ];
 
