@@ -158,7 +158,9 @@ async function checkPages(base) {
     if (!pathname.startsWith('/js/')) continue;
     for (const [, specifier, dynamic] of source.matchAll(IMPORTS)) queue.push(resolve(specifier ?? dynamic, new URL(pathname, base).href));
   }
-  const state = JSON.parse(await get(base, '/api/state'));
+  // The state is empty until the server's first pass, slower on Windows.
+  let state = {};
+  for (const started = Date.now(); !state.players && Date.now() - started < START_TIMEOUT_MS; await sleep(200)) state = JSON.parse(await get(base, '/api/state'));
   assert.ok(Array.isArray(state.players), '/api/state: no players');
   return served.size;
 }
