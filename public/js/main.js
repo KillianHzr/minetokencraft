@@ -97,8 +97,6 @@ const PET_SPOTS = {
 };
 // A sleeping cat breathes out a "z" every few seconds.
 const PET_ZZZ_S = 2.5;
-// Flames rising from the torches along the path at night, a few a second for all of them.
-const TORCH_FLAMES_PER_S = 3;
 // Ambiance of a Nether zone (rising embers) or End zone (floating portal particles), per second.
 const ZONE_PARTICLES = {
   nether: { type: 'ember', rate: 10, velocity: [0, 0.9, 0], spread: 0.3, life: 2.6, size: 0.12 },
@@ -551,7 +549,7 @@ function aimSun(direction) {
 const LOWEST_GROUND = -3;
 const COVER_MARGIN = 3;
 const CEILING_MARGIN = 3;
-// Rain and snow also fall around the house.
+// Snow also falls around the house.
 const WEATHER_MARGIN = 14;
 
 /**
@@ -710,17 +708,6 @@ function updatePet(record, dt) {
   particles.emit('zzz', { x, y: 0.6, z }, { spread: 0.1, velocity: [0.1, 0.35, 0], life: 1.8, size: 0.14 });
 }
 
-let torchTimer = 0;
-
-function emitTorchFlames(dt) {
-  if (lastGloom < 0.12 || !world.torches.length) return;
-  torchTimer -= dt;
-  if (torchTimer > 0) return;
-  torchTimer = 1 / (TORCH_FLAMES_PER_S * (reducedMotion() ? REDUCED_PARTICLES : 1));
-  const torch = world.torches[Math.floor(Math.random() * world.torches.length)];
-  particles.emit('flame', { x: torch.x, y: torch.y + 0.68, z: torch.z }, { spread: 0.04, velocity: [0, 0.35, 0], life: 0.45, size: 0.1 });
-}
-
 const timer = new THREE.Timer();
 const environment = new Environment(scene, {
   sky: document.getElementById('sky'),
@@ -799,7 +786,6 @@ function renderFrame(time) {
     world.animate(now);
     expireDepartures(now);
     emitZoneParticles(dt);
-    emitTorchFlames(dt);
   });
   timed('environment', () => updateEnvironment(dt));
   timed('particles', () => particles.update(dt));

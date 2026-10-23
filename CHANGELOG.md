@@ -4,6 +4,11 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 
 ## [Unreleased]
 
+### Removed
+
+- The torches along the path around the village.
+- Falling rain: a rainy day keeps its grey sky, a storm its lightning, and the rainbow still shows once the rain stops.
+
 ## [1.2.1] - 2026-10-21
 
 ### Changed

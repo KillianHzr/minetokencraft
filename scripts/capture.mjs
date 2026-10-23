@@ -173,8 +173,8 @@ async function screenshots(page) {
 }
 
 /**
- * README animation: a day in the village, the tooltip of a waiting session, both accounts out of quota, a rainy
- * night, the rainbow after it, then simple mode.
+ * README animation: a day in the village, the tooltip of a waiting session, both accounts out of quota, the night, a
+ * rainbow, then simple mode.
  */
 async function animation(page) {
   const frames = await fs.mkdtemp(path.join(os.tmpdir(), 'minetokencraft-frames-'));
@@ -200,7 +200,7 @@ async function animation(page) {
   await page.hover(4, 4);
   await page.setScene({ scenario: 'nether-end', hour: '13', condition: 'clear', season: 'summer' });
   await record(3);
-  await page.setScene({ scenario: 'nether-end', hour: '23', condition: 'rain', season: 'summer' });
+  await page.setScene({ scenario: 'nether-end', hour: '23', condition: 'clear', season: 'summer' });
   await record(2.5);
   await page.setScene({ scenario: 'normal', hour: '13', condition: 'rainbow', season: 'summer' });
   await sleep(3000);

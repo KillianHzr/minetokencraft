@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { windUniforms } from './wind.js';
-import { REDUCED_PARTICLES, reducedMotion } from './motion.js';
+import { reducedMotion } from './motion.js';
 import { TEXTURE_ROOT } from './textures.js';
 
 // Sky, light, weather and seasons: everything that changes with the real time and the weather outside.
@@ -28,8 +28,6 @@ const HAZES = {
 };
 // Seconds for the haze to follow a change of weather.
 const HAZE_EASE = 0.4;
-// Share of the raindrops that splash where they land (on the ground around the house).
-const SPLASH_SHARE = 0.15;
 // Rainbow after rain: half a ring standing just behind the house, facing the camera, red outside and violet inside.
 // Its size follows the house (radius over its width) and its feet sink into the ground. The view shows hardly any
 // sky, so it is layered: drawn over the landscape, under the house (World draws the house after it).
@@ -41,9 +39,7 @@ const RAINBOW_AFTER_MS = 20 * 60 * 1000;
 const OVERCAST = { clear: 1, cloudy: 0.8, rain: 0.65, storm: 0.5, snow: 0.75, fog: 0.7 };
 // Night stays readable: the moon gives enough light to tell rooms and creatures apart.
 const SUN = { dayIntensity: 0.9, moonIntensity: 0.38, sky: 0.58, nightSky: 0.28 };
-const RAIN_DROPS = 1600;
 const SNOW_FLAKES = 1100;
-const RAIN_SPEED = 16;
 const SNOW_SPEED = 1.3;
 const SKY_HEIGHT = 14;
 const LIGHTNING_MIN_S = 5;
@@ -92,20 +88,8 @@ export class Environment {
     this.stars = sky.querySelector('.sky__stars');
     this.sunDisc = sky.querySelector('.sky__sun');
     this.moonDisc = sky.querySelector('.sky__moon');
-    this.rain = this.makeRain();
     this.snow = this.makeSnow();
-    scene.add(this.rain, this.snow);
-  }
-
-  makeRain() {
-    const positions = new Float32Array(RAIN_DROPS * 6);
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const rain = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: '#a9c4ff', transparent: true, opacity: 0.55 }));
-    rain.frustumCulled = false;
-    rain.visible = false;
-    rain.userData.seeded = false;
-    return rain;
+    scene.add(this.snow);
   }
 
   /**
@@ -168,40 +152,6 @@ export class Environment {
       Math.random() * SKY_HEIGHT,
       bounds.z0 + Math.random() * (bounds.z1 - bounds.z0 + 1),
     ];
-  }
-
-  updateRain(dt, bounds, wind) {
-    const positions = this.rain.geometry.attributes.position.array;
-    const slant = wind * 0.25;
-    for (let i = 0; i < RAIN_DROPS; i++) {
-      const at = i * 6;
-      if (!this.rain.userData.seeded || positions[at + 1] < 0) {
-        if (this.rain.userData.seeded) this.splash(positions[at], positions[at + 2], bounds);
-        const [x, y, z] = this.randomSpot(bounds);
-        positions[at] = x;
-        positions[at + 1] = this.rain.userData.seeded ? SKY_HEIGHT : y;
-        positions[at + 2] = z;
-      } else {
-        positions[at + 1] -= RAIN_SPEED * dt;
-        positions[at] += RAIN_SPEED * slant * dt;
-      }
-      // A drop = a 0.6-block streak, slanted by the wind.
-      positions[at + 3] = positions[at] - slant * 0.6;
-      positions[at + 4] = positions[at + 1] + 0.6;
-      positions[at + 5] = positions[at + 2];
-    }
-    this.rain.userData.seeded = true;
-    this.rain.geometry.attributes.position.needsUpdate = true;
-  }
-
-  /**
-   * A raindrop reaching the ground around the house splashes; further away, nobody would see it.
-   */
-  splash(x, z, bounds) {
-    const near = this.splashArea;
-    if (!this.particles || !near || x < near.x0 || x > near.x1 + 1 || z < near.z0 || z > near.z1 + 1) return;
-    if (Math.random() > SPLASH_SHARE * (reducedMotion() ? REDUCED_PARTICLES : 1)) return;
-    this.particles.emit('splash', { x, y: 0.08, z }, { spread: 0, velocity: [0, 0.6, 0], gravity: 4, life: 0.28, size: 0.22 });
   }
 
   updateSnow(dt, bounds, wind, time) {
@@ -337,13 +287,9 @@ export class Environment {
     this.updateRainbow(dt, conditions, layout, now);
     const direction = this.updateLights(conditions);
     this.updateLightning(dt, conditions);
-    const precipitation = conditions.condition === 'snow' ? 'snow' : ['rain', 'storm'].includes(conditions.condition) ? 'rain' : null;
-    this.rain.visible = precipitation === 'rain';
-    this.snow.visible = precipitation === 'snow';
+    // No rain falls: a rainy sky stays grey, only snow comes down.
+    this.snow.visible = conditions.condition === 'snow';
     if (layout) {
-      this.particles = particles;
-      this.splashArea = layout.bounds;
-      if (this.rain.visible) this.updateRain(dt, layout.weatherArea ?? layout.bounds, conditions.wind);
       if (this.snow.visible) this.updateSnow(dt, layout.weatherArea ?? layout.bounds, conditions.wind, now);
       this.updateFalling(dt, conditions, layout.bounds, particles);
     }

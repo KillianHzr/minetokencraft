@@ -50,7 +50,7 @@ const TEXTURES = [
     // Landscape around the house: mountains, river, forests.
     'water_still', 'sand', 'gravel', 'andesite', 'calcite', 'coarse_dirt', 'mossy_cobblestone', 'clay', 'ice', 'packed_ice',
     'spruce_leaves', 'birch_log', 'birch_log_top', 'birch_leaves', 'podzol_top', 'podzol_side', 'sugar_cane', 'lily_pad',
-    'fern', 'tall_grass_bottom', 'tall_grass_top', 'pumpkin_side', 'pumpkin_top', 'sweet_berry_bush_stage3', 'torch',
+    'fern', 'tall_grass_bottom', 'tall_grass_top', 'pumpkin_side', 'pumpkin_top', 'sweet_berry_bush_stage3',
   ].map((name) => `block/${name}`),
   'item/diamond',
   // Animals by day, monsters by night.

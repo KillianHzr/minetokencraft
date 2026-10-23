@@ -20,7 +20,7 @@ Qui travaille, qui t'attend, qui a fini, à quel point chaque contexte est rempl
 
 [English](README.md) · Français
 
-<img src="docs/demo.gif" alt="MineTokenCraft en action : des sessions au travail, l'infobulle d'une session qui attend, des comptes sans quota qui partent dans le Nether et l'End, une nuit de pluie, le mode simple" width="100%">
+<img src="docs/demo.gif" alt="MineTokenCraft en action : des sessions au travail, l'infobulle d'une session qui attend, des comptes sans quota qui partent dans le Nether et l'End, une nuit, un arc-en-ciel, le mode simple" width="100%">
 
 </div>
 
@@ -53,7 +53,7 @@ Qui travaille, qui t'attend, qui a fini, à quel point chaque contexte est rempl
 - 📊 **Les quotas de chaque compte.** L'utilisation sur 5 heures et sur la semaine en barres de boss Minecraft en haut de l'écran, avec une prévision de l'heure à laquelle le quota 5 h sera épuisé à ce rythme. Un compte qui atteint sa limite de 5 h envoie toute son aile dans le **Nether** ; sa limite de la semaine, dans l'**End**.
 - 🧠 **Contexte, tâches et coût par session.** Une barre d'expérience pour la fenêtre de contexte, des toiles d'araignée qui envahissent la pièce à mesure qu'elle se remplit, des lampes de redstone qui s'allument avec la liste de tâches, des blocs d'émeraude qui s'empilent avec le coût. Tout est lu dans les transcripts : rien à installer.
 - 📈 **La consommation du jour et de la semaine.** Le coût ou les tokens heure par heure aujourd'hui, jour par jour sur 7 jours, par compte, comparés à une journée habituelle.
-- 🌦️ **Un monde vivant.** La vraie heure, la vraie météo locale (pluie qui éclabousse le sol, orages, neige, brouillard qui monte sur les montagnes), un arc-en-ciel quand la pluie s'arrête, des torches qui éclairent le chemin la nuit, les saisons (prairies au printemps, feuilles d'automne, neige l'hiver), le vent dans l'herbe, des animaux le jour, des monstres la nuit : et tu peux les combattre à l'épée en diamant.
+- 🌦️ **Un monde vivant.** La vraie heure, la vraie météo locale (ciel gris, orages, neige, brouillard qui monte sur les montagnes), un arc-en-ciel quand la pluie s'arrête, les saisons (prairies au printemps, feuilles d'automne, neige l'hiver), le vent dans l'herbe, des animaux le jour, des monstres la nuit : et tu peux les combattre à l'épée en diamant.
 - 🏷️ **Discret.** Juste un nametag au-dessus de chaque joueur ; survole une pièce pour une infobulle façon Minecraft avec les détails.
 - ♿ **Calme quand on le demande.** Avec *réduire les animations* activé dans le système : pas d'éclairs, pas de clignotements, eau et herbe immobiles, moins de particules.
 - 🖱️ **Clique sur une pièce pour aller à son terminal** (Terminal, iTerm, IDE JetBrains sur macOS), ou ouvre l'historique de la session.

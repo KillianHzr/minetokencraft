@@ -146,14 +146,9 @@ const PLANTS = {
   fern: ['fern', GRASS_TINT],
   sugarCane: 'sugar_cane',
   berryBush: 'sweet_berry_bush_stage3',
-  torch: 'torch',
 };
 // Draw order of the house: after the landscape and the rainbow (environment.js), so it stays in front of them.
 const HOUSE_ORDER = 2;
-// Plants that give their own light: unlit, never hazed.
-const GLOWING_PLANTS = new Set(['torch']);
-// Pool of light around each torch, on the ground, as night falls.
-const TORCH_GLOW = { size: 5, color: '#ffb35c', height: 0.03, base: 0.25 };
 // Wind sway: grass and flowers move noticeably, foliage barely.
 const WIND_SETTINGS = { plant: { sway: 0.22, anchor: 0 }, leaves: { sway: 0.05, anchor: -0.5 } };
 const WINDY_PLANTS = new Set(['grass', 'grassAutumn', 'poppy', 'dandelion', 'cornflower', 'daisy', 'allium', 'azureBluet', 'blueOrchid', 'pinkTulip', 'crimsonRoots', 'netherSprouts', 'fern', 'berryBush']);
@@ -320,7 +315,6 @@ class Blocks {
     this.carpets = [];
     this.plants = [];
     this.water = [];
-    this.torches = [];
   }
 
   set(type, x, y, z) {
@@ -363,44 +357,13 @@ class Blocks {
         return instanced(geometry, materials, cells, ({ x, y, z }, m) => m.makeTranslation(x + 0.5, y + 1 / 32, z + 0.5), false);
       }),
       ...[...byKey(this.plants, 'type')].map(([type, cells]) => instanced(cross, material(PLANTS[type], {
-        cutout: true, wind: WINDY_PLANTS.has(type) ? 'plant' : null, glow: GLOWING_PLANTS.has(type), haze: this.haze && !GLOWING_PLANTS.has(type),
+        cutout: true, wind: WINDY_PLANTS.has(type) ? 'plant' : null, haze: this.haze,
       }), cells,
         ({ x, y, z, scale = 1 }, m) => m.makeScale(scale, scale, scale).setPosition(x + 0.5, y, z + 0.5), false)),
       ...(this.water.length ? [instanced(waterQuad, waterMaterial(this.frozen), this.water,
         ({ x, z }, m) => m.makeTranslation(x + 0.5, WATER.level, z + 0.5), false)] : []),
     ];
   }
-}
-
-let glowTexture = null;
-
-/**
- * Warm pools of light on the ground around the torches: one flat quad each, added to what is below, in a single
- * draw call. Cheaper than real lights, which would cost on every pixel of the screen.
- */
-function torchGlow(spots) {
-  if (!glowTexture) {
-    const canvas = document.createElement('canvas');
-    canvas.width = canvas.height = 64;
-    const context = canvas.getContext('2d');
-    const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-    gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.35)');
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, 64, 64);
-    glowTexture = new THREE.CanvasTexture(canvas);
-  }
-  const material = new THREE.MeshBasicMaterial({
-    map: glowTexture, color: TORCH_GLOW.color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0,
-  });
-  const quad = new THREE.PlaneGeometry(TORCH_GLOW.size, TORCH_GLOW.size).rotateX(-Math.PI / 2);
-  const mesh = new THREE.InstancedMesh(quad, material, spots.length);
-  const matrix = new THREE.Matrix4();
-  spots.forEach(({ x, y, z }, index) => mesh.setMatrixAt(index, matrix.makeTranslation(x, y + TORCH_GLOW.height, z)));
-  mesh.visible = false;
-  mesh.renderOrder = 1;
-  return mesh;
 }
 
 // Water texture, whose frames World.animate scrolls through.
@@ -719,9 +682,6 @@ export class World {
     this.signature = null;
     this.rooms = new Map();
     this.portals = new Map();
-    // Torches along the path, for their flames at night.
-    this.torches = [];
-    this.torchGlow = null;
   }
 
   build(layout, season = 'summer', scenery = null) {
@@ -745,14 +705,10 @@ export class World {
     const house = [...blocks.meshes(), extras];
     for (const object of house) object.traverse((child) => (child.renderOrder = HOUSE_ORDER));
     this.group.add(...house);
-    this.torches = [];
-    this.torchGlow = null;
     if (scenery) {
       const land = new Blocks({ castShadow: false, frozen: season === 'winter', haze: true });
       buildTerrain(land, { flat: layout.bounds, ...scenery }, season, SEASON_GROUNDS[season]);
       this.group.add(...land.meshes());
-      this.torches = land.torches;
-      if (land.torches.length) this.group.add(this.torchGlow = torchGlow(land.torches));
     }
     return true;
   }
@@ -827,10 +783,6 @@ export class World {
    */
   setGloom(gloom) {
     this.gloom = gloom;
-    if (this.torchGlow) {
-      this.torchGlow.visible = gloom >= LIGHTS_ON_GLOOM;
-      this.torchGlow.material.opacity = Math.min(1, TORCH_GLOW.base + gloom);
-    }
     this.group.traverse((object) => {
       if (object.isPointLight && object.userData.baseIntensity) this.applyLight(object);
     });
