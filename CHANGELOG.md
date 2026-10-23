@@ -4,6 +4,8 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-10-23
+
 ### Removed
 
 - The torches along the path around the village.
@@ -84,7 +86,8 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 - `minetokencraft` command: open, demo, stop, serve, autostart, assets, statusline.
 - A live demo on GitHub Pages.
 
-[Unreleased]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.2...HEAD
+[1.2.2]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/KillianHzr/minetokencraft/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/KillianHzr/minetokencraft/compare/v1.0.0...v1.1.0
