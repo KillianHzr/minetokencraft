@@ -4,6 +4,8 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-10-23
+
 ### Changed
 
 - Simple mode: the sub-agents hang under their session like a tree, those at work first with their tool (or "thinking…"). The ones at work now stay when the columns shrink to fit the screen; only the finished ones go.
@@ -90,7 +92,8 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 - `minetokencraft` command: open, demo, stop, serve, autostart, assets, statusline.
 - A live demo on GitHub Pages.
 
-[Unreleased]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.2...HEAD
+[Unreleased]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.3...HEAD
+[1.2.3]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/KillianHzr/minetokencraft/compare/v1.1.0...v1.2.0
