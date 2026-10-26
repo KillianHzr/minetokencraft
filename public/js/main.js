@@ -1041,12 +1041,14 @@ canvas.addEventListener('click', (event) => {
   const id = room.player.id;
   pendingClick = setTimeout(() => focusPlayer(id), DOUBLE_CLICK_MS);
 });
-// Right click on a villager: its player whips it with the lead. Elsewhere, the browser's menu as usual.
+// Right click belongs to the lead: no browser menu on the page, except in the text fields (to paste a key, a folder).
+document.addEventListener('contextmenu', (event) => {
+  if (!event.target.closest?.('input, textarea, select, [contenteditable]')) event.preventDefault();
+});
+// Right click on a villager: its player whips it with the lead.
 canvas.addEventListener('contextmenu', (event) => {
   const { villager } = aimAt(event);
-  if (!villager) return;
-  event.preventDefault();
-  whips.lash(villager.record.entity, villager.entity);
+  if (villager) whips.lash(villager.record.entity, villager.entity);
 });
 canvas.addEventListener('dblclick', (event) => {
   clearTimeout(pendingClick);
