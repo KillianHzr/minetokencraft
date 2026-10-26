@@ -316,6 +316,27 @@ export class Alerts {
     }
   }
 
+  /**
+   * Crack of the lead on a villager: a short burst of noise, sharp and fading fast.
+   */
+  crack() {
+    if (!this.settings.sound) return;
+    this.audio ??= new AudioContext();
+    const { sampleRate } = this.audio;
+    const buffer = this.audio.createBuffer(1, Math.round(sampleRate * 0.12), sampleRate);
+    const samples = buffer.getChannelData(0);
+    for (let i = 0; i < samples.length; i++) samples[i] = (Math.random() * 2 - 1) * (1 - i / samples.length) ** 4;
+    const source = this.audio.createBufferSource();
+    source.buffer = buffer;
+    const filter = this.audio.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 1800;
+    const gain = this.audio.createGain();
+    gain.gain.value = 0.5;
+    source.connect(filter).connect(gain).connect(this.audio.destination);
+    source.start();
+  }
+
   announce(events) {
     if (events.some((event) => event.alert)) this.play('bell');
     else if (events.some((event) => event.chime)) this.play('chime');

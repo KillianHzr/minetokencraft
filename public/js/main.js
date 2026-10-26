@@ -12,6 +12,7 @@ import { Environment } from './environment.js';
 import { conditionsFor, SEASONS } from './season.js';
 import { Herd } from './mobs.js';
 import { Pet, petFor } from './pets.js';
+import { Whips } from './whip.js';
 import { emeraldCost, tasksLine, xpBar } from './widgets.js';
 import { DONE_ITEM, itemForTool } from './items.js';
 import { accountTheme, themeNotice } from './themes.js';
@@ -718,6 +719,7 @@ const environment = new Environment(scene, {
   cameraDistance: CAMERA_DISTANCE,
 });
 const herd = new Herd(scene, particles);
+const whips = new Whips(scene, particles, () => alerts.crack());
 // Time, weather and season forced by the test page; empty in normal operation.
 let envOverride = {};
 let conditions = conditionsFor(Date.now(), null);
@@ -780,6 +782,7 @@ function renderFrame(time) {
       emitAmbient(record, dt);
       world.updateRoom(record.data, now);
     }
+    whips.update(dt);
   });
   timed('world', () => {
     world.updatePortals(state.accounts ?? [], now);
@@ -1037,6 +1040,13 @@ canvas.addEventListener('click', (event) => {
   if (!room?.player || event.detail > 1) return;
   const id = room.player.id;
   pendingClick = setTimeout(() => focusPlayer(id), DOUBLE_CLICK_MS);
+});
+// Right click on a villager: its player whips it with the lead. Elsewhere, the browser's menu as usual.
+canvas.addEventListener('contextmenu', (event) => {
+  const { villager } = aimAt(event);
+  if (!villager) return;
+  event.preventDefault();
+  whips.lash(villager.record.entity, villager.entity);
 });
 canvas.addEventListener('dblclick', (event) => {
   clearTimeout(pendingClick);

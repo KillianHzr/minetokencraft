@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { pixelated } from './textures.js';
+import { loadTexture, pixelated, TEXTURE_ROOT } from './textures.js';
 
 // Small hand-drawn pixelated particles (8 x 8).
 const SHAPES = {
@@ -25,6 +25,9 @@ const SHAPES = {
   xp: { color: '#b6f23a', pixels: ['........', '..###...', '.#####..', '.#####..', '.#####..', '..###...', '........', '........'] },
   // Enchanting table runes, flying from the books to the reader.
   glyph: { color: '#d9c8ff', pixels: ['.#####..', '.#...#..', '.#.#.#..', '...#....', '.#.#.#..', '.#...#..', '.#####..', '........'] },
+  // Villager whipped with the lead: the game's angry villager cloud, and sweat drops while it rushes.
+  angry: { texture: 'particle/angry' },
+  sweat: { color: '#8fd3ff', pixels: ['........', '...#....', '...#....', '..###...', '.#####..', '.#####..', '..###...', '........'] },
 };
 
 function shapeTexture({ color, pixels }) {
@@ -34,6 +37,20 @@ function shapeTexture({ color, pixels }) {
   context.fillStyle = color;
   pixels.forEach((row, y) => [...row].forEach((cell, x) => cell === '#' && context.fillRect(x, y, 1, 1)));
   return pixelated(new THREE.CanvasTexture(canvas));
+}
+
+/**
+ * Material of a shape: drawn here, or the game's own texture, hidden until it has loaded.
+ */
+function shapeMaterial(shape) {
+  if (!shape.texture) return new THREE.MeshBasicMaterial({ map: shapeTexture(shape), alphaTest: 0.5 });
+  const material = new THREE.MeshBasicMaterial({ alphaTest: 0.5, visible: false });
+  loadTexture(`${TEXTURE_ROOT}${shape.texture}.png`).then((texture) => {
+    material.map = texture;
+    material.visible = true;
+    material.needsUpdate = true;
+  }).catch(() => {});
+  return material;
 }
 
 // Maximum live particles per shape: beyond that, new ones are ignored.
@@ -51,7 +68,7 @@ export class Particles {
     this.live = [];
     const quad = new THREE.PlaneGeometry(1, 1).applyQuaternion(facing);
     this.meshes = Object.fromEntries(Object.entries(SHAPES).map(([name, shape]) => {
-      const mesh = new THREE.InstancedMesh(quad, new THREE.MeshBasicMaterial({ map: shapeTexture(shape), alphaTest: 0.5 }), CAPACITY);
+      const mesh = new THREE.InstancedMesh(quad, shapeMaterial(shape), CAPACITY);
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       mesh.count = 0;
       mesh.frustumCulled = false;

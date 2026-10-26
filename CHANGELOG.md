@@ -4,6 +4,10 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 
 ## [Unreleased]
 
+### Added
+
+- Right-click a villager: its player whips it with a Minecraft lead, with a crack if the sound is on. The villager flinches, then works three times faster for a few seconds; a finished one shakes its head. On screen only: the sub-agent itself is left alone.
+
 ### Fixed
 
 - `npx minetokencraft` and local installs: the village is drawn again. The server looked for three.js inside its own folder, where npm does not put it in these installs.

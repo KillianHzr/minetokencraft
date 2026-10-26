@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { limb, skinModel } from './mcbox.js';
 import { layeredTexture, loadTexture, pixelated, TEXTURE_ROOT } from './textures.js';
 import { createItemMesh, createItemSprite, setItem, setSpriteItem } from './items.js';
+import { lashArm } from './whip.js';
 
 const PX = 1 / 16;
 // Render scale that Minecraft applies to players and villagers.
@@ -15,6 +16,16 @@ export { castShadows };
 const HIP_HEIGHT = 12 * PX * MODEL_SCALE;
 const SEAT_HEIGHT = 0.56;
 const SEATED_DROP = SEAT_HEIGHT / CHARACTER_SCALE - HIP_HEIGHT;
+// A villager whipped with the lead: red for a moment, a small hop, then it works three times faster for a while, or
+// shakes its head if it is already done.
+const HURT_S = 0.35;
+const HOP_S = 0.3;
+const HOP_HEIGHT = 0.3;
+const ZEAL_S = 6;
+const ZEAL_PACE = 3;
+const SHAKE_S = 1.2;
+const HURT_COLOR = new THREE.Color(1, 0.35, 0.35);
+const WHITE = new THREE.Color(1, 1, 1);
 
 // Blue / yellow / orange rather than green / red: readable with color blindness, like the status line.
 export const STATUS_COLORS = {
@@ -105,7 +116,7 @@ export class Entity {
     const dz = this.target.z - this.root.position.z;
     const distance = Math.hypot(dx, dz);
     this.moving = distance > 0.04;
-    let yaw = this.restYaw;
+    let yaw = this.faceYaw ?? this.restYaw;
     if (this.moving) {
       const step = Math.min(distance, (this.speed ?? WALK_SPEED) * dt);
       this.root.position.x += (dx / distance) * step;
@@ -188,11 +199,22 @@ export class Player extends Entity {
   setPose(pose, itemName) {
     this.pose = pose;
     this.alert.visible = pose === 'wave';
-    setItem(this.item, itemName);
+    setItem(this.item, this.lash ? 'lead' : itemName);
+  }
+
+  /**
+   * Where the held item is, in the scene: the rope of the lead starts there.
+   */
+  handPosition(target) {
+    if (!this.built) return target.copy(this.root.position).setY(this.root.position.y + 1.5);
+    return this.item.getWorldPosition(target);
   }
 
   update(dt) {
     this.clock += dt;
+    // Cracking the lead (whip.js): turned toward the villager.
+    const whipped = this.lash?.villager.root.position;
+    this.faceYaw = whipped ? Math.atan2(whipped.x - this.root.position.x, whipped.z - this.root.position.z) : null;
     this.updateMovement(dt);
     const t = this.clock;
     // The longer it waits for you, the bigger and more agitated the "!" gets.
@@ -212,10 +234,12 @@ export class Player extends Entity {
     this.rightLeg.rotation.x = -Math.PI / 2 * this.seated;
     this.leftLeg.rotation.x = -Math.PI / 2 * this.seated;
 
-    if (this.moving) {
-      this.walkCycle([this.rightLeg, this.leftLeg], [this.rightArm, this.leftArm], 1);
-      return;
-    }
+    if (this.moving) this.walkCycle([this.rightLeg, this.leftLeg], [this.rightArm, this.leftArm], 1);
+    else this.animatePose(t);
+    if (this.lash) this.rightArm.rotation.set(lashArm(this.lash, this.rightArm.rotation.x), 0, -0.06);
+  }
+
+  animatePose(t) {
     switch (this.pose) {
       case 'work': {
         // Minecraft-style pickaxe swing: a quick arc forward.
@@ -252,6 +276,12 @@ export class Villager extends Entity {
   constructor(biome, profession) {
     super(2.35);
     this.status = 'working';
+    this.hurt = 0;
+    this.hop = 0;
+    this.zeal = 0;
+    this.shake = 0;
+    // Clock of its work, which runs faster while it rushes after a lash.
+    this.work = this.clock;
     this.ring = new THREE.Mesh(
       new THREE.RingGeometry(0.32, 0.42, 24),
       new THREE.MeshBasicMaterial({ color: STATUS_COLORS.working, transparent: true, opacity: 0.85, depthWrite: false }),
@@ -278,7 +308,8 @@ export class Villager extends Entity {
       { from: [-4, 0, -4], size: [8, 10, 8], uv: [32, 0], inflate: 0.51, overlay: true },
       { from: [-1, -1, 4], size: [2, 4, 2], uv: [24, 0] },
     ], tex, materials);
-    this.head.add(hatRim(texture));
+    const rim = hatRim(texture);
+    this.head.add(rim);
     limb(this.model, [0, 12, 0], [
       { from: [-4, 0, -3], size: [8, 12, 6], uv: [16, 20] },
       { from: [-4, -8, -3], size: [8, 20, 6], uv: [0, 38], inflate: 0.05, overlay: true },
@@ -295,6 +326,7 @@ export class Villager extends Entity {
     this.leftLeg = limb(this.model, [2, 12, 0], [
       { from: [-2, -12, -2], size: [4, 12, 4], uv: [0, 22], mirror: true },
     ], tex, materials);
+    this.materials = [materials.base, materials.overlay, rim.material];
     const bones = skinModel(this.model);
     for (const part of ['head', 'arms', 'rightLeg', 'leftLeg']) this[part] = bones.get(this[part]);
     castShadows(this.model);
@@ -315,8 +347,33 @@ export class Villager extends Entity {
     this.ring.material.opacity = on ? 1 : 0.85;
   }
 
+  /**
+   * Hit by the lead of its player: nothing changes for the sub-agent, only on screen.
+   */
+  whipped({ hop = true } = {}) {
+    this.hurt = HURT_S;
+    this.hop = hop ? HOP_S : 0;
+    if (this.status === 'working') this.zeal = ZEAL_S;
+    else this.shake = SHAKE_S;
+    for (const material of this.materials ?? []) material.color.copy(HURT_COLOR);
+  }
+
+  updateWhipped(dt) {
+    if (this.hurt > 0) {
+      this.hurt -= dt;
+      if (this.hurt <= 0) for (const material of this.materials ?? []) material.color.copy(WHITE);
+    }
+    this.hop = Math.max(0, this.hop - dt);
+    this.posture.position.y = this.hop ? Math.sin(Math.PI * (1 - this.hop / HOP_S)) * HOP_HEIGHT : 0;
+    this.zeal = this.status === 'working' ? Math.max(0, this.zeal - dt) : 0;
+    this.shake = Math.max(0, this.shake - dt);
+    this.speed = this.zeal ? WALK_SPEED * ZEAL_PACE / 2 : undefined;
+    this.work += dt * (this.zeal ? ZEAL_PACE : 1);
+  }
+
   update(dt) {
     this.clock += dt;
+    this.updateWhipped(dt);
     this.updateMovement(dt);
     const t = this.clock;
     this.icon.position.y = 2.5 + Math.sin(t * 3) * 0.08;
@@ -329,8 +386,11 @@ export class Villager extends Entity {
       this.walkCycle([this.rightLeg, this.leftLeg], null, 1);
     } else if (this.status === 'working') {
       // The villager busies itself at its job-site block: it nods and turns from one side to the other.
-      this.head.rotation.x = 0.35 + Math.sin(t * 5) * 0.15;
-      this.model.rotation.y = Math.sin(t * 1.3) * 0.4;
+      this.head.rotation.x = 0.35 + Math.sin(this.work * 5) * 0.15;
+      this.model.rotation.y = Math.sin(this.work * 1.3) * 0.4;
+    } else if (this.shake) {
+      // Already done: it shakes its head, like a villager refusing a trade.
+      this.head.rotation.y = Math.sin(t * 24) * 0.5 * Math.min(1, this.shake * 3);
     } else {
       this.head.rotation.y = Math.sin(t * 0.7) * 0.3;
     }

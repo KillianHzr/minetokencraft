@@ -57,6 +57,7 @@ Qui travaille, qui t'attend, qui a fini, à quel point chaque contexte est rempl
 - 🏷️ **Discret.** Juste un nametag au-dessus de chaque joueur ; survole une pièce pour une infobulle façon Minecraft avec les détails.
 - ♿ **Calme quand on le demande.** Avec *réduire les animations* activé dans le système : pas d'éclairs, pas de clignotements, eau et herbe immobiles, moins de particules.
 - 🖱️ **Clique sur une pièce pour aller à son terminal** (Terminal, iTerm, IDE JetBrains sur macOS), ou ouvre l'historique de la session.
+- 🪢 **Une laisse pour les villageois.** Clic droit sur un sous-agent : son joueur le fouette avec une laisse Minecraft, et le villageois travaille trois fois plus vite pendant quelques secondes. Seulement à l'écran : le vrai sous-agent n'est pas touché.
 - 🧾 **Mode simple.** Un tableau de bord clair et épuré avec les mêmes informations, sans le jeu.
 - ⚡ **Léger.** Environ 200 appels de dessin par image, 30 i/s quand la fenêtre a le focus, 20 sinon, rien quand l'onglet est caché.
 
@@ -208,7 +209,7 @@ printf '%s' "$input" | minetokencraft statusline --quiet
 | Un cadre d'obsidienne et des yeux de l'Ender près de la maison | Les mêmes quotas, qui construisent un portail du Nether et un portail de l'End |
 | Une aile transformée en Nether ou en End | Ce compte n'a plus de quota 5 h, ou plus de quota de la semaine |
 
-Clique sur une pièce ou une carte pour ramener son terminal au premier plan. Double-clique sur une pièce pour zoomer dessus (de nouveau un double-clic, ou Échap, pour revoir tout le village). Clique sur un villageois, ou sur sa ligne dans le panneau, pour voir ce qu'a fait ce sous-agent. L'icône du livre ouvre l'historique de la session. **Focus** dans la barre d'outils assombrit tout sauf les sessions qui t'attendent. Et clique sur un monstre : il prend un coup d'épée en diamant, et réapparaît 5 secondes après sa mort.
+Clique sur une pièce ou une carte pour ramener son terminal au premier plan. Double-clique sur une pièce pour zoomer dessus (de nouveau un double-clic, ou Échap, pour revoir tout le village). Clique sur un villageois, ou sur sa ligne dans le panneau, pour voir ce qu'a fait ce sous-agent ; clic droit pour le fouetter à la laisse (pour rire). L'icône du livre ouvre l'historique de la session. **Focus** dans la barre d'outils assombrit tout sauf les sessions qui t'attendent. Et clique sur un monstre : il prend un coup d'épée en diamant, et réapparaît 5 secondes après sa mort.
 
 ## Mode simple
 

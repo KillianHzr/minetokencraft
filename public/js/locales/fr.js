@@ -25,7 +25,7 @@ export default {
   'zoom.back': 'Double-clic ou Échap pour revoir tout le village',
   'tooltip.hint': 'Clic : terminal · Double-clic : zoom',
   'tooltip.hintZoomed': 'Clic : terminal · Double-clic : tout le village',
-  'tooltip.villagerHint': 'Clic : ce qu\'a fait ce villageois',
+  'tooltip.villagerHint': 'Clic : ce qu\'a fait ce villageois · Clic droit : le fouetter',
   'banner.empty': 'Tout le monde dort.',
   'banner.offline': 'Serveur injoignable, nouvelle tentative…',
 

@@ -66,6 +66,8 @@ const TEXTURES = [
   ...[
     'diamond_pickaxe', 'writable_book', 'book', 'spyglass', 'compass_00', 'emerald', 'paper', 'enchanted_book',
     'ender_eye', 'painting', 'redstone', 'stick', 'iron_sword', 'diamond_sword', 'bell', 'map', 'clock_00', 'goat_horn',
+    // The lead a player whips its villagers with.
+    'lead',
   ].map((name) => `item/${name}`),
   'entity/villager/villager',
   // The room of a session: chests and item frames.

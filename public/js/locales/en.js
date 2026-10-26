@@ -25,7 +25,7 @@ export default {
   'zoom.back': 'Double-click or Esc to see the whole village',
   'tooltip.hint': 'Click: terminal · Double-click: zoom',
   'tooltip.hintZoomed': 'Click: terminal · Double-click: whole village',
-  'tooltip.villagerHint': 'Click: what this villager did',
+  'tooltip.villagerHint': 'Click: what this villager did · Right-click: whip it',
   'banner.empty': 'Everyone is asleep.',
   'banner.offline': 'Server unreachable, trying again…',
 

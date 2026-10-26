@@ -57,6 +57,7 @@ English · [Français](README.fr.md)
 - 🏷️ **Out of the way.** Just a nametag over each player; hover a room for a Minecraft-style tooltip with the details.
 - ♿ **Calm when asked.** With *reduce motion* turned on in the system, no lightning flashes, no blinking, still water and grass, fewer particles.
 - 🖱️ **Click a room to jump to its terminal** (Terminal, iTerm, JetBrains IDEs on macOS), or open the session history.
+- 🪢 **A lead for the villagers.** Right-click a sub-agent: its player cracks a Minecraft lead on it like a whip, and the villager works three times faster for a few seconds. On screen only: the sub-agent itself is left alone.
 - 🧾 **Simple mode.** A clean, light dashboard with the same information, no game.
 - ⚡ **Light on resources.** About 200 draw calls a frame, 30 fps when focused, 20 when not, nothing when the tab is hidden.
 
@@ -208,7 +209,7 @@ printf '%s' "$input" | minetokencraft statusline --quiet
 | Obsidian frame and eyes of ender by the house | Same quotas, building a Nether portal and an End portal |
 | Wing turned into the Nether or the End | That account is out of 5-hour or weekly quota |
 
-Click a room or a card to bring its terminal to the front. Double-click a room to zoom on it (double-click again, or Esc, to see the whole village). Click a villager, or its line in the side panel, to see what that sub-agent did. The book icon opens the session history. **Focus** in the toolbar darkens everything but the sessions waiting for you. And click a mob: it takes a diamond sword hit, and respawns 5 seconds after dying.
+Click a room or a card to bring its terminal to the front. Double-click a room to zoom on it (double-click again, or Esc, to see the whole village). Click a villager, or its line in the side panel, to see what that sub-agent did; right-click it to whip it with the lead (just for fun). The book icon opens the session history. **Focus** in the toolbar darkens everything but the sessions waiting for you. And click a mob: it takes a diamond sword hit, and respawns 5 seconds after dying.
 
 ## Simple mode
 
