@@ -29,7 +29,8 @@
     "check": "node scripts/check.mjs",
     "capture": "node scripts/capture.mjs",
     "test": "node scripts/test.mjs",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
     "three": "^0.186.1"

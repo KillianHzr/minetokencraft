@@ -52,6 +52,8 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 
 ## Releases
 
-Maintainers bump the version with `npm version minor` (or `patch`), move the `Unreleased` notes of `CHANGELOG.md` under the new version, and push the tag. The release workflow first runs every check (three systems, three Node versions, the package test), then checks that the tag matches `package.json` and is on `main`, publishes to npm, and creates the GitHub release. If any check fails, nothing is published.
+Maintainers publish with `npm run release` on an up-to-date `main`. It shows the next version and its notes, asks for confirmation, runs `npm run check` and `npm test`, dates the `Unreleased` notes of `CHANGELOG.md`, bumps `package.json`, then commits, tags and pushes. Without a level it picks `minor` when the notes have an *Added* section, `patch` otherwise; `npm run release -- major` (or `minor`, `patch`, `x.y.z`) forces it, `--dry-run` only shows what it would publish, `--yes` skips the question.
+
+The tag starts the release workflow, which first runs every check (three systems, three Node versions, the package test), then checks that the tag matches `package.json` and is on `main`, publishes to npm, and creates the GitHub release. If any check fails, nothing is published.
 
 Publishing uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers): no token is stored, npm trusts `release.yml` of this repository, and the package gets a signed provenance. It is set on npmjs.com, in the package settings, under *Trusted publishing*: GitHub Actions, user `KillianHzr`, repository `minetokencraft`, workflow `release.yml`, with `npm publish` allowed.
