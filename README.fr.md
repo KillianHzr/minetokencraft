@@ -128,6 +128,15 @@ minetokencraft
 
 </details>
 
+### Mettre à jour
+
+```sh
+npm install -g minetokencraft@latest
+minetokencraft
+```
+
+`minetokencraft` redémarre le serveur laissé en marche par une version précédente, et le démarrage automatique aussi s'il est activé. Avec npx, `npx minetokencraft@latest` fait de même.
+
 Envie de voir avant ? La [démo en ligne](https://killianhzr.github.io/minetokencraft/) tourne dans ton navigateur avec des sessions factices dans tous les états, et permet de changer l'heure, la météo, la saison et le scénario de quota. `minetokencraft demo` ouvre la même page en local.
 
 ## Commandes

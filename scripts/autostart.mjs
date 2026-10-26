@@ -47,6 +47,7 @@ function launchd() {
     file,
     log,
     loaded,
+    pid: () => run('launchctl', ['print', `${domain}/${label}`]).then(({ stdout }) => Number(stdout.match(/^\s*pid = (\d+)/m)?.[1]) || null, () => null),
     async on() {
       if (await loaded()) await run('launchctl', ['bootout', `${domain}/${label}`]);
       await fs.mkdir(path.dirname(file), { recursive: true });
@@ -84,11 +85,14 @@ WantedBy=default.target
     file,
     log: `journalctl --user -u ${unit}`,
     loaded: () => run('systemctl', ['--user', 'is-enabled', unit]).then(() => true, () => false),
+    pid: () => run('systemctl', ['--user', 'show', '--property', 'MainPID', '--value', unit]).then(({ stdout }) => Number(stdout.trim()) || null, () => null),
     async on() {
       await fs.mkdir(path.dirname(file), { recursive: true });
       await fs.writeFile(file, definition);
       await run('systemctl', ['--user', 'daemon-reload']);
-      await run('systemctl', ['--user', 'enable', '--now', unit]);
+      await run('systemctl', ['--user', 'enable', unit]);
+      // Restart rather than start: a server already running moves to this definition, and to this install.
+      await run('systemctl', ['--user', 'restart', unit]);
     },
     async off() {
       await run('systemctl', ['--user', 'disable', '--now', unit]).catch(() => {});
@@ -99,6 +103,15 @@ WantedBy=default.target
 }
 
 const SERVICES = { darwin: launchd, linux: systemd };
+
+/**
+ * The start at login, if it is what runs the server `pid`: an update restarts the server through it, so that it keeps
+ * starting the server, from the new install.
+ */
+export async function autostartRunning(pid) {
+  const service = SERVICES[process.platform]?.();
+  return service && pid && (await service.pid()) === pid ? service : null;
+}
 
 /**
  * Start at login: `on`, `off` or `status`, on macOS and Linux.

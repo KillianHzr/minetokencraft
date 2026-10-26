@@ -128,6 +128,15 @@ minetokencraft
 
 </details>
 
+### Updating
+
+```sh
+npm install -g minetokencraft@latest
+minetokencraft
+```
+
+`minetokencraft` restarts the server an older version left running, and the start at login too when it is on. With npx, `npx minetokencraft@latest` does the same.
+
 Want to see it first? The [live demo](https://killianhzr.github.io/minetokencraft/) runs in your browser with fake sessions in every state, and lets you switch the time, weather, season and quota scenario. `minetokencraft demo` opens the same page locally.
 
 ## Commands

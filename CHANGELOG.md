@@ -6,6 +6,7 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 
 ### Added
 
+- Updating is `npm install -g minetokencraft@latest`, then `minetokencraft`: the command now restarts a server left running by an older version, through the start at login when that is what runs it.
 - Right-click a villager: its player whips it with a Minecraft lead, with a crack if the sound is on. The villager flinches, then works three times faster for a few seconds; a finished one shakes its head. On screen only: the sub-agent itself is left alone.
 
 ### Fixed

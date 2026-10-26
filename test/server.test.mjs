@@ -47,6 +47,11 @@ test('the page, the test page and three.js are served', async () => {
   assert.equal((await request('/vendor/three/build/three.module.js')).status, 200);
 });
 
+test('the settings tell the version of the server, for `minetokencraft` to restart an older one', async () => {
+  const { version } = JSON.parse((await request('/api/settings')).text);
+  assert.equal(version, JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version);
+});
+
 test('the state is JSON, with the accounts found in the home folder', async () => {
   let state = {};
   for (let i = 0; i < 50 && !state.accounts; i++) {

@@ -14,6 +14,7 @@ import { refreshWeather, startWeather } from './lib/weather.mjs';
 import { accountsOverview, allAccounts } from './lib/accounts.mjs';
 import { refreshLimits, startLimits } from './lib/limits.mjs';
 import { fillMissingAssets } from './scripts/fetch-assets.mjs';
+import { VERSION } from './lib/version.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const HEARTBEAT_MS = 15000;
@@ -166,7 +167,8 @@ async function handleApi(req, res, pathname) {
   }
   if (resource === 'accounts') return sendJson(res, 200, await accountsOverview());
   if (resource === 'settings') {
-    if (!isJsonPost(req)) return sendJson(res, 200, { ...await publicSettings(), notificationsSupported: await notificationsSupported() });
+    // The version tells `minetokencraft` whether this server must be restarted after an update.
+    if (!isJsonPost(req)) return sendJson(res, 200, { ...await publicSettings(), notificationsSupported: await notificationsSupported(), version: VERSION });
     try {
       const patch = await readBody(req);
       const settings = await updateSettings(patch);
