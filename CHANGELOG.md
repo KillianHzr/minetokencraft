@@ -4,6 +4,8 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-26
+
 ### Added
 
 - Updating is `npm install -g minetokencraft@latest`, then `minetokencraft`: the command now restarts a server left running by an older version, through the start at login when that is what runs it.
@@ -101,7 +103,8 @@ All notable changes to MineTokenCraft are listed here. The format follows [Keep 
 - `minetokencraft` command: open, demo, stop, serve, autostart, assets, statusline.
 - A live demo on GitHub Pages.
 
-[Unreleased]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.3...HEAD
+[Unreleased]: https://github.com/KillianHzr/minetokencraft/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.3...v1.3.0
 [1.2.3]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/KillianHzr/minetokencraft/compare/v1.2.0...v1.2.1
